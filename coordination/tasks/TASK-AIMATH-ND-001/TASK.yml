@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-AIMATH-ND-001",
+  "campaign_id": "CAM-AIMATH-ND",
+  "title": "Blind AI-native representation invention pilot",
+  "task_kind": "RESEARCH",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "research_mode": "AI_NATIVE_REPRESENTATION",
+  "objective": "From a frozen raw mathematical-information packet that does not mandate graph, matrix, vector, hypergraph, or another human-selected primitive, invent a representation language and test whether it improves held-out prediction, falsification, proof-obligation compression, invariant discovery, or cross-domain transfer. Mere relabeling is not success.",
+  "assumptions": [],
+  "route_id": "ROUTE-AIMATH-ND-001",
+  "collision_keys": [
+    "discovery/aimath-nd/representation-a"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "INDEPENDENT_ATTACK",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "held_out_required": true,
+  "toy_problem_gate": true,
+  "transfer_test_required": true,
+  "post_outcome_evaluation": "REQUIRED",
+  "success_conditions": [
+    "held-out predictive or falsification gain attributable to the invented representation",
+    "new reusable invariant or lemma enabled by the invented representation",
+    "measurable proof-obligation compression",
+    "explicit cross-domain transfer with mathematical utility"
+  ],
+  "failure_conditions": [
+    "representation gives no measurable mathematical utility beyond relabeling or in-sample fit"
+  ],
+  "stop_conditions": [
+    "representation is only a reversible renaming with no discovery benefit",
+    "held-out tests fail without a new mechanism",
+    "only larger brute force remains"
+  ],
+  "owned_paths": [
+    "work/TASK-AIMATH-ND-001/**"
+  ],
+  "expected_artifacts": [
+    "frozen raw-input description and leakage firewall",
+    "invented representation specification",
+    "held-out evaluation record",
+    "human-math compilation when possible",
+    "outcome record with self-assessment"
+  ],
+  "created_at": "2026-09-01"
+}
