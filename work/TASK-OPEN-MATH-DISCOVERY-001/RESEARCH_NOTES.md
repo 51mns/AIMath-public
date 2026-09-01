@@ -137,7 +137,7 @@ sha256sum work/TASK-OPEN-MATH-DISCOVERY-001/open_math_discovery_coefficients.py 
 Expected SHA-256:
 
 ```text
-3536f1bb7034616257c7d5303d910291bd891944222e2a38cf173e47a8331ac4  open_math_discovery_coefficients.py
+7f97962b75576397e6d067fea202ef73b510b0e7d200cc84fd3cff8e21a8b44f  open_math_discovery_coefficients.py
 19408f875ad4749f653cf99ee31c6b09822d4179a70f158db68e241cb0a26c00  generated results JSON
 ```
 
