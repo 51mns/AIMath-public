@@ -32,5 +32,5 @@ jobs:
           python3 scripts/build_public_manifest.py . --output /tmp/AIMath-public-manifest.json
           python3 -m json.tool /tmp/AIMath-public-manifest.json >/dev/null
 
-      - name: Reproduce fixed-433 package
-        run: python3 research/fixed-433/reproduce.py
+      - name: Reproduce all executable public claims
+        run: python3 scripts/reproduce_public_claims.py .
