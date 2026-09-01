@@ -1,0 +1,35 @@
+{
+  "snapshot_source_commit": "c8e61e0e398f540bc8c5de79663398d689f37473",
+  "fixed_433_public_replay": {
+    "exit_code": 0,
+    "stdout": "candidate exact cases: 3/3 PASS\nindependent exact cases: 3/3 PASS\ncandidate/independent cross-comparison: PASS\nnegative controls: 4/4 PASS\nfixed all-k identity bases: PASS\nfixed-433 public reproduction: PASS\n",
+    "stderr": ""
+  },
+  "public_release_audit": {
+    "exit_code": 0,
+    "stdout": "PASS: no blocked paths, opaque payloads, obvious credentials, emails, private home paths, or private ChatGPT conversation URLs detected\n",
+    "stderr": ""
+  },
+  "public_layout": {
+    "exit_code": 0,
+    "stdout": "PASS: public layout (12 required files present)\n",
+    "stderr": ""
+  },
+  "clone_metadata_tolerance": {
+    "exit_code": 0,
+    "stdout": "PASS: no blocked paths, opaque payloads, obvious credentials, emails, private home paths, or private ChatGPT conversation URLs detected\n",
+    "stderr": ""
+  },
+  "nested_dotgit_negative_control": {
+    "exit_code": 1,
+    "stdout": "FAIL: public release audit found:\n - forbidden path part: research/bad-copy/.git\n - forbidden path part: research/bad-copy/.git/HEAD\n",
+    "stderr": ""
+  },
+  "expected": {
+    "fixed_433_public_replay_exit_code": 0,
+    "public_release_audit_exit_code": 0,
+    "public_layout_exit_code": 0,
+    "clone_metadata_tolerance_exit_code": 0,
+    "nested_dotgit_negative_control_exit_code": "nonzero"
+  }
+}
