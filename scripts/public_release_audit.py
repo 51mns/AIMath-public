@@ -23,6 +23,8 @@ HIGH_RISK_FILENAMES = {
     "cookies.txt",
     "credentials.json",
     "secrets.json",
+    "conversations.json",
+    "message_feedback.json",
 }
 
 PATTERNS = {
@@ -36,6 +38,8 @@ PATTERNS = {
     "private key block": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     "macOS home path": re.compile(r"/Users/[^/\s]+/"),
     "Linux home path": re.compile(r"/home/[^/\s]+/"),
+    "runtime attachment path": re.compile(r"(?:sandbox:)?/mnt/data/"),
+    "connector-style private file id": re.compile(r"\bfile_[0-9a-f]{16,}\b"),
     "private ChatGPT conversation URL": re.compile(r"https?://(?:chat\.openai\.com|chatgpt\.com)/c/"),
 }
 
@@ -45,8 +49,10 @@ TEXT_SUFFIX_ALLOW = {
 }
 TEXT_NAMES_ALLOW = {"Makefile", "LICENSE", "NOTICE", ".gitignore"}
 
+
 def norm(path: Path, root: Path) -> str:
     return path.relative_to(root).as_posix()
+
 
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
@@ -77,8 +83,6 @@ def main() -> int:
         if not path.is_file():
             continue
 
-        # Opaque binary archives and encoded private envelopes are not accepted
-        # by default in a public release.
         lower = path.name.lower()
         if lower.endswith((".zip", ".7z", ".rar", ".tar", ".tgz", ".gz", ".b64")):
             findings.append(f"opaque archive/encoded payload requires manual review: {rel}")
@@ -107,9 +111,13 @@ def main() -> int:
             print(" -", item)
         return 1
 
-    print("PASS: no blocked paths, opaque payloads, obvious credentials, emails, "
-          "private home paths, or private ChatGPT conversation URLs detected")
+    print(
+        "PASS: no blocked private paths, opaque payloads, obvious credentials, "
+        "emails, home/runtime paths, connector file ids, or private ChatGPT "
+        "conversation URLs detected"
+    )
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
