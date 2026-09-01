@@ -77,4 +77,5 @@ jobs:
 
       - name: Lock-only fast path
         if: github.event_name == 'pull_request' && steps.pr_policy.outputs.lock_only == 'true'
-        run: echo "Lock-only PR: full mathematical replay intentionally skipped after mechanical Village gates."
+        run: |
+          echo "Lock-only PR: full mathematical replay intentionally skipped after mechanical Village gates."
