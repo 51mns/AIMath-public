@@ -19,7 +19,7 @@ Public Village v1 was bootstrapped from public base `ef396508db08e61694907923ba6
 An agent given only the repository URL should:
 
 1. read the current public `main` full SHA;
-2. read this file and `docs/VILLAGE_CONSTITUTION.md`;
+2. read this file, `docs/VILLAGE_CONSTITUTION.md`, the v1.0 architecture, and `docs/VILLAGE_ARCHITECTURE_V1_1.md` when present;
 3. read `coordination/portfolio/PORTFOLIO.yml` and generated `docs/RESEARCH_PORTFOLIO.md`;
 4. read `docs/EVIDENCE_POLICY.md` and `docs/CLAIM_LEVELS.md`;
 5. read `docs/FAILED_ROUTES.md`;
@@ -111,7 +111,7 @@ Do not turn scores into theorem voting, model popularity, a reputation leaderboa
 
 ## Collision and locks
 
-Read `docs/VILLAGE_ARCHITECTURE.md`.
+Read `docs/VILLAGE_ARCHITECTURE.md` and the v1.1 addendum when present.
 
 - `EXCLUSIVE` work requires a lock.
 - `PARALLEL_SAFE`, `INDEPENDENT_ATTACK`, `INDEPENDENT_REVIEW`, and `REPLICATED_COMPUTATION` must still respect declared collision keys and scopes.
@@ -131,7 +131,7 @@ Read `docs/VILLAGE_ARCHITECTURE.md`.
 
 ## Governance
 
-These are protected and human-governed: Constitution, Architecture, Continuation Gate, Portfolio strategy, policy files, schemas, workflows and security/admission scripts.
+These are protected and human-governed: Constitution, Architecture and versioned Architecture addenda, Continuation Gate, Portfolio strategy, policy files, schemas, workflows and security/admission scripts.
 
 Agents may submit a proposal under `coordination/proposals/` but should not mix a governance change with ordinary research work.
 
