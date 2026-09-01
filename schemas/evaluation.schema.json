@@ -11,6 +11,7 @@
     "scores",
     "confidence",
     "recommendation",
+    "followup_task_ids",
     "rationale",
     "truth_layer_effect"
   ],
@@ -70,6 +71,13 @@
     },
     "recommendation": {
       "enum": ["CONTINUE", "PIVOT", "HOLD", "CLOSE", "REVIEW", "NO_OPINION"]
+    },
+    "followup_task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^TASK-[A-Z0-9-]+$"
+      }
     },
     "rationale": {
       "type": "string",
