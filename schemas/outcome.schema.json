@@ -41,6 +41,20 @@
     },
     "review_required": {
       "type": "boolean"
+    },
+    "self_assessment": {
+      "type": "object",
+      "properties": {
+        "information_gain": {"type": "integer", "minimum": 0, "maximum": 5},
+        "mathematical_reusability": {"type": "integer", "minimum": 0, "maximum": 5},
+        "transfer_potential": {"type": "integer", "minimum": 0, "maximum": 5},
+        "external_relevance": {"type": "integer", "minimum": 0, "maximum": 5},
+        "followup_expected_value": {"type": "integer", "minimum": 0, "maximum": 5},
+        "surprise": {"type": "integer", "minimum": 0, "maximum": 5},
+        "uncertainty": {"type": "integer", "minimum": 0, "maximum": 5},
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": true
