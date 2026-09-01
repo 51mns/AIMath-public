@@ -15,9 +15,16 @@ Contributions that **disprove** an AIMath claim are as valuable as contributions
 
 ## Before starting a mathematical route
 
-Read [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md). If your proposal resembles a route marked `REFUTED`, `BOUNDED NO-GO`, `BLOCKED`, `INCONCLUSIVE`, or `HOLD`, explain what materially new ingredient changes the old obstruction.
+Read, in this order:
 
-Do not reopen a closed architecture merely by increasing a finite search depth, polynomial degree, ansatz order, or compute budget unless the failure ledger explicitly says that is a meaningful unresolved direction.
+1. [`docs/CONTRIBUTION_TARGETS.md`](docs/CONTRIBUTION_TARGETS.md) — current bounded tasks where outside work is useful;
+2. [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md) — known blockers/no-go/HOLD routes;
+3. [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md) — proof/computation/review/novelty separation;
+4. the exact public claim package linked from [`docs/RESULTS.md`](docs/RESULTS.md).
+
+If your proposal resembles a route marked `REFUTED`, `BOUNDED NO-GO`, `BLOCKED`, `INCONCLUSIVE`, or `HOLD`, explain what materially new ingredient changes the old obstruction.
+
+Do not reopen a closed architecture merely by increasing finite search depth, polynomial degree, ansatz order, or compute budget unless the failure ledger explicitly says that remains meaningful.
 
 ## Before opening a pull request
 
@@ -26,18 +33,24 @@ Run:
 ```bash
 python3 scripts/public_release_audit.py .
 python3 scripts/verify_public_layout.py .
+python3 scripts/reproduce_public_claims.py .
 ```
+
+If your change affects only one claim package, also run its local replay command from that package.
 
 For mathematical changes, include:
 
 - Claim ID;
-- old statement;
-- proposed statement;
-- proof vs computation distinction;
-- exact reproduction command;
-- changed hashes;
+- exact old statement;
+- exact proposed statement;
+- proof vs finite computation distinction;
+- exact reproduction command when executable evidence exists;
+- changed file hashes or deterministic manifest;
+- independent-review status;
 - novelty claim, if any, with primary sources;
 - relevant failed-route entry and reopening justification, when applicable.
+
+Do not submit raw private conversations, private correspondence, personal data, credentials, private Git history, or third-party artifacts whose redistribution rights are unclear.
 
 ## When a route fails
 
@@ -47,7 +60,9 @@ Do not turn a bounded failure into a claim that an entire mathematical area is i
 
 ## Status promotion
 
-A writer does not self-promote their own result to `INDEPENDENTLY_REPRODUCED`. A materially independent review is required.
+A writer does not self-promote their own result to `INDEPENDENTLY_REPRODUCED`. A materially independent review is required. See [`docs/CLAIM_LEVELS.md`](docs/CLAIM_LEVELS.md).
+
+An independent reviewer should not assume the writer conclusion. Where feasible, freeze a fresh derivation or verifier before comparing against the writer artifacts.
 
 ## Scope discipline
 
@@ -55,4 +70,4 @@ Keep one mathematical objective per pull request when possible. Do not mix a the
 
 ## Style
 
-Prefer plain mathematical statements, exact commands, machine-readable certificates, and explicit failure conditions over narrative confidence.
+Prefer plain mathematical statements, exact commands, machine-readable certificates, negative controls, and explicit failure conditions over narrative confidence.
