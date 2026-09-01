@@ -8,7 +8,8 @@
     "global_admission",
     "global_active_lane_cap",
     "source_snapshot",
-    "governance"
+    "governance",
+    "allocation_policy"
   ],
   "properties": {
     "schema_version": {
@@ -39,6 +40,36 @@
     },
     "governance": {
       "type": "object"
+    },
+    "allocation_policy": {
+      "type": "object",
+      "required": [
+        "mode",
+        "class_weights",
+        "soft_class_caps_pct",
+        "evaluation_bonus_cap",
+        "rule"
+      ],
+      "properties": {
+        "mode": {
+          "const": "ADAPTIVE_DIVERSITY"
+        },
+        "class_weights": {
+          "type": "object"
+        },
+        "soft_class_caps_pct": {
+          "type": "object"
+        },
+        "evaluation_bonus_cap": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": true
