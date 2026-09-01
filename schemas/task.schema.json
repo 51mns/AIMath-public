@@ -57,6 +57,13 @@
         "E3"
       ]
     },
+    "research_mode": {
+      "enum": [
+        "STANDARD",
+        "OPEN_THEOREM_DISCOVERY",
+        "AI_NATIVE_REPRESENTATION"
+      ]
+    },
     "objective": {
       "type": "string",
       "minLength": 1
@@ -94,6 +101,21 @@
     },
     "frontier_sensitive": {
       "type": "boolean"
+    },
+    "held_out_required": {
+      "type": "boolean"
+    },
+    "toy_problem_gate": {
+      "type": "boolean"
+    },
+    "transfer_test_required": {
+      "type": "boolean"
+    },
+    "post_outcome_evaluation": {
+      "enum": [
+        "OPTIONAL",
+        "REQUIRED"
+      ]
     },
     "success_conditions": {
       "type": "array"
