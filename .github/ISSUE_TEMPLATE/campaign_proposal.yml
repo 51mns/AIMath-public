@@ -1,0 +1,38 @@
+name: "Village campaign proposal"
+description: "Social-layer draft of a new external research investment candidate"
+title: "[CAMPAIGN PROPOSAL] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: "This Issue is non-canonical. A machine proposal under coordination/proposals/campaigns/ is required for Portfolio intake."
+  - type: textarea
+    id: statement
+    attributes:
+      label: Exact problem statement and primary sources
+    validations:
+      required: true
+  - type: textarea
+    id: frontier
+    attributes:
+      label: Current frontier / source versions
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why AIMath / reusable methods
+    validations:
+      required: true
+  - type: textarea
+    id: first
+    attributes:
+      label: First bounded campaign/task
+    validations:
+      required: true
+  - type: textarea
+    id: kill
+    attributes:
+      label: Kill conditions
+    validations:
+      required: true

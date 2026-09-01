@@ -1,49 +1,40 @@
-# AIMath Public 日本語ガイド
+# AIMath Public
 
-これはAIMathの**公開専用・履歴なし版**です。private研究リポジトリをそのまま公開したものではありません。
+AIMathの**履歴を引き継がない公開研究リポジトリ**です。private正本のGit履歴・生チャット・メール・個人情報をmirrorしません。
 
-公開スナップショットの基準SHAは `c8e61e0e398f540bc8c5de79663398d689f37473` です。
+公開snapshotのprivate canonical source: `c8e61e0e398f540bc8c5de79663398d689f37473`
 
-## 最初に見る場所
+## AIMath Village v1
 
-- [`docs/RESULTS.md`](docs/RESULTS.md): 受理済み成果と公開claim package
-- [`docs/CONTRIBUTION_TARGETS.md`](docs/CONTRIBUTION_TARGETS.md): 外部から手伝いやすい現在の限定タスク
-- [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md): すでに失敗・停止・反証された研究ルートと再開条件
-- [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md): 証明・有限計算・独立再現・noveltyを混同しないための証拠ルール
-- [`docs/EXPORT_GAPS.md`](docs/EXPORT_GAPS.md): まだpublicへ完全輸出していない再現物
-- [`docs/CLAIM_LEVELS.md`](docs/CLAIM_LEVELS.md): `INDEPENDENTLY_REPRODUCED` などの意味
-- [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md): 再現方法
-- [`CONTRIBUTING.md`](CONTRIBUTING.md): 証明の検証、反例、改善案の出し方
+中心原則は次の3つです。
 
-新しい証明ルートを始める前に `FAILED_ROUTES.md` を確認してください。単に計算量、探索深度、多項式次数などを増やしただけで、既に閉じたアーキテクチャを繰り返さないためです。
+- **Portfolio decides where to explore.** どこへ研究資源を使うかは人間が統治する。
+- **Researchers decide how to explore.** 人間・AI研究者はbounded taskの中で研究方法を選ぶ。
+- **Evidence decides what becomes knowledge.** 定理の受理は人気や多数決ではなく証拠で決まる。
 
-## 一括確認
+Licence（再利用権）とCredit（誰が何をしたか）はこの3層と分離します。
 
-Python 3.10+ を使える通常のGit checkoutでは、次で公開版の主要チェックを実行できます。
+最初に [`AGENTS.md`](AGENTS.md)、[`docs/VILLAGE_CONSTITUTION.md`](docs/VILLAGE_CONSTITUTION.md)、[`docs/RESEARCH_PORTFOLIO.md`](docs/RESEARCH_PORTFOLIO.md) を読んでください。
+
+## ローカル確認
 
 ```bash
 python3 scripts/public_release_audit.py .
 python3 scripts/verify_public_layout.py .
+python3 scripts/village.py validate
+python3 scripts/village.py status
+python3 scripts/village.py test
 python3 scripts/reproduce_public_claims.py .
 ```
 
-`reproduce_public_claims.py` は、公開されている実行可能なclaim packageをまとめて再現します。純粋な数学証明が本体のclaimについて、無理に「計算が通ったから証明」と置き換えることはしません。
+## ライセンス
 
-## claimの読み方
+- コード・validator・CI・tooling: `Apache-2.0`
+- AIMath独自の証明文・review・解説: `CC-BY-4.0`
+- AIMath独自の凍結statement・certificate・claim/task/campaign等machine state: `CC0-1.0`
 
-AIMathでは次を別々に扱います。
+詳細は [`LICENSING.md`](LICENSING.md) と `REUSE.toml`。外部contributionはDCO 1.1を使います。
 
-- 数学的に正しいか
-- 有限計算が再現できるか
-- 別reviewerが独立再現したか
-- 文献上の新規性があるか
-- 原著者確認があるか
-- 外部の未解決問題のfrontierを実際に動かしたか
+## 注意
 
-そのため、`INDEPENDENTLY_REPRODUCED` でも自動的に「世界初」「新定理」という意味にはなりません。
-
-`RESULTS.md` に名前があるだけでは完全公開とは扱いません。第三者がpublic repoだけで statement・proof/certificate・reproduction・independent review・novelty status を追えないものは `EXPORT_GAPS.md` で未完として管理します。
-
-## プライバシー
-
-公開版には、生のChatGPT会話、個人情報、メール/DM、生の原著者対応、認証情報、private添付、内部調整ログ、private Git履歴を含めません。private上の有用な数学は、private branch/historyを露出するのではなく、固定された数学的証拠からcleanな公開claim packageとして再構成します。
+Campaignの`HOLD`や`CLOSED`は「AIMathが今そこへ資源を使わない」という戦略判断です。外部の人が公開ライセンスの範囲でその数学を研究・再利用することを禁止するものではありません。

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ContinuationMemo",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "trigger",
+    "information_gain",
+    "recommended_decision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^CAM-[A-Z0-9-]+$"
+    },
+    "trigger": {
+      "type": "object"
+    },
+    "assets_gained": {
+      "type": "array"
+    },
+    "failed_routes": {
+      "type": "array"
+    },
+    "external_progress": {
+      "type": "object"
+    },
+    "information_gain": {
+      "type": "object"
+    },
+    "transfer_value": {
+      "type": "array"
+    },
+    "do_not_continue_for_check": {
+      "type": "object"
+    },
+    "recommended_decision": {
+      "enum": [
+        "CONTINUE",
+        "HOLD",
+        "CLOSE",
+        "PIVOT"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

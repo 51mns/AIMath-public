@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "claim_id": "C-LOCAL-TP2",
+  "mathematical_level": "PROOF_CANDIDATE",
+  "validity_state": "CURRENT",
+  "public_evidence": "PARTIAL",
+  "dependency_use": "SCOPED",
+  "statement_path": null,
+  "depends_on": [],
+  "verification_modes": [
+    "FINITE_EXACT_REPLAY",
+    "MATHEMATICAL_REVIEW"
+  ],
+  "novelty": "NOT_ESTABLISHED",
+  "external_frontier_impact": "NONE",
+  "supersedes": [],
+  "superseded_by": null,
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473"
+  }
+}

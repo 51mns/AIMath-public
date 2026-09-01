@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FailedRoute",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "route_id",
+    "campaign_id",
+    "status",
+    "scope",
+    "decisive_obstruction",
+    "remaining_open_scope",
+    "reopen_if"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "route_id": {
+      "type": "string",
+      "pattern": "^FR-[A-Z0-9-]+$"
+    },
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^CAM-[A-Z0-9-]+$"
+    },
+    "status": {
+      "enum": [
+        "REFUTED",
+        "BOUNDED_NO_GO",
+        "BLOCKED",
+        "INCONCLUSIVE",
+        "CLOSED_IN_SCOPE"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decisive_obstruction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "remaining_open_scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reopen_if": {
+      "type": "array"
+    },
+    "public_source": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

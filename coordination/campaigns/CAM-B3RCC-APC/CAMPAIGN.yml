@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-B3RCC-APC",
+  "title": "B3RCC / antipodal partial cube campaign",
+  "kind": "PUBLIC_RESEARCH_THEME",
+  "strategic_state": "HOLD",
+  "priority": "HOLD",
+  "max_active_lanes": 1,
+  "problem": {
+    "frozen_statement": "B3RCC / antipodal partial cube campaign",
+    "public_basis": "docs/CONTRIBUTION_TARGETS.md"
+  },
+  "continuation_conditions": [],
+  "do_not_continue_for": [
+    "next-rank enumeration alone"
+  ],
+  "reopen_conditions": [
+    "concrete external APC family making the all-rank theorem load-bearing",
+    "source-backed local-to-global bridge",
+    "materially new external target"
+  ],
+  "assets": [
+    {
+      "claim_id": "C-APC-RANK-R-VERTEX-DIMENSION-BOUND",
+      "public_evidence": "FULL",
+      "dependency_use": "ALLOWED",
+      "load_bearing": true
+    }
+  ],
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473",
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT"
+  }
+}

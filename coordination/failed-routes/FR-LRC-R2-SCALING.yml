@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "route_id": "FR-LRC-R2-SCALING",
+  "campaign_id": "CAM-LONELY-RUNNER",
+  "status": "CLOSED_IN_SCOPE",
+  "scope": "measured R2 scaling/performance direction",
+  "decisive_obstruction": "accepted theorem did not improve the frozen benchmark",
+  "remaining_open_scope": "mathematically different pruning or complexity theorem",
+  "reopen_if": [
+    "credible new complexity advantage"
+  ],
+  "public_source": "docs/FAILED_ROUTES.md"
+}

@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 AIMath contributors
+# SPDX-License-Identifier: Apache-2.0
+# Protected Village governance, legal, security, campaign and task-definition paths
+/AGENTS.md @51mns
+/CONTRIBUTING.md @51mns
+/LICENSING.md @51mns
+/REUSE.toml @51mns
+/LICENSES/ @51mns
+/SECURITY.md @51mns
+/docs/VILLAGE_CONSTITUTION.md @51mns
+/docs/VILLAGE_ARCHITECTURE.md @51mns
+/docs/CONTINUATION_GATE.md @51mns
+/docs/GITHUB_SETTINGS_REQUIRED.md @51mns
+/coordination/portfolio/ @51mns
+/coordination/policy/ @51mns
+/coordination/campaigns/*/CAMPAIGN.yml @51mns
+/coordination/campaigns/*/decisions/ @51mns
+/coordination/tasks/*/TASK.yml @51mns
+/schemas/ @51mns
+/.github/workflows/ @51mns
+/.github/CODEOWNERS @51mns
+/scripts/public_release_audit.py @51mns
+/scripts/village.py @51mns
+/scripts/village_core.py @51mns
+/scripts/check_dco.py @51mns
+/scripts/check_village_pr.py @51mns
+/scripts/test_village_acceptance.py @51mns
+/scripts/verify_public_layout.py @51mns
+/research/**/CLAIM.yml @51mns

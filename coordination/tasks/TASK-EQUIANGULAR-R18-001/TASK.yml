@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-EQUIANGULAR-R18-001",
+  "campaign_id": "CAM-EQUIANGULAR-R18",
+  "title": "General obstruction beyond the eta17 singleton branch",
+  "task_kind": "RESEARCH",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "objective": "Find a theorem-level obstruction that applies to multiple remaining hypothetical 59-line spectral possibilities rather than one isolated next case.",
+  "assumptions": [
+    {
+      "claim_id": "C-EQUIANGULAR-R18-ETA17-SINGLETON-EXCLUSION",
+      "required_scope": "eta17 result as reusable deck-method precedent"
+    }
+  ],
+  "route_id": "ROUTE-EQUIANGULAR-R18-001",
+  "collision_keys": [
+    "eq18/general-structural-obstruction"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "EXCLUSIVE",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": true,
+  "success_conditions": [
+    "claim candidate",
+    "counterexample",
+    "reusable structural reduction"
+  ],
+  "failure_conditions": [
+    "exact bounded no-go for frozen route"
+  ],
+  "stop_conditions": [
+    "route degenerates to isolated next-case enumeration",
+    "only larger finite search is available"
+  ],
+  "owned_paths": [
+    "work/TASK-EQUIANGULAR-R18-001/**"
+  ],
+  "expected_artifacts": [
+    "proof/research notes",
+    "exact verifier when load-bearing",
+    "outcome record"
+  ],
+  "created_at": "2026-09-01"
+}

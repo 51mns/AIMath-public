@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-REFRESH-001",
+  "campaign_id": "CAM-LOCAL-TP2",
+  "title": "Independent dependency/route triage for a genuinely new Local TP2 architecture",
+  "task_kind": "DEPENDENCY_TRIAGE",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "objective": "Evaluate a submitted materially new route against public failed-route memory; this maintenance task does not itself reopen the campaign.",
+  "assumptions": [
+    {
+      "claim_id": "C-LOCAL-TP2",
+      "required_scope": "frozen candidate only"
+    }
+  ],
+  "route_id": "ROUTE-LOCAL-TP2-REFRESH-001",
+  "collision_keys": [
+    "local-tp2/new-route-triage"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "PARALLEL_SAFE",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "success_conditions": [
+    "claim candidate",
+    "counterexample",
+    "reusable structural reduction"
+  ],
+  "failure_conditions": [
+    "exact bounded no-go for frozen route"
+  ],
+  "stop_conditions": [
+    "no new mechanism after the frozen bounded budget"
+  ],
+  "owned_paths": [
+    "work/TASK-LOCAL-TP2-REFRESH-001/**"
+  ],
+  "expected_artifacts": [
+    "proof/research notes",
+    "exact verifier when load-bearing",
+    "outcome record"
+  ],
+  "created_at": "2026-09-01"
+}

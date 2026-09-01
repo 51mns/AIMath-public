@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Outcome",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "outcome_type",
+    "summary",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^TASK-[A-Z0-9-]+$"
+    },
+    "outcome_type": {
+      "enum": [
+        "CLAIM_CANDIDATE",
+        "COUNTEREXAMPLE",
+        "STRUCTURAL_REDUCTION",
+        "FAILED_ROUTE",
+        "INCONCLUSIVE",
+        "REPRODUCTION_FAILURE",
+        "LITERATURE_MATCH",
+        "NO_REUSABLE_PROGRESS"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifacts": {
+      "type": "array"
+    },
+    "claim_ids": {
+      "type": "array"
+    },
+    "review_required": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": true
+}

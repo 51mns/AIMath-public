@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-FIXED-433",
+  "title": "Fixed-433 placement and theory identification",
+  "kind": "PUBLIC_RESEARCH_THEME",
+  "strategic_state": "ACTIVE",
+  "priority": "P1",
+  "max_active_lanes": 2,
+  "problem": {
+    "frozen_statement": "Fixed-433 placement and theory identification",
+    "public_basis": "docs/CONTRIBUTION_TARGETS.md"
+  },
+  "continuation_conditions": [
+    "primary-source placement",
+    "stronger classification subsuming the public identity"
+  ],
+  "do_not_continue_for": [
+    "claim novelty from search absence"
+  ],
+  "reopen_conditions": [],
+  "assets": [
+    {
+      "claim_id": "C-ROOT-433",
+      "public_evidence": "FULL",
+      "dependency_use": "ALLOWED",
+      "load_bearing": true
+    },
+    {
+      "claim_id": "C-433-SPRINGBORN-OBSTRUCTION",
+      "public_evidence": "FULL",
+      "dependency_use": "ALLOWED",
+      "load_bearing": true
+    },
+    {
+      "claim_id": "C-433-EXISTING-THEORY-IDENTIFICATION",
+      "public_evidence": "FULL",
+      "dependency_use": "ALLOWED",
+      "load_bearing": true
+    }
+  ],
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473",
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT"
+  }
+}

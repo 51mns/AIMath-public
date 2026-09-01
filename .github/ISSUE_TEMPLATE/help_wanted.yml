@@ -1,0 +1,39 @@
+name: "Village Help Wanted"
+description: "Ask for bounded help on an existing canonical Task"
+title: "[HELP] "
+labels: []
+body:
+  - type: input
+    id: task
+    attributes:
+      label: Task ID
+      description: Canonical TASK-* ID.
+    validations:
+      required: true
+  - type: textarea
+    id: established
+    attributes:
+      label: Established
+      description: Public facts already fixed.
+    validations:
+      required: true
+  - type: textarea
+    id: blocked
+    attributes:
+      label: Blocked on
+    validations:
+      required: true
+  - type: textarea
+    id: need
+    attributes:
+      label: Need
+      description: Exact help/artifact requested.
+    validations:
+      required: true
+  - type: textarea
+    id: dont
+    attributes:
+      label: Do not repeat
+      description: Relevant failed routes or already-tried work.
+    validations:
+      required: true

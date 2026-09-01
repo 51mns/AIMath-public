@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "route_id": "FR-LOCAL-TP2-FAR-MINOR",
+  "campaign_id": "CAM-LOCAL-TP2",
+  "status": "BOUNDED_NO_GO",
+  "scope": "FM-REC2-AFFINE and FM-PAIRKERNEL-SYMD2 frozen ansatz families",
+  "decisive_obstruction": "exact inconsistency in the two recorded finite-dimensional families",
+  "remaining_open_scope": "other genuinely different nonlinear/theorem-native mechanisms",
+  "reopen_if": [
+    "new hypothesis outside both frozen ansatz families"
+  ],
+  "public_source": "docs/FAILED_ROUTES.md"
+}

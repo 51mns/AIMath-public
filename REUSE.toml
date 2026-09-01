@@ -1,0 +1,49 @@
+version = 1
+
+# Existing-tree defaults use deterministic path rules. Later matching entries
+# override earlier ones. New files should prefer explicit SPDX headers when practical.
+
+[[annotations]]
+path = ["*.md", "docs/**", "research/**/*.md", "reviews/**/*.md", "templates/**/*.md"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 AIMath contributors"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+[[annotations]]
+path = ["*.json", "research/**/*.json", "reviews/**/*.json", "research/**/*.csv", "reviews/**/*.csv", "coordination/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 AIMath contributors"
+SPDX-License-Identifier = "CC0-1.0"
+
+# Human-readable coordination guides are documentation, not canonical machine state.
+[[annotations]]
+path = ["coordination/**/*.md"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 AIMath contributors"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# Executable/software-like material overrides generic JSON/data rules.
+[[annotations]]
+path = [".gitignore", ".github/**", "scripts/**", "schemas/**", "templates/**/*.py", "research/**/*.py", "reviews/**/*.py"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 AIMath contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Frozen AIMath-authored statements and canonical machine metadata are friction-minimised data.
+[[annotations]]
+path = ["research/**/STATEMENT.md", "research/**/CLAIM.yml", "reviews/**/REVIEW.yml"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 AIMath contributors"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = ["README.md", "README.ja.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSING.md", "AGENTS.md"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 AIMath contributors"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+[[annotations]]
+path = ["VALIDATION.json", "PUBLIC_MANIFEST.json", "REUSE.toml"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 AIMath contributors"
+SPDX-License-Identifier = "CC0-1.0"

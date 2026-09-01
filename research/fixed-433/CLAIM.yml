@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "claim_id": "C-ROOT-433",
+  "mathematical_level": "INDEPENDENTLY_REPRODUCED",
+  "validity_state": "CURRENT",
+  "public_evidence": "FULL",
+  "dependency_use": "ALLOWED",
+  "statement_path": null,
+  "depends_on": [],
+  "verification_modes": [
+    "EXECUTABLE_CERTIFICATE",
+    "INDEPENDENT_DERIVATION"
+  ],
+  "novelty": "NOT_ESTABLISHED",
+  "external_frontier_impact": "NONE",
+  "supersedes": [],
+  "superseded_by": null,
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473"
+  }
+}

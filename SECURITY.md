@@ -1,13 +1,29 @@
-# Security policy
+# Security and responsible disclosure
 
-For public issues, do not post secrets or private personal information.
+AIMath-public contains mathematical research and executable verification code.
 
-If a credential is exposed, rotate it first. If personal/private data is committed, treat Git history as affected even after a later deletion.
+## Untrusted contributions
 
-The public export gate is:
+Treat all code in an external pull request as untrusted.
 
-```bash
-python3 scripts/public_release_audit.py .
-```
+CI policy:
 
-This repository intentionally contains no private canonical Git history.
+- uses the `pull_request` event, never `pull_request_target` for untrusted code;
+- grants only `contents: read`;
+- does not persist checkout credentials;
+- exposes no project secrets to research code;
+- uses bounded job timeouts;
+- rejects workflow requests for write permissions or secret access;
+- runs exact/reproduction code only in the disposable CI runner.
+
+Do not manually execute untrusted contributor code with local credentials or access to the private AIMath workspace.
+
+## Private data
+
+Never submit credentials, raw correspondence, personal identifiers, private Git history, private runtime paths, raw ChatGPT exports, or opaque private archives.
+
+Use the public security/privacy policy in `docs/PRIVACY_AND_SECURITY.md` and the release scanner before merge.
+
+## Governance compromise
+
+If a governance/security cascade is suspected, a human maintainer may set `global_admission` to `PAUSED`, identify the last trusted main, audit governance diffs and mark affected claims/campaigns for reevaluation. Do not rewrite public history merely to hide a governance error.

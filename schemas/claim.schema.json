@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claim",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "claim_id",
+    "mathematical_level",
+    "validity_state",
+    "public_evidence",
+    "dependency_use",
+    "depends_on",
+    "verification_modes",
+    "novelty",
+    "external_frontier_impact"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "claim_id": {
+      "type": "string",
+      "pattern": "^C-[A-Z0-9-]+$"
+    },
+    "mathematical_level": {
+      "enum": [
+        "DRAFT",
+        "COMPUTATIONAL_EVIDENCE",
+        "PROOF_CANDIDATE",
+        "PROVED_INTERNAL",
+        "INDEPENDENTLY_REPRODUCED",
+        "PUBLISHED",
+        "REFUTED",
+        "BLOCKED_MISSING_ARTIFACT"
+      ]
+    },
+    "validity_state": {
+      "enum": [
+        "CURRENT",
+        "NEEDS_REREVIEW",
+        "REFUTED",
+        "SUPERSEDED"
+      ]
+    },
+    "public_evidence": {
+      "enum": [
+        "FULL",
+        "SUBSTANTIAL",
+        "PARTIAL",
+        "INTENTIONAL_PRIVATE"
+      ]
+    },
+    "dependency_use": {
+      "enum": [
+        "ALLOWED",
+        "SCOPED",
+        "NAVIGATION_ONLY",
+        "FORBIDDEN"
+      ]
+    },
+    "statement_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "depends_on": {
+      "type": "array"
+    },
+    "verification_modes": {
+      "type": "array"
+    },
+    "novelty": {
+      "type": "string"
+    },
+    "external_frontier_impact": {
+      "enum": [
+        "NONE",
+        "STRUCTURAL_PROGRESS",
+        "BOUND_IMPROVEMENT",
+        "PARTIAL_RESOLUTION",
+        "FULL_RESOLUTION"
+      ]
+    },
+    "supersedes": {
+      "type": "array"
+    },
+    "superseded_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_snapshot": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}
