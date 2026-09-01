@@ -26,10 +26,17 @@ BOOTSTRAP_PROTECTED = [
     "SECURITY.md",
     "docs/VILLAGE_CONSTITUTION.md",
     "docs/VILLAGE_ARCHITECTURE.md",
+    "docs/VILLAGE_ARCHITECTURE_V1_1.md",
     "docs/CONTINUATION_GATE.md",
     "docs/GITHUB_SETTINGS_REQUIRED.md",
+    "docs/RESEARCH_PORTFOLIO.md",
+    "docs/RESEARCH_BOARD.md",
+    "docs/DEPENDENCY_GRAPH.md",
+    "docs/CAMPAIGN_HISTORY.md",
+    "docs/RESEARCH_EVALUATIONS.md",
     "coordination/portfolio/**",
     "coordination/policy/**",
+    "coordination/evaluations/README.md",
     "coordination/campaigns/**/CAMPAIGN.yml",
     "coordination/tasks/**/TASK.yml",
     "research/**/CLAIM.yml",
@@ -39,17 +46,24 @@ BOOTSTRAP_PROTECTED = [
     "scripts/public_release_audit.py",
     "scripts/village.py",
     "scripts/village_core.py",
+    "scripts/village_rank.py",
     "scripts/check_dco.py",
     "scripts/check_village_pr.py",
     "scripts/test_village_acceptance.py",
+    "scripts/test_village_v1_1.py",
     "scripts/verify_public_layout.py",
 ]
 BOOTSTRAP_GOVERNANCE_ONLY = [
     "AGENTS.md", "CONTRIBUTING.md", "LICENSING.md", "REUSE.toml", "LICENSES/**", "SECURITY.md",
-    "docs/VILLAGE_CONSTITUTION.md", "docs/VILLAGE_ARCHITECTURE.md", "docs/CONTINUATION_GATE.md",
-    "docs/GITHUB_SETTINGS_REQUIRED.md", "coordination/portfolio/**", "coordination/policy/**",
+    "docs/VILLAGE_CONSTITUTION.md", "docs/VILLAGE_ARCHITECTURE.md", "docs/VILLAGE_ARCHITECTURE_V1_1.md", "docs/CONTINUATION_GATE.md",
+    "docs/GITHUB_SETTINGS_REQUIRED.md", "docs/RESEARCH_PORTFOLIO.md", "docs/RESEARCH_BOARD.md",
+    "docs/DEPENDENCY_GRAPH.md", "docs/CAMPAIGN_HISTORY.md", "docs/RESEARCH_EVALUATIONS.md",
+    "coordination/portfolio/**", "coordination/policy/**", "coordination/evaluations/README.md",
     "coordination/campaigns/**/CAMPAIGN.yml", "coordination/tasks/**/TASK.yml",
     "schemas/**", ".github/workflows/**", ".github/CODEOWNERS",
+    "scripts/village.py", "scripts/village_core.py", "scripts/village_rank.py",
+    "scripts/check_village_pr.py", "scripts/test_village_acceptance.py", "scripts/test_village_v1_1.py",
+    "scripts/verify_public_layout.py",
 ]
 
 
@@ -266,6 +280,10 @@ def validate_lock_only(
         head_td.cleanup()
 
 
+def _merge_unique(base_patterns: list[str], head_patterns: list[str]) -> list[str]:
+    return list(dict.fromkeys([*base_patterns, *head_patterns]))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", required=True)
@@ -289,6 +307,18 @@ def main() -> int:
         if base_protected
         else BOOTSTRAP_GOVERNANCE_ONLY
     )
+
+    # Non-maintainers are always judged solely against base/main policy. A maintainer
+    # performing a versioned governance migration may add newly protected paths in
+    # the proposed head; for that actor only, use the union so new governance files
+    # can be introduced atomically without weakening non-maintainer admission.
+    if args.actor in maintainers:
+        head_protected = show_json(args.head, "coordination/policy/PROTECTED_PATHS.yml")
+        if head_protected:
+            protected = _merge_unique(protected, head_protected.get("protected_patterns", []))
+            governance_only = _merge_unique(
+                governance_only, head_protected.get("governance_only_patterns", [])
+            )
 
     bootstrap = show_json(args.base, "coordination/portfolio/PORTFOLIO.yml") is None
     errors: list[str] = []
