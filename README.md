@@ -33,6 +33,7 @@ For a full public-distribution check:
 ```bash
 python3 scripts/public_release_audit.py .
 python3 scripts/verify_public_layout.py .
+python3 scripts/build_public_manifest.py . --output /tmp/AIMath-public-manifest.json
 ```
 
 The same checks run automatically on pushes and pull requests through GitHub Actions.
@@ -41,10 +42,11 @@ The same checks run automatically on pushes and pull requests through GitHub Act
 
 1. Read [`docs/RESULTS.md`](docs/RESULTS.md) for the current public result index.
 2. **Before starting a new proof route, read [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md)** so that you do not repeat a known blocker or bounded no-go.
-3. Read [`docs/CLAIM_LEVELS.md`](docs/CLAIM_LEVELS.md) before interpreting a status label.
-4. Read [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) to reproduce a claim package.
-5. Use [`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to check, refute, extend, or contribute a result.
-6. Report a mathematical issue with the **Math review** issue template, and a failed replay with the **Reproduction failure** template.
+3. Read [`docs/EXPORT_GAPS.md`](docs/EXPORT_GAPS.md) to see which private-canonical results are only partially exported and therefore still need public proof/reproduction packages.
+4. Read [`docs/CLAIM_LEVELS.md`](docs/CLAIM_LEVELS.md) before interpreting a status label.
+5. Read [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) to reproduce a claim package.
+6. Use [`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to check, refute, extend, or contribute a result.
+7. Report a mathematical issue with the **Math review** issue template, and a failed replay with the **Reproduction failure** template.
 
 ## Public status model
 
@@ -62,14 +64,14 @@ The public index uses conservative wording by default.
 ## Repository layout
 
 ```text
-docs/        Results, failed routes, claim levels, reproducibility, safety and provenance
+docs/        Results, failed routes, export gaps, claim levels, reproducibility, safety and provenance
 research/    Public claim packages only
 reviews/     Independent public reviews and reproduction evidence
-scripts/     Public validation and safety checks
+scripts/     Public validation, manifest generation and safety checks
 templates/   Standard package skeleton for new claims
 ```
 
-The private workspace contains additional exploratory branches, coordination records, conversation recovery material, and other internal artifacts. Those are **not** copied here automatically. Privacy-safe summaries of important failed/blocked research routes are exported to `docs/FAILED_ROUTES.md` when they are useful for preventing duplicated work.
+The private workspace contains additional exploratory branches, coordination records, conversation recovery material, and other internal artifacts. Those are **not** copied here automatically. Privacy-safe summaries of important failed/blocked research routes are exported to `docs/FAILED_ROUTES.md` when they are useful for preventing duplicated work. Missing but useful public exports are tracked in `docs/EXPORT_GAPS.md` rather than silently assumed to exist.
 
 ## One-command safety check
 
@@ -79,6 +81,8 @@ python3 scripts/verify_public_layout.py .
 ```
 
 Both commands must pass before a public release.
+
+`PUBLIC_MANIFEST.json` is a metadata pointer rather than a live hash inventory. Generate a current worktree manifest with `scripts/build_public_manifest.py`; immutable tagged releases should preserve the manifest generated from the exact release checkout.
 
 ## Current public-export policy
 
