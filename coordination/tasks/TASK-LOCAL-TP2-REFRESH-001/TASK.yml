@@ -22,9 +22,9 @@
   "lease_ttl_hours": 168,
   "frontier_sensitive": false,
   "success_conditions": [
-    "claim candidate",
-    "counterexample",
-    "reusable structural reduction"
+    "route classified as matching a recorded failed route",
+    "materially new ingredient identified and filed as a portfolio proposal",
+    "no new mechanism found (NO_REUSABLE_PROGRESS)"
   ],
   "failure_conditions": [
     "exact bounded no-go for frozen route"
