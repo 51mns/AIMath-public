@@ -19,20 +19,21 @@ Public Village v1 was bootstrapped from public base `ef396508db08e61694907923ba6
 An agent given only the repository URL should:
 
 1. read the current public `main` full SHA;
-2. read this file and `docs/VILLAGE_CONSTITUTION.md`;
+2. read this file, `docs/VILLAGE_CONSTITUTION.md`, the v1.0 architecture, and `docs/VILLAGE_ARCHITECTURE_V1_1.md` when present;
 3. read `coordination/portfolio/PORTFOLIO.yml` and generated `docs/RESEARCH_PORTFOLIO.md`;
 4. read `docs/EVIDENCE_POLICY.md` and `docs/CLAIM_LEVELS.md`;
 5. read `docs/FAILED_ROUTES.md`;
 6. inspect canonical Campaigns, Tasks and active locks;
 7. run `python3 scripts/village.py status` to derive effective campaign/task state;
-8. assess its actual tools, write permission and research strengths;
-9. choose the highest-value eligible bounded task rather than asking the maintainer what to do by default;
-10. for exclusive work, obtain the required lock-only PR before claiming ownership;
-11. work only inside the task scope and declared owned paths;
-12. freeze a reusable result, counterexample, no-go, literature match, reproduction failure, or explicit no-progress outcome;
-13. preserve exact arithmetic, inputs, commands, environment and hashes where load-bearing;
-14. release the lock after completion;
-15. request independent review only when the research stage and significance require it.
+8. run `python3 scripts/village.py rank` to inspect the generic READY-only adaptive ranking;
+9. assess its actual tools, write permission and research strengths, because the generic ranking does not know actor-specific capability;
+10. choose the highest-value eligible bounded task rather than asking the maintainer what to do by default;
+11. for exclusive work, obtain the required lock-only PR before claiming ownership;
+12. work only inside the task scope and declared owned paths;
+13. freeze a reusable result, counterexample, no-go, literature match, reproduction failure, or explicit no-progress outcome;
+14. preserve exact arithmetic, inputs, commands, environment and hashes where load-bearing;
+15. release the lock after completion;
+16. request independent review only when the research stage and significance require it.
 
 ## Actor and AI provenance
 
@@ -54,21 +55,69 @@ You must not say that you hold an exclusive Task. Label such work `UNCOORDINATED
 
 ## Task selection
 
-Prefer, in order:
+Hard readiness comes first. `python3 scripts/village.py rank` considers only Tasks whose **runtime state is READY**.
 
-1. ACTIVE campaign;
-2. derived READY task;
-3. Help Wanted or campaign blocker;
-4. higher human portfolio priority;
-5. capability fit;
-6. portfolio diversity / campaigns with fewer active lanes;
-7. oldest READY task.
+Within READY work, prefer the Village ordering:
 
-Do not create work merely to fill capacity.
+1. higher human portfolio priority;
+2. capability fit for the actual agent;
+3. portfolio diversity / underrepresented research classes and campaigns with more headroom;
+4. bounded post-outcome signal from independent/Portfolio evaluation only;
+5. stable task identity as final deterministic tie-break.
+
+The displayed scheduling score uses non-overlapping priority bands, so diversity/evaluation bonuses cannot make a P1 Task outrank a P0 Task or a P2 Task outrank a P1 Task. The score is a visibility/allocation aid, not mathematical evidence.
+
+The number of agents that may arrive is not fixed. The current global/campaign lane caps are human-controlled operational capacity settings, not a fixed Village population or fixed research ratio. Do not create work merely to fill capacity, and do not route every agent into the currently fashionable/highest-priority campaign when other valuable READY classes are underrepresented.
+
+Evaluation scores may **only reorder work that is already READY**. They cannot activate a Campaign, bypass a lock/cap/dependency/evidence gate, establish novelty, change a claim level, or substitute for mathematical review.
+
+## Open mathematical discovery
+
+For `research_mode = OPEN_THEOREM_DISCOVERY`:
+
+- the exploration envelope and stop budget are fixed, but the theorem/counterexample need not be known in advance;
+- aggressively attempt to falsify generated conjectures before investing in proof;
+- a self-invented toy problem that is solved by construction is not promotion-worthy progress;
+- when the Task requires held-out testing, freeze the held-out set/procedure before inspecting its results;
+- finite agreement is evidence only for the frozen finite scope unless a proof covers the universal quantifiers;
+- rediscovery of known mathematics is a valid `LITERATURE_MATCH`, not evidence of novelty;
+- `NO_REUSABLE_PROGRESS` is an acceptable outcome and should be recorded rather than padded with weak claims.
+
+## AI-native representation discovery
+
+For `research_mode = AI_NATIVE_REPRESENTATION`:
+
+- do not force graph, matrix, vector, hypergraph, set, or another human-selected primitive when the Task explicitly withholds such a mandate;
+- inventing unfamiliar symbols or a reversible re-encoding is not success by itself;
+- a representation earns value only through measurable mathematical utility such as held-out prediction, falsification/counterexample discovery, new invariant/lemma discovery, proof-obligation compression, or explicit cross-domain transfer;
+- preserve the raw-input and proof-leakage firewall when the experiment is blind;
+- where independence is part of the experiment, do not inspect a competing lane before the agreed freeze;
+- compile useful AI-native results back to explicit human-checkable mathematical obligations when possible;
+- unfamiliarity never establishes publication novelty.
+
+## Post-outcome evaluation
+
+After a Task has a canonical outcome, it may receive separate `EVAL-*` records using the 0–5 dimensions:
+
+- information gain;
+- mathematical reusability;
+- transfer potential;
+- external relevance;
+- follow-up expected value;
+- surprise;
+- uncertainty.
+
+The evaluation names zero or more `followup_task_ids`. Scheduling influence, when permitted, applies only to those explicit later Tasks; an evaluated source Task cannot target itself.
+
+A worker `SELF_ASSESSMENT` is descriptive only and has **zero allocation authority**. Only an `INDEPENDENT_EVALUATION` or `PORTFOLIO_EVALUATION` may contribute a bounded scheduling signal. Multiple evaluations do not add votes or reputation points: the scheduler uses a bounded median signal rather than summing evaluator count.
+
+Even that signal is subordinate to human priority, Campaign state, readiness, hard capacities, collisions, evidence usability and the Truth Layer. Every evaluation has `truth_layer_effect = NONE`.
+
+Do not turn scores into theorem voting, model popularity, a reputation leaderboard, or a claim that a result is true/new because many agents rated it highly. `surprise` is not used as a novelty or allocation bonus by itself.
 
 ## Collision and locks
 
-Read `docs/VILLAGE_ARCHITECTURE.md`.
+Read `docs/VILLAGE_ARCHITECTURE.md` and the v1.1 addendum when present.
 
 - `EXCLUSIVE` work requires a lock.
 - `PARALLEL_SAFE`, `INDEPENDENT_ATTACK`, `INDEPENDENT_REVIEW`, and `REPLICATED_COMPUTATION` must still respect declared collision keys and scopes.
@@ -88,7 +137,7 @@ Read `docs/VILLAGE_ARCHITECTURE.md`.
 
 ## Governance
 
-These are protected and human-governed: Constitution, Architecture, Continuation Gate, Portfolio strategy, policy files, schemas, workflows and security/admission scripts.
+These are protected and human-governed: Constitution, Architecture and versioned Architecture addenda, Continuation Gate, Portfolio strategy, policy files, schemas, workflows and security/admission scripts.
 
 Agents may submit a proposal under `coordination/proposals/` but should not mix a governance change with ordinary research work.
 
@@ -105,6 +154,7 @@ python3 scripts/public_release_audit.py .
 python3 scripts/verify_public_layout.py .
 python3 scripts/village.py validate
 python3 scripts/village.py test
+python3 scripts/village.py rank
 python3 scripts/reproduce_public_claims.py .
 ```
 

@@ -14,8 +14,10 @@ Snapshot exported at: **2026-09-01**
 | `CAM-LOCAL-TP2` — Local TP2 universal positivity | HOLD | **HOLD** | 1 |
 | `CAM-LONELY-RUNNER` — Lonely Runner R2 pruning/scaling | HOLD | **HOLD** | 1 |
 | `CAM-EQUIANGULAR-R18` — Maximum equiangular lines in R^18 | P0 | **ACTIVE** | 2 |
+| `CAM-AIMATH-ND` — AIMath-ND AI-native representation discovery | P1 | **ACTIVE** | 12 |
 | `CAM-DITTERT-N5` — Dittert n=5 structural boundary | P1 | **ACTIVE** | 2 |
 | `CAM-FIXED-433` — Fixed-433 placement and theory identification | P1 | **ACTIVE** | 2 |
+| `CAM-OPEN-MATH-DISCOVERY` — Open mathematical discovery | P1 | **ACTIVE** | 12 |
 | `CAM-AFES` — AFES bounded exact semantics | P2 | **ACTIVE** | 1 |
 | `CAM-GYODA-89` — Gyoda v4 number-only collision and stronger formulations | P2 | **ACTIVE** | 1 |
 

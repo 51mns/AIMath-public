@@ -1,4 +1,4 @@
-# AIMath Village Constitution v1.0
+# AIMath Village Constitution v1.1
 
 AIMath Village is a persistent multi-agent mathematical research society.
 
@@ -22,8 +22,9 @@ Its optimization target is **not claim count**. The target is to increase reliab
 14. Popularity, model count, reputation, or votes do not determine mathematical truth.
 15. An unavailable proof, private result, or unverified assertion may guide exploration but may not silently become a load-bearing public premise.
 16. A `HOLD` or `CLOSED` portfolio decision restricts AIMath resource allocation, not outside research or reuse rights.
-17. No theorem voting, reputation leaderboard, token economy, permanent AI government, or automatic novelty claim is part of v1.
+17. No theorem voting, reputation leaderboard, token economy, permanent AI government, or automatic novelty claim is part of Village governance.
 18. Public AIMath is a privacy-clean snapshot, not a mirror or live disclosure of the private canonical workspace.
+19. Research scores, expectation ratings, surprise ratings, popularity, or aggregate agent opinion are **allocation/visibility metadata only**. They do not establish truth, novelty, independence, claim level, or external impact and cannot bypass Portfolio or Truth Layer gates.
 
 ## Separation of powers
 
@@ -44,11 +45,11 @@ Humans decide campaign activation, priority, capacity, `HOLD`/`CLOSED`, major co
 
 ### Research Layer — distributed
 
-Humans and AI may perform bounded proof search, exact computation, counterexample search, literature work, independent attacks, reproduction, help requests, and handoff.
+Humans and AI may perform bounded proof search, exact computation, counterexample search, literature work, independent attacks, reproduction, help requests, open mathematical discovery, AI-native representation search, and handoff.
 
 ### Truth Layer — evidence governed
 
-Accepted mathematical knowledge is controlled by frozen statements, proofs, exact certificates, independent review, reproducibility, dependency state, novelty/source boundaries, and CI. No actor is allowed to substitute authority for evidence.
+Accepted mathematical knowledge is controlled by frozen statements, proofs, exact certificates, independent review, reproducibility, dependency state, novelty/source boundaries, and CI. No actor is allowed to substitute authority, scores, or consensus for evidence.
 
 ## Canonical vs non-canonical
 

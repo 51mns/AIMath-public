@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-OPEN-MATH-DISCOVERY-002",
+  "campaign_id": "CAM-OPEN-MATH-DISCOVERY",
+  "title": "Cross-domain structural transfer search",
+  "task_kind": "RESEARCH",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "research_mode": "OPEN_THEOREM_DISCOVERY",
+  "objective": "Search for an explicit structural correspondence between at least two natural mathematical domains. Freeze a result only when states, operations, and invariants are mapped concretely and the correspondence produces held-out prediction, falsification, proof simplification, or another reusable mathematical gain.",
+  "assumptions": [],
+  "route_id": "ROUTE-OPEN-MATH-DISCOVERY-002",
+  "collision_keys": [
+    "discovery/open-math/transfer"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "PARALLEL_SAFE",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "held_out_required": true,
+  "toy_problem_gate": true,
+  "transfer_test_required": true,
+  "post_outcome_evaluation": "REQUIRED",
+  "success_conditions": [
+    "explicit cross-domain structural correspondence with held-out utility",
+    "reusable transferred invariant or lemma",
+    "counterexample or no-go showing a plausible transfer fails for a precise reason"
+  ],
+  "failure_conditions": [
+    "no correspondence survives the bounded held-out transfer tests"
+  ],
+  "stop_conditions": [
+    "candidate correspondences reduce to vague analogy without explicit mappings",
+    "only terminology matching remains",
+    "only larger brute force remains"
+  ],
+  "owned_paths": [
+    "work/TASK-OPEN-MATH-DISCOVERY-002/**"
+  ],
+  "expected_artifacts": [
+    "explicit state-operation-invariant mapping",
+    "held-out test record",
+    "outcome record with self-assessment"
+  ],
+  "created_at": "2026-09-01"
+}

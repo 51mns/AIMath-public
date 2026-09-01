@@ -26,5 +26,26 @@
     "lease_ttl_min_hours": 24,
     "lease_ttl_max_hours": 336,
     "self_renewal_limit": 1
+  },
+  "allocation_policy": {
+    "mode": "ADAPTIVE_DIVERSITY",
+    "class_weights": {
+      "EXTERNAL_OPEN_PROBLEM": 5,
+      "DERIVED_GENERAL_MATH": 3,
+      "OPEN_MATH_DISCOVERY": 3,
+      "AI_NATIVE_MATH": 3,
+      "QUALITY_KNOWLEDGE": 2,
+      "PLATFORM": 1
+    },
+    "soft_class_caps_pct": {
+      "EXTERNAL_OPEN_PROBLEM": 60,
+      "DERIVED_GENERAL_MATH": 40,
+      "OPEN_MATH_DISCOVERY": 40,
+      "AI_NATIVE_MATH": 40,
+      "QUALITY_KNOWLEDGE": 30,
+      "PLATFORM": 20
+    },
+    "evaluation_bonus_cap": 12,
+    "rule": "Evaluation scores may reorder already-READY work only; they never override strategic state, hard capacity, locks, dependencies, evidence usability, or Truth Layer promotion. Participant count is not fixed and no work is created merely to fill capacity."
   }
 }

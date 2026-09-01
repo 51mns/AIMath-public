@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResearchEvaluation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "evaluation_id",
+    "task_id",
+    "evaluation_role",
+    "evaluator",
+    "scores",
+    "confidence",
+    "recommendation",
+    "followup_task_ids",
+    "rationale",
+    "truth_layer_effect"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "evaluation_id": {
+      "type": "string",
+      "pattern": "^EVAL-[A-Z0-9-]+$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^TASK-[A-Z0-9-]+$"
+    },
+    "evaluation_role": {
+      "enum": [
+        "SELF_ASSESSMENT",
+        "INDEPENDENT_EVALUATION",
+        "PORTFOLIO_EVALUATION"
+      ]
+    },
+    "evaluator": {
+      "type": "object",
+      "required": ["actor_id"],
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "pattern": "^gh:[A-Za-z0-9_.-]+$"
+        },
+        "ai_assistance": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "scores": {
+      "type": "object",
+      "required": [
+        "information_gain",
+        "mathematical_reusability",
+        "transfer_potential",
+        "external_relevance",
+        "followup_expected_value",
+        "surprise",
+        "uncertainty"
+      ],
+      "properties": {
+        "information_gain": {"type": "integer", "minimum": 0, "maximum": 5},
+        "mathematical_reusability": {"type": "integer", "minimum": 0, "maximum": 5},
+        "transfer_potential": {"type": "integer", "minimum": 0, "maximum": 5},
+        "external_relevance": {"type": "integer", "minimum": 0, "maximum": 5},
+        "followup_expected_value": {"type": "integer", "minimum": 0, "maximum": 5},
+        "surprise": {"type": "integer", "minimum": 0, "maximum": 5},
+        "uncertainty": {"type": "integer", "minimum": 0, "maximum": 5}
+      },
+      "additionalProperties": false
+    },
+    "confidence": {
+      "enum": ["LOW", "MEDIUM", "HIGH"]
+    },
+    "recommendation": {
+      "enum": ["CONTINUE", "PIVOT", "HOLD", "CLOSE", "REVIEW", "NO_OPINION"]
+    },
+    "followup_task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^TASK-[A-Z0-9-]+$"
+      }
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "truth_layer_effect": {
+      "const": "NONE"
+    },
+    "created_at": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-AIMATH-ND",
+  "title": "AIMath-ND AI-native representation discovery",
+  "kind": "FOUNDATIONAL_RESEARCH",
+  "research_class": "AI_NATIVE_MATH",
+  "strategic_state": "ACTIVE",
+  "priority": "P1",
+  "max_active_lanes": 12,
+  "problem": {
+    "frozen_statement": "Test whether AI-invented mathematical representation languages and primitives can produce measurable discovery, prediction, falsification, proof-compression, or transfer utility without mandating a human-selected primitive vocabulary."
+  },
+  "continuation_conditions": [
+    "held-out predictive or falsification gain",
+    "new reusable lemma or invariant enabled by the representation",
+    "meaningful proof-obligation compression",
+    "cross-domain transfer with explicit state, operation, and invariant correspondences"
+  ],
+  "do_not_continue_for": [
+    "mere renaming or reversible re-encoding with no mathematical utility",
+    "opaque encoding that cannot support prediction, proof, falsification, or transfer",
+    "accepted-proof leakage into a nominally blind experiment",
+    "in-sample fit without held-out performance"
+  ],
+  "reopen_conditions": [],
+  "discovery_policy": {
+    "human_primitive_mandate": false,
+    "held_out_required": true,
+    "transfer_or_utility_required": true,
+    "novelty_requires_literature_audit": true,
+    "baseline_must_be_frozen_before_run": true
+  },
+  "assets": [],
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473",
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT"
+  }
+}

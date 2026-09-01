@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-OPEN-MATH-DISCOVERY",
+  "title": "Open mathematical discovery",
+  "kind": "FOUNDATIONAL_RESEARCH",
+  "research_class": "OPEN_MATH_DISCOVERY",
+  "strategic_state": "ACTIVE",
+  "priority": "P1",
+  "max_active_lanes": 12,
+  "problem": {
+    "frozen_statement": "Run bounded open-ended searches over natural mathematical objects for nontrivial reusable theorem candidates, counterexamples, structural reductions, or useful known-theory rediscoveries without requiring a preselected external theorem target."
+  },
+  "continuation_conditions": [
+    "nontrivial reusable theorem or counterexample candidate",
+    "structural reduction with credible reuse",
+    "held-out predictive or transfer utility",
+    "useful rediscovery that connects AIMath to stronger known theory"
+  ],
+  "do_not_continue_for": [
+    "self-invented toy problems solved by construction",
+    "new terminology or notation without predictive, falsification, proof, or transfer value",
+    "larger brute-force search without a new mechanism"
+  ],
+  "reopen_conditions": [],
+  "discovery_policy": {
+    "toy_problem_gate": true,
+    "held_out_default": true,
+    "novelty_requires_literature_audit": true,
+    "no_progress_is_valid_outcome": true
+  },
+  "assets": [],
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473",
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT"
+  }
+}
