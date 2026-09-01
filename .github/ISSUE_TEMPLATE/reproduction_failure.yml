@@ -1,0 +1,35 @@
+name: Reproduction failure
+description: Report a deterministic replay or verification failure
+title: "[Reproduction] "
+labels: []
+body:
+  - type: input
+    id: claim
+    attributes:
+      label: Claim ID or package
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Ubuntu 24.04, Python 3.12.4"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Relevant output / error
+    validations:
+      required: true
+  - type: textarea
+    id: hashes
+    attributes:
+      label: Hash check
+      description: Say whether committed SHA-256 values still match.
