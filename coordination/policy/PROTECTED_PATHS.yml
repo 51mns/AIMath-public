@@ -20,6 +20,7 @@
     "scripts/public_release_audit.py",
     "scripts/village.py",
     "scripts/village_core.py",
+    "scripts/village_rank.py",
     "scripts/check_dco.py",
     "scripts/check_village_pr.py",
     "CONTRIBUTING.md",
@@ -31,6 +32,7 @@
     "coordination/campaigns/**/CAMPAIGN.yml",
     "coordination/tasks/**/TASK.yml",
     "scripts/test_village_acceptance.py",
+    "scripts/test_village_v1_1.py",
     "scripts/verify_public_layout.py",
     "research/**/CLAIM.yml"
   ],
@@ -57,6 +59,13 @@
     "docs/GITHUB_SETTINGS_REQUIRED.md",
     "coordination/campaigns/**/CAMPAIGN.yml",
     "coordination/tasks/**/TASK.yml",
+    "scripts/village.py",
+    "scripts/village_core.py",
+    "scripts/village_rank.py",
+    "scripts/check_village_pr.py",
+    "scripts/test_village_acceptance.py",
+    "scripts/test_village_v1_1.py",
+    "scripts/verify_public_layout.py",
     ".github/CODEOWNERS"
   ]
 }
