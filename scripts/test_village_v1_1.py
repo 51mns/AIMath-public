@@ -11,7 +11,12 @@ import tempfile
 import unittest
 
 from test_village_acceptance import NOW, add_lock, base_state
-from village_rank import EvaluationBook, rank_ready_tasks, research_class_for_task
+from village_rank import (
+    EvaluationBook,
+    discovery_policy_errors,
+    rank_ready_tasks,
+    research_class_for_task,
+)
 
 
 def allocation_policy():
@@ -48,15 +53,30 @@ def rank_state():
         }
     )
     s.tasks["TASK-X-1"].update({"created_at": "2026-09-01"})
+    s.tasks["TASK-SOURCE"] = {
+        **s.tasks["TASK-X-1"],
+        "task_id": "TASK-SOURCE",
+        "collision_keys": ["source"],
+        "owned_paths": ["work/source/**"],
+    }
+    s.outcomes["TASK-SOURCE"] = {
+        "schema_version": 1,
+        "task_id": "TASK-SOURCE",
+        "outcome_type": "STRUCTURAL_REDUCTION",
+        "summary": "completed source task",
+        "artifacts": [],
+        "review_required": False,
+    }
     return s
 
 
 def evaluation(
     eid,
-    tid="TASK-X-1",
+    tid="TASK-SOURCE",
     role="INDEPENDENT_EVALUATION",
     actor="gh:evaluator",
     *,
+    targets=("TASK-X-1",),
     followup=5,
     surprise=5,
     uncertainty=0,
@@ -80,16 +100,21 @@ def evaluation(
         },
         "confidence": confidence,
         "recommendation": recommendation,
+        "followup_task_ids": list(targets),
         "rationale": "bounded test evaluation",
         "truth_layer_effect": "NONE",
     }
 
 
 class VillageV11Acceptance(unittest.TestCase):
-    def test_AA_rank_contains_READY_only(self):
+    def test_AA_rank_contains_runtime_READY_only(self):
         s = rank_state()
         book = EvaluationBook(".", s)
         self.assertEqual([r.task_id for r in rank_ready_tasks(s, book)], ["TASK-X-1"])
+        # readiness() alone would still be mechanically satisfiable for TASK-SOURCE,
+        # but runtime_state is DONE because it has an outcome; it must never rank.
+        self.assertEqual(s.runtime_state("TASK-SOURCE"), "DONE")
+        self.assertNotIn("TASK-SOURCE", [r.task_id for r in rank_ready_tasks(s, book)])
         s.campaigns["CAM-X"]["strategic_state"] = "HOLD"
         s.campaigns["CAM-X"]["priority"] = "HOLD"
         book.records = [evaluation("EVAL-HIGH")]
@@ -131,7 +156,7 @@ class VillageV11Acceptance(unittest.TestCase):
             "owned_paths": ["work/p0/**"],
         }
         book = EvaluationBook(".", s)
-        book.records = [evaluation("EVAL-P1", tid="TASK-X-1")]
+        book.records = [evaluation("EVAL-P1")]
         rows = rank_ready_tasks(s, book)
         self.assertEqual(rows[0].task_id, "TASK-P0")
         self.assertGreater(rows[0].score, rows[1].score)
@@ -216,6 +241,62 @@ class VillageV11Acceptance(unittest.TestCase):
         b2 = EvaluationBook(".", s2)
         b2.records = copy.deepcopy(b1.records)
         self.assertEqual(b1.render(), b2.render())
+
+    def test_AK_evaluation_requires_canonical_source_outcome(self):
+        s = rank_state()
+        repo_root = Path(__file__).resolve().parent.parent
+        schema_text = (repo_root / "schemas/evaluation.schema.json").read_text(encoding="utf-8")
+        del s.outcomes["TASK-SOURCE"]
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "schemas").mkdir()
+            (root / "schemas/evaluation.schema.json").write_text(schema_text, encoding="utf-8")
+            d = root / "coordination/evaluations"
+            d.mkdir(parents=True)
+            (d / "a.yml").write_text(json.dumps(evaluation("EVAL-A")), encoding="utf-8")
+            book = EvaluationBook(root, s).load()
+            self.assertTrue(any("no canonical outcome" in e for e in book.errors))
+
+    def test_AL_evaluation_affects_only_explicit_followup_target(self):
+        s = rank_state()
+        s.tasks["TASK-X-2"] = {
+            **s.tasks["TASK-X-1"],
+            "task_id": "TASK-X-2",
+            "collision_keys": ["x/2"],
+            "owned_paths": ["work/x2/**"],
+        }
+        book = EvaluationBook(".", s)
+        book.records = [evaluation("EVAL-A", targets=("TASK-X-1",))]
+        rows = {r.task_id: r for r in rank_ready_tasks(s, book)}
+        self.assertEqual(rows["TASK-X-1"].evaluation_bonus, 12)
+        self.assertEqual(rows["TASK-X-2"].evaluation_bonus, 0)
+
+    def test_AM_ai_native_guardrails_are_executable(self):
+        s = rank_state()
+        s.campaigns["CAM-ND"] = {
+            "campaign_id": "CAM-ND",
+            "strategic_state": "ACTIVE",
+            "max_active_lanes": 2,
+            "assets": [],
+            "priority": "P1",
+            "kind": "FOUNDATIONAL_RESEARCH",
+            "research_class": "AI_NATIVE_MATH",
+        }
+        s.tasks["TASK-ND"] = {
+            **s.tasks["TASK-X-1"],
+            "task_id": "TASK-ND",
+            "campaign_id": "CAM-ND",
+            "collision_keys": ["nd"],
+            "owned_paths": ["work/nd/**"],
+            "research_mode": "AI_NATIVE_REPRESENTATION",
+            "held_out_required": True,
+            "toy_problem_gate": True,
+            "transfer_test_required": False,
+            "post_outcome_evaluation": "REQUIRED",
+            "success_conditions": ["utility"],
+            "stop_conditions": ["bounded stop"],
+        }
+        self.assertTrue(any("transfer_test_required=true" in e for e in discovery_policy_errors(s)))
 
 
 if __name__ == "__main__":
