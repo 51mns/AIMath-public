@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposal",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "proposal_id",
+    "proposal_type",
+    "actor_id",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "proposal_id": {
+      "type": "string",
+      "pattern": "^PROP-(CAM|TASK|PORT)-[A-Z0-9-]+$"
+    },
+    "proposal_type": {
+      "enum": [
+        "NEW_CAMPAIGN",
+        "NEW_TASK",
+        "REOPEN_CAMPAIGN",
+        "PORTFOLIO_CHANGE"
+      ]
+    },
+    "actor_id": {
+      "type": "string",
+      "pattern": "^gh:[A-Za-z0-9_.-]+$"
+    },
+    "status": {
+      "enum": [
+        "OPEN",
+        "ACCEPTED",
+        "REJECTED",
+        "WITHDRAWN"
+      ]
+    },
+    "new_ingredient": {
+      "type": "string"
+    },
+    "kill_conditions": {
+      "type": "array"
+    },
+    "evidence": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": true
+}

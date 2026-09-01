@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "portfolio_id": "AIMATH-PUBLIC-V1",
+  "global_admission": "OPEN",
+  "global_active_lane_cap": 12,
+  "priorities": [
+    "P0",
+    "P1",
+    "P2",
+    "HOLD"
+  ],
+  "source_snapshot": {
+    "private_canonical_main": {
+      "sha": "c8e61e0e398f540bc8c5de79663398d689f37473"
+    },
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT",
+    "note": "Public portfolio is not private AIMath real-time state."
+  },
+  "governance": {
+    "strategy_authority": "HUMAN_MAINTAINER",
+    "default_actor_exclusive_lock_cap": 1,
+    "default_campaign_proposal_cap_per_actor": 1,
+    "default_task_proposal_cap_per_actor": 3,
+    "default_lease_ttl_hours": 168,
+    "lease_ttl_min_hours": 24,
+    "lease_ttl_max_hours": 336,
+    "self_renewal_limit": 1
+  }
+}

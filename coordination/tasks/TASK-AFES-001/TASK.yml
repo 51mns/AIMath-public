@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-AFES-001",
+  "campaign_id": "CAM-AFES",
+  "title": "Strict bool/int scalar boundary repair",
+  "task_kind": "RESEARCH",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "objective": "Repair exact integer-vs-boolean validation at rational-valued entry points, add boolean negative controls, and freeze the narrow repair for independent review.",
+  "assumptions": [
+    {
+      "claim_id": "C-AFES-BOUNDED-SEMANTICS",
+      "required_scope": "accepted bounded semantics only"
+    }
+  ],
+  "route_id": "ROUTE-AFES-001",
+  "collision_keys": [
+    "afes/strict-scalar-canonicality"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "EXCLUSIVE",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "success_conditions": [
+    "strict scalar repair with negative controls",
+    "counterexample showing wider strict claim still false"
+  ],
+  "failure_conditions": [
+    "exact bounded no-go for frozen route"
+  ],
+  "stop_conditions": [
+    "no new mechanism after the frozen bounded budget"
+  ],
+  "owned_paths": [
+    "work/TASK-AFES-001/**"
+  ],
+  "expected_artifacts": [
+    "proof/research notes",
+    "exact verifier when load-bearing",
+    "outcome record"
+  ],
+  "created_at": "2026-09-01"
+}

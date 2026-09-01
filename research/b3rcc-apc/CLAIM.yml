@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "claim_id": "C-APC-RANK-R-VERTEX-DIMENSION-BOUND",
+  "mathematical_level": "INDEPENDENTLY_REPRODUCED",
+  "validity_state": "CURRENT",
+  "public_evidence": "FULL",
+  "dependency_use": "ALLOWED",
+  "statement_path": null,
+  "depends_on": [],
+  "verification_modes": [
+    "INDEPENDENT_DERIVATION",
+    "FINITE_EXACT_REPLAY"
+  ],
+  "novelty": "NOT_ESTABLISHED",
+  "external_frontier_impact": "STRUCTURAL_PROGRESS",
+  "supersedes": [],
+  "superseded_by": null,
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473"
+  }
+}

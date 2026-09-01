@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "route_id": "FR-FIXED-433-GROWTH",
+  "campaign_id": "CAM-FIXED-433",
+  "status": "REFUTED",
+  "scope": "blanket internal route g(m) -> infinity",
+  "decisive_obstruction": "fixed-433 infinite subsequence with noncanonical root energy at most 4",
+  "remaining_open_scope": "other root-energy theorems compatible with fixed-433",
+  "reopen_if": [
+    "different statement compatible with the fixed-433 family"
+  ],
+  "public_source": "docs/FAILED_ROUTES.md"
+}

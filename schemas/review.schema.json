@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Review",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "claim_id",
+    "reviewer_actor",
+    "writer_material_seen_before_freeze",
+    "implementation_independent",
+    "method_independent",
+    "independence_grade",
+    "decision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "claim_id": {
+      "type": "string",
+      "pattern": "^C-[A-Z0-9-]+$"
+    },
+    "reviewer_actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "writer_material_seen_before_freeze": {
+      "type": "object"
+    },
+    "implementation_independent": {
+      "type": "boolean"
+    },
+    "method_independent": {
+      "type": "boolean"
+    },
+    "derivation_frozen_before_comparison": {
+      "type": "boolean"
+    },
+    "adversarial_controls": {
+      "type": "boolean"
+    },
+    "independence_grade": {
+      "enum": [
+        "I0",
+        "I1",
+        "I2",
+        "I3"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "PASS_WITH_QUALIFICATIONS",
+        "INCONCLUSIVE"
+      ]
+    },
+    "checked": {
+      "type": "array"
+    },
+    "not_checked": {
+      "type": "array"
+    },
+    "source": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

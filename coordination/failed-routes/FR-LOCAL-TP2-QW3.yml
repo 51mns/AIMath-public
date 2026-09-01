@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "route_id": "FR-LOCAL-TP2-QW3",
+  "campaign_id": "CAM-LOCAL-TP2",
+  "status": "BLOCKED",
+  "scope": "QW3 individual-sign propagation for the frozen adjacent determinant candidate",
+  "decisive_obstruction": "fixed-stencil identity accepted but all-depth sign not proved",
+  "remaining_open_scope": "materially different theorem-native architectures",
+  "reopen_if": [
+    "new theorem-native sign/recurrence mechanism",
+    "external theorem implying frozen determinant"
+  ],
+  "public_source": "docs/FAILED_ROUTES.md"
+}

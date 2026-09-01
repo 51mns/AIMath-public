@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "campaign_id",
+    "title",
+    "task_kind",
+    "stored_state",
+    "research_stage",
+    "objective",
+    "collision_keys",
+    "parallelism",
+    "lease_ttl_hours",
+    "frontier_sensitive"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^TASK-[A-Z0-9-]+$"
+    },
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^CAM-[A-Z0-9-]+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_kind": {
+      "enum": [
+        "RESEARCH",
+        "INDEPENDENT_REVIEW",
+        "REPRODUCTION",
+        "FRONTIER_REFRESH",
+        "LITERATURE_AUDIT",
+        "DEPENDENCY_TRIAGE"
+      ]
+    },
+    "stored_state": {
+      "enum": [
+        "PROPOSED",
+        "APPROVED",
+        "RETIRED"
+      ]
+    },
+    "research_stage": {
+      "enum": [
+        "E0",
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assumptions": {
+      "type": "array"
+    },
+    "route_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "collision_keys": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "explicit_conflicts_with": {
+      "type": "array"
+    },
+    "parallelism": {
+      "enum": [
+        "EXCLUSIVE",
+        "PARALLEL_SAFE",
+        "INDEPENDENT_ATTACK",
+        "INDEPENDENT_REVIEW",
+        "REPLICATED_COMPUTATION"
+      ]
+    },
+    "lease_ttl_hours": {
+      "type": "integer",
+      "minimum": 24,
+      "maximum": 336
+    },
+    "frontier_sensitive": {
+      "type": "boolean"
+    },
+    "success_conditions": {
+      "type": "array"
+    },
+    "failure_conditions": {
+      "type": "array"
+    },
+    "stop_conditions": {
+      "type": "array"
+    },
+    "owned_paths": {
+      "type": "array"
+    },
+    "expected_artifacts": {
+      "type": "array"
+    },
+    "created_at": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "actor_id_format": "gh:<github-login>",
+  "responsible_principal": "GitHub actor submitting/signing the contribution",
+  "dco_required": true,
+  "ai_is_dco_actor": false,
+  "github_noreply_recommended": true,
+  "exclusive_writer_lock_cap_default": 1,
+  "sybil_claim": "NOT_SOLVED",
+  "final_resource_control": "human portfolio capacity and maintainer governance"
+}

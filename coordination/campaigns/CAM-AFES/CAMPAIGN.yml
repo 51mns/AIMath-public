@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-AFES",
+  "title": "AFES bounded exact semantics",
+  "kind": "PUBLIC_RESEARCH_THEME",
+  "strategic_state": "ACTIVE",
+  "priority": "P2",
+  "max_active_lanes": 1,
+  "problem": {
+    "frozen_statement": "AFES bounded exact semantics",
+    "public_basis": "docs/CONTRIBUTION_TARGETS.md"
+  },
+  "continuation_conditions": [
+    "narrow bool/int strict canonicality repair"
+  ],
+  "do_not_continue_for": [
+    "broad total equality or field-closure claims"
+  ],
+  "reopen_conditions": [],
+  "assets": [
+    {
+      "claim_id": "C-AFES-BOUNDED-SEMANTICS",
+      "public_evidence": "FULL",
+      "dependency_use": "ALLOWED",
+      "load_bearing": true
+    }
+  ],
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473",
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Campaign",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "title",
+    "kind",
+    "strategic_state",
+    "priority",
+    "max_active_lanes",
+    "assets",
+    "source_snapshot"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^CAM-[A-Z0-9-]+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "EXTERNAL_OPEN_PROBLEM",
+        "PUBLIC_RESEARCH_THEME",
+        "FOUNDATIONAL_RESEARCH",
+        "SOFTWARE_RESEARCH"
+      ]
+    },
+    "strategic_state": {
+      "enum": [
+        "PROPOSED",
+        "ACTIVE",
+        "HOLD",
+        "CLOSED"
+      ]
+    },
+    "priority": {
+      "enum": [
+        "P0",
+        "P1",
+        "P2",
+        "HOLD"
+      ]
+    },
+    "max_active_lanes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "problem": {
+      "type": "object"
+    },
+    "continuation_conditions": {
+      "type": "array"
+    },
+    "do_not_continue_for": {
+      "type": "array"
+    },
+    "reopen_conditions": {
+      "type": "array"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "source_snapshot": {
+      "type": "object"
+    },
+    "frontier": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

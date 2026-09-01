@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-FIXED-433-001",
+  "campaign_id": "CAM-FIXED-433",
+  "title": "Primary-source placement of fixed affine identification",
+  "task_kind": "LITERATURE_AUDIT",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "objective": "Determine from primary sources whether the exact fixed affine transformation or representative identity is explicit in prior literature.",
+  "assumptions": [
+    {
+      "claim_id": "C-433-EXISTING-THEORY-IDENTIFICATION",
+      "required_scope": "exact public fixed transformation"
+    }
+  ],
+  "route_id": "ROUTE-FIXED-433-001",
+  "collision_keys": [
+    "fixed-433/literature-placement"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "PARALLEL_SAFE",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "success_conditions": [
+    "source-backed exact match",
+    "source-backed stronger theorem",
+    "documented bounded unresolved comparison"
+  ],
+  "failure_conditions": [
+    "exact bounded no-go for frozen route"
+  ],
+  "stop_conditions": [
+    "no new mechanism after the frozen bounded budget"
+  ],
+  "owned_paths": [
+    "work/TASK-FIXED-433-001/**"
+  ],
+  "expected_artifacts": [
+    "proof/research notes",
+    "exact verifier when load-bearing",
+    "outcome record"
+  ],
+  "created_at": "2026-09-01"
+}

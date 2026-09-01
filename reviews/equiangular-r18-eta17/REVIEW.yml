@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "claim_id": "C-EQUIANGULAR-R18-ETA17-SINGLETON-EXCLUSION",
+  "reviewer_actor": "public-independent-review-record",
+  "writer_material_seen_before_freeze": {
+    "statement": true,
+    "proof": false,
+    "code": false,
+    "generated_outputs": false
+  },
+  "implementation_independent": true,
+  "method_independent": true,
+  "derivation_frozen_before_comparison": true,
+  "adversarial_controls": true,
+  "independence_grade": "I3",
+  "decision": "PASS",
+  "checked": [
+    "spectrum reduction",
+    "principal-deletion quartic form",
+    "64 endpoint candidates",
+    "type-2 filter",
+    "deck derivative contradiction"
+  ],
+  "not_checked": [
+    "publication novelty",
+    "full N(18) problem"
+  ],
+  "source": "INDEPENDENT_REVIEW.md"
+}

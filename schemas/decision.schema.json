@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CampaignDecision",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "decision_id",
+    "decided_at",
+    "decision",
+    "authority",
+    "reason"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^CAM-[A-Z0-9-]+$"
+    },
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decided_at": {
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "PROPOSED",
+        "ACTIVE",
+        "HOLD",
+        "CLOSED",
+        "CONTINUE",
+        "PIVOT"
+      ]
+    },
+    "authority": {
+      "const": "HUMAN_MAINTAINER"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "supersedes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

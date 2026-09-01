@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-LOCAL-TP2",
+  "title": "Local TP2 universal positivity",
+  "kind": "PUBLIC_RESEARCH_THEME",
+  "strategic_state": "HOLD",
+  "priority": "HOLD",
+  "max_active_lanes": 1,
+  "problem": {
+    "frozen_statement": "Local TP2 universal positivity",
+    "public_basis": "docs/CONTRIBUTION_TARGETS.md"
+  },
+  "continuation_conditions": [],
+  "do_not_continue_for": [
+    "larger denominator/depth only",
+    "higher-degree variants of closed far-minor ansatz"
+  ],
+  "reopen_conditions": [
+    "materially new theorem-native mechanism",
+    "external theorem directly implying frozen statement",
+    "valid counterexample"
+  ],
+  "assets": [
+    {
+      "claim_id": "C-LOCAL-TP2",
+      "public_evidence": "PARTIAL",
+      "dependency_use": "SCOPED",
+      "load_bearing": false
+    }
+  ],
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473",
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT"
+  }
+}

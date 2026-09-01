@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lock",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "lock_id",
+    "task_id",
+    "actor",
+    "base_main_sha",
+    "acquired_at",
+    "expires_at",
+    "work_ref",
+    "collision_keys",
+    "renewal_count"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "lock_id": {
+      "type": "string",
+      "pattern": "^LOCK-[A-Z0-9-]+$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^TASK-[A-Z0-9-]+$"
+    },
+    "actor": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^gh:[A-Za-z0-9_.-]+$"
+        },
+        "type": {
+          "enum": [
+            "HUMAN_PRINCIPAL",
+            "ORGANIZATION_PRINCIPAL"
+          ]
+        },
+        "ai_assistance": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "base_main_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "acquired_at": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "string"
+    },
+    "work_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "collision_keys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "renewal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "progress_artifact": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": true
+}

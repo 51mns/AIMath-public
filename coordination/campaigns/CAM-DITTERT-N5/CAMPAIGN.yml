@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-DITTERT-N5",
+  "title": "Dittert n=5 structural boundary",
+  "kind": "PUBLIC_RESEARCH_THEME",
+  "strategic_state": "ACTIVE",
+  "priority": "P1",
+  "max_active_lanes": 2,
+  "problem": {
+    "frozen_statement": "Dittert n=5 structural boundary",
+    "public_basis": "docs/CONTRIBUTION_TARGETS.md"
+  },
+  "continuation_conditions": [
+    "broader zero-pattern theorem",
+    "source-backed multi-class reduction"
+  ],
+  "do_not_continue_for": [
+    "infer other support classes from the Z2 theorem"
+  ],
+  "reopen_conditions": [],
+  "assets": [
+    {
+      "claim_id": "C-DITTERT-N5-Z2-MATCHING-EXCLUSION",
+      "public_evidence": "SUBSTANTIAL",
+      "dependency_use": "ALLOWED",
+      "load_bearing": true
+    }
+  ],
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473",
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT"
+  }
+}

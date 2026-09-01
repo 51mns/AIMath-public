@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 AIMath contributors
+# SPDX-License-Identifier: Apache-2.0
 name: Verify public release
 
 on:
@@ -12,14 +14,39 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
+
+      - name: PR policy and change class
+        id: pr_policy
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_ACTOR: ${{ github.actor }}
+        run: |
+          python3 scripts/check_village_pr.py \
+            --base "$BASE_SHA" \
+            --head "$HEAD_SHA" \
+            --actor "$PR_ACTOR" \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: DCO 1.1 sign-off
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/check_dco.py "$BASE_SHA" "$HEAD_SHA"
 
       - name: Public safety audit
         run: python3 scripts/public_release_audit.py .
@@ -27,10 +54,28 @@ jobs:
       - name: Verify public layout
         run: python3 scripts/verify_public_layout.py .
 
+      - name: Validate Village state
+        run: python3 scripts/village.py validate
+
+      - name: Village synthetic acceptance tests
+        run: python3 scripts/village.py test
+
+      - name: Install pinned REUSE tool
+        run: python3 -m pip install --disable-pip-version-check 'reuse==6.2.0'
+
+      - name: REUSE/SPDX compliance
+        run: reuse lint
+
       - name: Generate live SHA-256 manifest
         run: |
           python3 scripts/build_public_manifest.py . --output /tmp/AIMath-public-manifest.json
           python3 -m json.tool /tmp/AIMath-public-manifest.json >/dev/null
 
       - name: Reproduce all executable public claims
+        if: github.event_name != 'pull_request' || steps.pr_policy.outputs.lock_only != 'true'
         run: python3 scripts/reproduce_public_claims.py .
+
+      - name: Lock-only fast path
+        if: github.event_name == 'pull_request' && steps.pr_policy.outputs.lock_only == 'true'
+        run: |
+          echo "Lock-only PR: full mathematical replay intentionally skipped after mechanical Village gates."

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portfolio",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "portfolio_id",
+    "global_admission",
+    "global_active_lane_cap",
+    "source_snapshot",
+    "governance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "portfolio_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "global_admission": {
+      "enum": [
+        "OPEN",
+        "PAUSED"
+      ]
+    },
+    "global_active_lane_cap": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "priorities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_snapshot": {
+      "type": "object"
+    },
+    "governance": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

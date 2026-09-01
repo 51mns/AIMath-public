@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-EQUIANGULAR-R18",
+  "title": "Maximum equiangular lines in R^18",
+  "kind": "EXTERNAL_OPEN_PROBLEM",
+  "strategic_state": "ACTIVE",
+  "priority": "P0",
+  "max_active_lanes": 2,
+  "problem": {
+    "frozen_statement": "Maximum equiangular lines in R^18",
+    "public_basis": "docs/CONTRIBUTION_TARGETS.md"
+  },
+  "continuation_conditions": [
+    "general obstruction beyond one spectral branch",
+    "multi-branch exclusion",
+    "meaningful frontier reduction"
+  ],
+  "do_not_continue_for": [
+    "isolated next-case enumeration with low transfer value",
+    "larger finite search without a new mechanism"
+  ],
+  "reopen_conditions": [],
+  "assets": [
+    {
+      "claim_id": "C-EQUIANGULAR-R18-ETA17-SINGLETON-EXCLUSION",
+      "public_evidence": "FULL",
+      "dependency_use": "ALLOWED",
+      "load_bearing": true
+    }
+  ],
+  "source_snapshot": {
+    "private_main": "c8e61e0e398f540bc8c5de79663398d689f37473",
+    "exported_at": "2026-09-01",
+    "mode": "SNAPSHOT"
+  },
+  "frontier": {
+    "checked_at": "2026-09-01",
+    "ttl_days": 90,
+    "status": "PUBLIC_SNAPSHOT",
+    "sensitive_default": true
+  }
+}
