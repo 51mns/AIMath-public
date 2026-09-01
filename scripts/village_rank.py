@@ -10,6 +10,14 @@ from typing import Any
 
 from village_core import VillageState, load_machine_file, validate_schema
 
+RESEARCH_CLASSES = {
+    "EXTERNAL_OPEN_PROBLEM",
+    "DERIVED_GENERAL_MATH",
+    "OPEN_MATH_DISCOVERY",
+    "AI_NATIVE_MATH",
+    "QUALITY_KNOWLEDGE",
+    "PLATFORM",
+}
 QUALITY_TASK_KINDS = {
     "INDEPENDENT_REVIEW",
     "REPRODUCTION",
@@ -18,6 +26,7 @@ QUALITY_TASK_KINDS = {
     "DEPENDENCY_TRIAGE",
 }
 ELIGIBLE_EVALUATION_ROLES = {"INDEPENDENT_EVALUATION", "PORTFOLIO_EVALUATION"}
+FOLLOWUP_RECOMMENDATIONS = {"CONTINUE", "PIVOT", "REVIEW"}
 LEGACY_CLASS_BY_KIND = {
     "EXTERNAL_OPEN_PROBLEM": "EXTERNAL_OPEN_PROBLEM",
     "PUBLIC_RESEARCH_THEME": "DERIVED_GENERAL_MATH",
@@ -63,9 +72,58 @@ def research_class_for_task(state: VillageState, task_id: str) -> str:
     return LEGACY_CLASS_BY_KIND.get(campaign.get("kind"), "DERIVED_GENERAL_MATH")
 
 
+def discovery_policy_errors(state: VillageState) -> list[str]:
+    errors: list[str] = []
+    policy = state.portfolio.get("allocation_policy", {})
+    if policy.get("mode") != "ADAPTIVE_DIVERSITY":
+        errors.append("allocation_policy.mode must be ADAPTIVE_DIVERSITY")
+    weights = policy.get("class_weights", {})
+    caps = policy.get("soft_class_caps_pct", {})
+    for research_class in sorted(RESEARCH_CLASSES):
+        weight = weights.get(research_class)
+        if not isinstance(weight, int) or isinstance(weight, bool) or weight < 1:
+            errors.append(f"allocation_policy.class_weights.{research_class} must be integer >= 1")
+        cap = caps.get(research_class)
+        if not isinstance(cap, int) or isinstance(cap, bool) or not 0 <= cap <= 100:
+            errors.append(f"allocation_policy.soft_class_caps_pct.{research_class} must be integer 0..100")
+    eval_cap = policy.get("evaluation_bonus_cap")
+    if not isinstance(eval_cap, int) or isinstance(eval_cap, bool) or not 0 <= eval_cap <= 12:
+        errors.append("allocation_policy.evaluation_bonus_cap must be integer 0..12")
+
+    for tid, task in state.tasks.items():
+        research_class = research_class_for_task(state, tid)
+        if research_class == "OPEN_MATH_DISCOVERY" and task.get("task_kind") == "RESEARCH":
+            if task.get("research_mode") != "OPEN_THEOREM_DISCOVERY":
+                errors.append(f"{tid}: OPEN_MATH_DISCOVERY research requires research_mode OPEN_THEOREM_DISCOVERY")
+            if task.get("toy_problem_gate") is not True:
+                errors.append(f"{tid}: OPEN_MATH_DISCOVERY research requires toy_problem_gate=true")
+            campaign = state.campaigns[task["campaign_id"]]
+            if campaign.get("discovery_policy", {}).get("held_out_default") is True and task.get("held_out_required") is not True:
+                errors.append(f"{tid}: campaign held_out_default requires held_out_required=true")
+            if task.get("post_outcome_evaluation") != "REQUIRED":
+                errors.append(f"{tid}: discovery research requires post_outcome_evaluation=REQUIRED")
+        if research_class == "AI_NATIVE_MATH" and task.get("task_kind") == "RESEARCH":
+            if task.get("research_mode") != "AI_NATIVE_REPRESENTATION":
+                errors.append(f"{tid}: AI_NATIVE_MATH research requires research_mode AI_NATIVE_REPRESENTATION")
+            if task.get("held_out_required") is not True:
+                errors.append(f"{tid}: AI_NATIVE_MATH research requires held_out_required=true")
+            if task.get("toy_problem_gate") is not True:
+                errors.append(f"{tid}: AI_NATIVE_MATH research requires toy_problem_gate=true")
+            if task.get("transfer_test_required") is not True:
+                errors.append(f"{tid}: AI_NATIVE_MATH research requires transfer_test_required=true")
+            if task.get("post_outcome_evaluation") != "REQUIRED":
+                errors.append(f"{tid}: AI-native research requires post_outcome_evaluation=REQUIRED")
+        if research_class in {"OPEN_MATH_DISCOVERY", "AI_NATIVE_MATH"} and task.get("task_kind") == "RESEARCH":
+            if not task.get("stop_conditions"):
+                errors.append(f"{tid}: discovery research requires bounded stop_conditions")
+            if not task.get("success_conditions"):
+                errors.append(f"{tid}: discovery research requires explicit success_conditions")
+    return errors
+
+
 def _mean_followup(evals: list[dict[str, Any]]) -> float | None:
     vals = [e.get("scores", {}).get("followup_expected_value") for e in evals]
-    vals = [float(x) for x in vals if isinstance(x, int)]
+    vals = [float(x) for x in vals if isinstance(x, int) and not isinstance(x, bool)]
     return round(sum(vals) / len(vals), 2) if vals else None
 
 
@@ -101,6 +159,8 @@ class EvaluationBook:
             tid = record.get("task_id")
             if tid not in self.state.tasks:
                 self.errors.append(f"{rel}: unknown task {tid}")
+            elif tid not in self.state.outcomes:
+                self.errors.append(f"{rel}: evaluation is post-outcome metadata but task {tid} has no canonical outcome")
             role = record.get("evaluation_role")
             actor = record.get("evaluator", {}).get("actor_id")
             if isinstance(tid, str) and isinstance(role, str) and isinstance(actor, str):
@@ -110,25 +170,34 @@ class EvaluationBook:
                         f"{rel}: evaluator {actor} has duplicate {role} for task {tid}"
                     )
                 seen_evaluator_slots.add(slot)
+            followups = record.get("followup_task_ids", [])
+            if len(followups) != len(set(followups)):
+                self.errors.append(f"{rel}: followup_task_ids contains duplicates")
+            for target in followups:
+                if target not in self.state.tasks:
+                    self.errors.append(f"{rel}: unknown follow-up task {target}")
+                if target == tid:
+                    self.errors.append(f"{rel}: evaluated task may not target itself as follow-up")
+            if record.get("recommendation") in FOLLOWUP_RECOMMENDATIONS and not followups:
+                self.errors.append(f"{rel}: {record.get('recommendation')} requires at least one followup_task_id")
             self.records.append(record)
         return self
 
-    def for_task(self, task_id: str) -> list[dict[str, Any]]:
+    def for_source_task(self, task_id: str) -> list[dict[str, Any]]:
         return [r for r in self.records if r.get("task_id") == task_id]
 
-    def allocation_eligible(self, task_id: str) -> list[dict[str, Any]]:
+    def _signals_for_target(self, task_id: str, roles: set[str]) -> list[dict[str, Any]]:
         return [
             r
-            for r in self.for_task(task_id)
-            if r.get("evaluation_role") in ELIGIBLE_EVALUATION_ROLES
+            for r in self.records
+            if r.get("evaluation_role") in roles and task_id in r.get("followup_task_ids", [])
         ]
 
+    def allocation_eligible(self, task_id: str) -> list[dict[str, Any]]:
+        return self._signals_for_target(task_id, ELIGIBLE_EVALUATION_ROLES)
+
     def self_assessments(self, task_id: str) -> list[dict[str, Any]]:
-        return [
-            r
-            for r in self.for_task(task_id)
-            if r.get("evaluation_role") == "SELF_ASSESSMENT"
-        ]
+        return self._signals_for_target(task_id, {"SELF_ASSESSMENT"})
 
     @staticmethod
     def _single_signal(record: dict[str, Any], cap: int) -> float:
@@ -163,23 +232,24 @@ class EvaluationBook:
             "> GENERATED deterministically from canonical `coordination/evaluations/**/*.yml`. Do not hand-edit.",
             "> Evaluation scores are allocation/visibility metadata only. `truth_layer_effect` is always `NONE`.",
             "",
-            "| Evaluation | Task | Role | Info | Reuse | Transfer | External | Follow-up EV | Surprise | Uncertainty | Confidence | Recommendation |",
-            "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|",
+            "| Evaluation | Source task | Role | Info | Reuse | Transfer | External | Follow-up EV | Surprise | Uncertainty | Confidence | Recommendation | Follow-up tasks |",
+            "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|---|",
         ]
         for r in sorted(self.records, key=lambda x: x.get("evaluation_id", "")):
             s = r.get("scores", {})
+            followups = ", ".join(f"`{x}`" for x in r.get("followup_task_ids", [])) or "—"
             lines.append(
                 f"| `{r.get('evaluation_id')}` | `{r.get('task_id')}` | {r.get('evaluation_role')} | "
                 f"{s.get('information_gain')} | {s.get('mathematical_reusability')} | "
                 f"{s.get('transfer_potential')} | {s.get('external_relevance')} | "
                 f"{s.get('followup_expected_value')} | {s.get('surprise')} | {s.get('uncertainty')} | "
-                f"{r.get('confidence')} | {r.get('recommendation')} |"
+                f"{r.get('confidence')} | {r.get('recommendation')} | {followups} |"
             )
         if not self.records:
-            lines.append("| — | — | — | — | — | — | — | — | — | — | — | No canonical evaluations yet |")
+            lines.append("| — | — | — | — | — | — | — | — | — | — | — | No canonical evaluations yet | — |")
         lines += [
             "",
-            "Self-assessment has zero scheduling authority. Independent/Portfolio evaluations contribute only a bounded READY-task ranking signal and never affect mathematical truth, novelty, review independence, or hard readiness gates.",
+            "Self-assessment has zero scheduling authority. Independent/Portfolio evaluations contribute only a bounded signal to explicitly named follow-up Tasks after the source Task has a canonical outcome; they never affect mathematical truth, novelty, review independence, or hard readiness gates.",
             "",
         ]
         return "\n".join(lines)
@@ -196,7 +266,7 @@ class EvaluationBook:
 def _class_weight_bonus(state: VillageState, research_class: str) -> int:
     weights = state.portfolio.get("allocation_policy", {}).get("class_weights", {})
     weight = weights.get(research_class, 1)
-    if not isinstance(weight, int):
+    if not isinstance(weight, int) or isinstance(weight, bool):
         return 0
     return max(0, min(4, weight - 1))
 
@@ -252,8 +322,7 @@ def rank_ready_tasks(state: VillageState, book: EvaluationBook) -> list[RankedTa
     eval_cap = int(policy.get("evaluation_bonus_cap", 0))
     rows: list[RankedTask] = []
     for tid in sorted(state.tasks):
-        ready, _ = state.readiness(tid)
-        if not ready:
+        if state.runtime_state(tid) != "READY":
             continue
         task = state.tasks[tid]
         campaign = state.campaigns[task["campaign_id"]]
