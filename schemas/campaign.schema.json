@@ -33,6 +33,16 @@
         "SOFTWARE_RESEARCH"
       ]
     },
+    "research_class": {
+      "enum": [
+        "EXTERNAL_OPEN_PROBLEM",
+        "DERIVED_GENERAL_MATH",
+        "OPEN_MATH_DISCOVERY",
+        "AI_NATIVE_MATH",
+        "QUALITY_KNOWLEDGE",
+        "PLATFORM"
+      ]
+    },
     "strategic_state": {
       "enum": [
         "PROPOSED",
@@ -64,6 +74,9 @@
     },
     "reopen_conditions": {
       "type": "array"
+    },
+    "discovery_policy": {
+      "type": "object"
     },
     "assets": {
       "type": "array",
