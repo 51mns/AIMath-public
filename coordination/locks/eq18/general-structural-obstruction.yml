@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "lock_id": "LOCK-EQUIANGULAR-R18-001-51MNS",
+  "task_id": "TASK-EQUIANGULAR-R18-001",
+  "actor": {
+    "id": "gh:51mns",
+    "type": "HUMAN_PRINCIPAL",
+    "ai_assistance": {
+      "model": "GPT-5.6 Sol",
+      "role": "research agent"
+    }
+  },
+  "base_main_sha": "5a36b1d413a05400120d25946e0acf71bce20a30",
+  "acquired_at": "2026-09-01T13:32:00Z",
+  "expires_at": "2026-09-08T13:32:00Z",
+  "work_ref": "research/TASK-EQUIANGULAR-R18-001-51mns",
+  "collision_keys": ["eq18/general-structural-obstruction"],
+  "renewal_count": 0
+}
