@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-OPEN-MATH-DISCOVERY-001",
+  "campaign_id": "CAM-OPEN-MATH-DISCOVERY",
+  "title": "Bounded open theorem and counterexample discovery",
+  "task_kind": "RESEARCH",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "research_mode": "OPEN_THEOREM_DISCOVERY",
+  "objective": "Generate and aggressively falsify at most 20 bounded hypotheses over natural mathematical objects, pursue at most 3 serious proof routes, and freeze only reusable theorem candidates, counterexamples, structural reductions, or useful known-theory rediscoveries. Self-invented tautological toy problems do not count as progress.",
+  "assumptions": [],
+  "route_id": "ROUTE-OPEN-MATH-DISCOVERY-001",
+  "collision_keys": [
+    "discovery/open-math/theorem"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "PARALLEL_SAFE",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "held_out_required": true,
+  "toy_problem_gate": true,
+  "transfer_test_required": false,
+  "post_outcome_evaluation": "REQUIRED",
+  "success_conditions": [
+    "nontrivial claim candidate",
+    "exact counterexample",
+    "reusable structural reduction",
+    "useful literature match discovered through the bounded search"
+  ],
+  "failure_conditions": [
+    "bounded exploration produces no reusable mathematical progress"
+  ],
+  "stop_conditions": [
+    "20 candidate hypotheses have been assessed",
+    "3 serious proof routes have been exhausted",
+    "only larger brute force remains"
+  ],
+  "owned_paths": [
+    "work/TASK-OPEN-MATH-DISCOVERY-001/**"
+  ],
+  "expected_artifacts": [
+    "bounded exploration notes",
+    "falsification log",
+    "exact verifier when load-bearing",
+    "outcome record with self-assessment"
+  ],
+  "created_at": "2026-09-01"
+}
