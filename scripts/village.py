@@ -8,12 +8,13 @@ import subprocess
 import sys
 
 from village_core import VillageState
-from village_rank import EvaluationBook, rank_ready_tasks
+from village_rank import EvaluationBook, discovery_policy_errors, rank_ready_tasks
 
 
 def _state_and_book(root: Path):
     state = VillageState(root).load()
     errors = list(state.validate())
+    errors.extend(discovery_policy_errors(state))
     book = EvaluationBook(root, state).load()
     errors.extend(book.errors)
     return state, book, errors
@@ -65,6 +66,7 @@ def cmd_rank(root: Path) -> int:
         return 1
     rows = rank_ready_tasks(state, book)
     print("LIVE_RANK_AS_OF_UTC\t" + datetime.now(timezone.utc).isoformat())
+    print("GENERIC_CAPABILITY_FIT\tUNSPECIFIED")
     print("READY_TASK_RANKING")
     print(
         "rank\ttask\tscore\tpriority\tclass\tclass_weight\tdiversity\t"
