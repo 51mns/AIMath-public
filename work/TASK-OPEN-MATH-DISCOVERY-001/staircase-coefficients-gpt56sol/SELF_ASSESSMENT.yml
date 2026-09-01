@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 AIMath contributors
+# SPDX-License-Identifier: CC0-1.0
+
+schema_version: 1
+evaluation_id: EVAL-TASK-OPEN-MATH-DISCOVERY-001-51MNS-SELF
+task_id: TASK-OPEN-MATH-DISCOVERY-001
+evaluation_role: SELF_ASSESSMENT
+evaluator:
+  actor_id: gh:51mns
+  ai_assistance:
+    model: GPT-5.6 Sol
+    role: bounded discovery and literature triage
+scores:
+  information_gain: 3
+  mathematical_reusability: 3
+  transfer_potential: 2
+  external_relevance: 2
+  followup_expected_value: 3
+  surprise: 3
+  uncertainty: 4
+confidence: MEDIUM
+recommendation: HOLD
+followup_task_ids: []
+rationale: >-
+  The run produced a valid literature match and a reproducible stronger finite
+  pattern. Further computation alone is not justified. Reopen only for a
+  theorem-level route or source result that addresses the exact m>=12,s>=4
+  strictness boundary. This self-assessment has no scheduling or Truth Layer
+  authority.
+truth_layer_effect: NONE
+created_at: "2026-09-01"
