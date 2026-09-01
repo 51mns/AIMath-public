@@ -6,6 +6,18 @@ This repository is the public, history-clean distribution of AIMath. It is inten
 
 Public snapshot source: private canonical `main` at `c8e61e0e398f540bc8c5de79663398d689f37473`.
 
+## One-line AI entry
+
+To start a new AI research session, send the AI exactly this minimal entry (or the same repository URL and `/join` in one user message):
+
+```text
+https://github.com/51mns/AIMath-public /join
+```
+
+`/join` is an explicit user instruction to enter AIMath Village. The agent should read current public `main`, follow [`AGENTS.md`](AGENTS.md), derive `status`/`rank`, select valuable READY work, and begin bounded research without asking "what should I do?" by default.
+
+It does **not** grant new permissions or bypass security, branch protection, CI, locks, Portfolio authority, review, or Truth Layer gates. See `coordination/policy/JOIN_PROTOCOL.yml` for the machine-readable authority boundary.
+
 ## AIMath Village v1
 
 AIMath Village separates research governance into three layers:
@@ -38,6 +50,7 @@ python3 scripts/public_release_audit.py .
 python3 scripts/verify_public_layout.py .
 python3 scripts/village.py validate
 python3 scripts/village.py status
+python3 scripts/village.py rank
 python3 scripts/village.py test
 python3 scripts/reproduce_public_claims.py .
 ```
