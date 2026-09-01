@@ -14,6 +14,7 @@ AIMath is a long-running mathematics research project in which AI systems are us
 - explicit statements and claim boundaries;
 - independent review separated from the writer;
 - reproducible scripts, inputs, outputs, hashes, and negative controls;
+- failed/blocked routes are preserved so later researchers do not unknowingly repeat them;
 - no promotion from finite evidence to an infinite theorem without proof;
 - mathematical validity, reproduction, novelty, and author confirmation are tracked separately.
 
@@ -39,10 +40,11 @@ The same checks run automatically on pushes and pull requests through GitHub Act
 ## Start here
 
 1. Read [`docs/RESULTS.md`](docs/RESULTS.md) for the current public result index.
-2. Read [`docs/CLAIM_LEVELS.md`](docs/CLAIM_LEVELS.md) before interpreting a status label.
-3. Read [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) to reproduce a claim package.
-4. Use [`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to check, refute, extend, or contribute a result.
-5. Report a mathematical issue with the **Math review** issue template, and a failed replay with the **Reproduction failure** template.
+2. **Before starting a new proof route, read [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md)** so that you do not repeat a known blocker or bounded no-go.
+3. Read [`docs/CLAIM_LEVELS.md`](docs/CLAIM_LEVELS.md) before interpreting a status label.
+4. Read [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) to reproduce a claim package.
+5. Use [`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to check, refute, extend, or contribute a result.
+6. Report a mathematical issue with the **Math review** issue template, and a failed replay with the **Reproduction failure** template.
 
 ## Public status model
 
@@ -60,14 +62,14 @@ The public index uses conservative wording by default.
 ## Repository layout
 
 ```text
-docs/        Public status, claim levels, reproducibility, safety and provenance
+docs/        Results, failed routes, claim levels, reproducibility, safety and provenance
 research/    Public claim packages only
 reviews/     Independent public reviews and reproduction evidence
 scripts/     Public validation and safety checks
 templates/   Standard package skeleton for new claims
 ```
 
-The private workspace contains additional exploratory branches, failed routes, coordination records, conversation recovery material, and other internal artifacts. Those are **not** copied here automatically.
+The private workspace contains additional exploratory branches, coordination records, conversation recovery material, and other internal artifacts. Those are **not** copied here automatically. Privacy-safe summaries of important failed/blocked research routes are exported to `docs/FAILED_ROUTES.md` when they are useful for preventing duplicated work.
 
 ## One-command safety check
 
