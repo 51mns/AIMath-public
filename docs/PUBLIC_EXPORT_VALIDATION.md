@@ -36,7 +36,7 @@ The byte-identical fixed-blob executions above returned exit code `0`. Captured 
 
 ```text
 36f106abcd89121ea9df5342049420a22da0bbc40305932e738d9661b5d2d7e2  springborn-writer
- e07eb8f3be37c3701b8f680cf9cae2bcf48d7ec74ae4b010709e2880817c9871  springborn-independent
+e07eb8f3be37c3701b8f680cf9cae2bcf48d7ec74ae4b010709e2880817c9871  springborn-independent
 86b51ff073ceca65d4ed1d1c3b17c7d4ac67130cc3b959a412ee1d7a40fc3e58  identification-writer
 4563e6a413da970f3fda7d8d7f67f2ebf42c53cda3279241923e5b2bc2fe08d0  identification-independent
 24cabe8ecce90a165013403bb666a6dd6162dde8b62c1fc054157481ca27a0e5  gyoda-89
@@ -46,8 +46,6 @@ e69ee4116a8b392ec8f3dd5f6d9bac23940c541fa28d0b64217f9f2255cd8aea  b3rcc-rank4-wi
 bac3d08fdd85a07cd780c656f471a2ec4cc1c0ee06d2991a8eb3f0d64881d514  afes-bounded
 ef2ae56c7403047206d6c0efe8b53ce5e960bc78b7f5ed60f661c7f9c82d24d9  thue-morse
 ```
-
-The leading space before the second line is formatting only; the hash is the 64-hex string beginning `e07e...`.
 
 ## Mathematical/reproduction boundary
 
