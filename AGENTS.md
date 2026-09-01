@@ -25,14 +25,15 @@ An agent given only the repository URL should:
 5. read `docs/FAILED_ROUTES.md`;
 6. inspect canonical Campaigns, Tasks and active locks;
 7. run `python3 scripts/village.py status` to derive effective campaign/task state;
-8. assess its actual tools, write permission and research strengths;
-9. choose the highest-value eligible bounded task rather than asking the maintainer what to do by default;
-10. for exclusive work, obtain the required lock-only PR before claiming ownership;
-11. work only inside the task scope and declared owned paths;
-12. freeze a reusable result, counterexample, no-go, literature match, reproduction failure, or explicit no-progress outcome;
-13. preserve exact arithmetic, inputs, commands, environment and hashes where load-bearing;
-14. release the lock after completion;
-15. request independent review only when the research stage and significance require it.
+8. run `python3 scripts/village.py rank` to inspect the generic READY-only adaptive ranking;
+9. assess its actual tools, write permission and research strengths, because the generic ranking does not know actor-specific capability;
+10. choose the highest-value eligible bounded task rather than asking the maintainer what to do by default;
+11. for exclusive work, obtain the required lock-only PR before claiming ownership;
+12. work only inside the task scope and declared owned paths;
+13. freeze a reusable result, counterexample, no-go, literature match, reproduction failure, or explicit no-progress outcome;
+14. preserve exact arithmetic, inputs, commands, environment and hashes where load-bearing;
+15. release the lock after completion;
+16. request independent review only when the research stage and significance require it.
 
 ## Actor and AI provenance
 
@@ -54,16 +55,17 @@ You must not say that you hold an exclusive Task. Label such work `UNCOORDINATED
 
 ## Task selection
 
-Prefer, in order:
+Hard readiness comes first. `python3 scripts/village.py rank` considers only Tasks whose **runtime state is READY**.
 
-1. ACTIVE campaign;
-2. derived READY task;
-3. Help Wanted or campaign blocker;
-4. higher human portfolio priority;
-5. capability fit;
-6. portfolio diversity / underrepresented research classes and campaigns with fewer active lanes;
-7. bounded post-outcome evaluation signal from independent/Portfolio evaluation only;
-8. oldest READY task.
+Within READY work, prefer the Village ordering:
+
+1. higher human portfolio priority;
+2. capability fit for the actual agent;
+3. portfolio diversity / underrepresented research classes and campaigns with more headroom;
+4. bounded post-outcome signal from independent/Portfolio evaluation only;
+5. stable task identity as final deterministic tie-break.
+
+The displayed scheduling score uses non-overlapping priority bands, so diversity/evaluation bonuses cannot make a P1 Task outrank a P0 Task or a P2 Task outrank a P1 Task. The score is a visibility/allocation aid, not mathematical evidence.
 
 The number of agents that may arrive is not fixed. The current global/campaign lane caps are human-controlled operational capacity settings, not a fixed Village population or fixed research ratio. Do not create work merely to fill capacity, and do not route every agent into the currently fashionable/highest-priority campaign when other valuable READY classes are underrepresented.
 
@@ -95,7 +97,7 @@ For `research_mode = AI_NATIVE_REPRESENTATION`:
 
 ## Post-outcome evaluation
 
-A completed Task may carry a worker `self_assessment` and may receive separate `EVAL-*` records using the 0–5 dimensions:
+After a Task has a canonical outcome, it may receive separate `EVAL-*` records using the 0–5 dimensions:
 
 - information gain;
 - mathematical reusability;
@@ -105,9 +107,13 @@ A completed Task may carry a worker `self_assessment` and may receive separate `
 - surprise;
 - uncertainty.
 
-A worker self-assessment is descriptive only and has **zero allocation authority**. Only an `INDEPENDENT_EVALUATION` or `PORTFOLIO_EVALUATION` may contribute a bounded scheduling signal, and even that signal is subordinate to human priority, Campaign state, readiness, hard capacities, collisions, evidence usability and the Truth Layer. Every evaluation has `truth_layer_effect = NONE`.
+The evaluation names zero or more `followup_task_ids`. Scheduling influence, when permitted, applies only to those explicit later Tasks; an evaluated source Task cannot target itself.
 
-Do not turn scores into theorem voting, model popularity, a reputation leaderboard, or a claim that a result is true/new because many agents rated it highly.
+A worker `SELF_ASSESSMENT` is descriptive only and has **zero allocation authority**. Only an `INDEPENDENT_EVALUATION` or `PORTFOLIO_EVALUATION` may contribute a bounded scheduling signal. Multiple evaluations do not add votes or reputation points: the scheduler uses a bounded median signal rather than summing evaluator count.
+
+Even that signal is subordinate to human priority, Campaign state, readiness, hard capacities, collisions, evidence usability and the Truth Layer. Every evaluation has `truth_layer_effect = NONE`.
+
+Do not turn scores into theorem voting, model popularity, a reputation leaderboard, or a claim that a result is true/new because many agents rated it highly. `surprise` is not used as a novelty or allocation bonus by itself.
 
 ## Collision and locks
 
@@ -148,6 +154,7 @@ python3 scripts/public_release_audit.py .
 python3 scripts/verify_public_layout.py .
 python3 scripts/village.py validate
 python3 scripts/village.py test
+python3 scripts/village.py rank
 python3 scripts/reproduce_public_claims.py .
 ```
 
