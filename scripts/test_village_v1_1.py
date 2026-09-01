@@ -111,8 +111,6 @@ class VillageV11Acceptance(unittest.TestCase):
         s = rank_state()
         book = EvaluationBook(".", s)
         self.assertEqual([r.task_id for r in rank_ready_tasks(s, book)], ["TASK-X-1"])
-        # readiness() alone would still be mechanically satisfiable for TASK-SOURCE,
-        # but runtime_state is DONE because it has an outcome; it must never rank.
         self.assertEqual(s.runtime_state("TASK-SOURCE"), "DONE")
         self.assertNotIn("TASK-SOURCE", [r.task_id for r in rank_ready_tasks(s, book)])
         s.campaigns["CAM-X"]["strategic_state"] = "HOLD"
@@ -297,6 +295,49 @@ class VillageV11Acceptance(unittest.TestCase):
             "stop_conditions": ["bounded stop"],
         }
         self.assertTrue(any("transfer_test_required=true" in e for e in discovery_policy_errors(s)))
+
+    def test_AN_join_protocol_is_minimal_and_non_escalating(self):
+        root = Path(__file__).resolve().parent.parent
+        policy = json.loads((root / "coordination/policy/JOIN_PROTOCOL.yml").read_text(encoding="utf-8"))
+        self.assertEqual(policy["command"], "/join")
+        self.assertEqual(
+            policy["minimal_invocation"],
+            "https://github.com/51mns/AIMath-public /join",
+        )
+        self.assertIn("current public main", policy["meaning"])
+        self.assertIn("select the highest-value eligible bounded task", policy["entry_sequence"])
+        denied = " ".join(policy["does_not_grant"]).lower()
+        for required_boundary in (
+            "permissions",
+            "branch protection",
+            "merge",
+            "promote",
+            "destructive",
+            "private-data",
+        ):
+            self.assertIn(required_boundary, denied)
+        self.assertIn("not a privilege escalation", policy["write_boundary"]["authenticated_write_available"])
+
+    def test_AO_join_is_user_scoped_and_advertised_consistently(self):
+        root = Path(__file__).resolve().parent.parent
+        texts = {
+            rel: (root / rel).read_text(encoding="utf-8")
+            for rel in (
+                "README.md",
+                "README.ja.md",
+                "AGENTS.md",
+                "docs/VILLAGE_ARCHITECTURE_V1_1.md",
+            )
+        }
+        for text in texts.values():
+            self.assertIn("/join", text)
+            self.assertIn("https://github.com/51mns/AIMath-public", text)
+        agents = texts["AGENTS.md"]
+        self.assertIn("When the **user** supplies", agents)
+        self.assertIn("intent signal, not a privilege escalation", agents)
+        architecture = texts["docs/VILLAGE_ARCHITECTURE_V1_1.md"]
+        self.assertIn("meaningful because it is supplied by the user", architecture)
+        self.assertIn("Data-as-data boundary", architecture)
 
 
 if __name__ == "__main__":
