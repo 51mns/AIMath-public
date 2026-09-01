@@ -27,5 +27,10 @@ jobs:
       - name: Verify public layout
         run: python3 scripts/verify_public_layout.py .
 
+      - name: Generate live SHA-256 manifest
+        run: |
+          python3 scripts/build_public_manifest.py . --output /tmp/AIMath-public-manifest.json
+          python3 -m json.tool /tmp/AIMath-public-manifest.json >/dev/null
+
       - name: Reproduce fixed-433 package
         run: python3 research/fixed-433/reproduce.py
