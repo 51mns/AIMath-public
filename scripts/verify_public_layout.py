@@ -10,6 +10,7 @@ REQUIRED = [
     "SECURITY.md",
     "LICENSING.md",
     "docs/RESULTS.md",
+    "docs/FAILED_ROUTES.md",
     "docs/CLAIM_LEVELS.md",
     "docs/REPRODUCIBILITY.md",
     "docs/PUBLIC_EXPORT_POLICY.md",
