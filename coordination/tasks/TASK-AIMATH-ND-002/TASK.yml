@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-AIMATH-ND-002",
+  "campaign_id": "CAM-AIMATH-ND",
+  "title": "Independent AI-native representation competitor",
+  "task_kind": "RESEARCH",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "research_mode": "AI_NATIVE_REPRESENTATION",
+  "objective": "Independently invent a competing representation from the same class of frozen raw mathematical information without inspecting the other representation lane before freeze. Evaluate it on held-out prediction, falsification, proof compression, invariant discovery, and transfer so representation diversity can be compared without treating model count as truth.",
+  "assumptions": [],
+  "route_id": "ROUTE-AIMATH-ND-002",
+  "collision_keys": [
+    "discovery/aimath-nd/representation-b"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "INDEPENDENT_ATTACK",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "held_out_required": true,
+  "toy_problem_gate": true,
+  "transfer_test_required": true,
+  "post_outcome_evaluation": "REQUIRED",
+  "success_conditions": [
+    "independently invented representation with held-out mathematical utility",
+    "new reusable invariant or lemma not copied from another lane",
+    "measurable proof or falsification advantage",
+    "explicit cross-domain transfer with mathematical utility"
+  ],
+  "failure_conditions": [
+    "representation gives no measurable mathematical utility beyond relabeling or in-sample fit"
+  ],
+  "stop_conditions": [
+    "another lane's derivation was inspected before the agreed freeze",
+    "representation is only a reversible renaming with no discovery benefit",
+    "held-out tests fail without a new mechanism",
+    "only larger brute force remains"
+  ],
+  "owned_paths": [
+    "work/TASK-AIMATH-ND-002/**"
+  ],
+  "expected_artifacts": [
+    "pre-comparison independence declaration",
+    "invented representation specification",
+    "held-out evaluation record",
+    "human-math compilation when possible",
+    "outcome record with self-assessment"
+  ],
+  "created_at": "2026-09-01"
+}
