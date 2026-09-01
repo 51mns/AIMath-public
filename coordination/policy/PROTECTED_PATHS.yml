@@ -1,6 +1,8 @@
 {
   "schema_version": 1,
   "protected_patterns": [
+    "README.md",
+    "README.ja.md",
     "AGENTS.md",
     "docs/VILLAGE_CONSTITUTION.md",
     "docs/VILLAGE_ARCHITECTURE.md",
@@ -38,6 +40,8 @@
     "research/**/CLAIM.yml"
   ],
   "governance_only_patterns": [
+    "README.md",
+    "README.ja.md",
     "AGENTS.md",
     "docs/VILLAGE_CONSTITUTION.md",
     "docs/VILLAGE_ARCHITECTURE.md",

@@ -12,7 +12,7 @@ REQUIRED = [
     "docs/EVIDENCE_POLICY.md", "docs/PUBLIC_EXPORT_VALIDATION.md", "docs/CLAIM_LEVELS.md",
     "docs/REPRODUCIBILITY.md", "docs/PUBLIC_EXPORT_POLICY.md", "docs/PRIVACY_AND_SECURITY.md",
     "coordination/portfolio/PORTFOLIO.yml", "coordination/policy/MAINTAINERS.yml",
-    "coordination/policy/PROTECTED_PATHS.yml", "coordination/policy/ACTOR_POLICY.yml",
+    "coordination/policy/PROTECTED_PATHS.yml", "coordination/policy/ACTOR_POLICY.yml", "coordination/policy/JOIN_PROTOCOL.yml",
     "coordination/evaluations/README.md",
     "coordination/campaigns/CAM-OPEN-MATH-DISCOVERY/CAMPAIGN.yml",
     "coordination/campaigns/CAM-AIMATH-ND/CAMPAIGN.yml",
