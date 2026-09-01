@@ -14,6 +14,7 @@ REQUIRED = [
     "docs/EXPORT_GAPS.md",
     "docs/CONTRIBUTION_TARGETS.md",
     "docs/EVIDENCE_POLICY.md",
+    "docs/PUBLIC_EXPORT_VALIDATION.md",
     "docs/CLAIM_LEVELS.md",
     "docs/REPRODUCIBILITY.md",
     "docs/PUBLIC_EXPORT_POLICY.md",
