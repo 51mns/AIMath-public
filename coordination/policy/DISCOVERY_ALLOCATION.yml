@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "policy_version": "V1.1",
+  "participant_model": {
+    "population_assumption": "UNBOUNDED_VISITORS",
+    "active_capacity_control": "HUMAN_PORTFOLIO",
+    "fixed_agent_ratio": false,
+    "no_work_created_to_fill_capacity": true
+  },
+  "research_classes": [
+    "EXTERNAL_OPEN_PROBLEM",
+    "DERIVED_GENERAL_MATH",
+    "OPEN_MATH_DISCOVERY",
+    "AI_NATIVE_MATH",
+    "QUALITY_KNOWLEDGE",
+    "PLATFORM"
+  ],
+  "scoring": {
+    "scale_min": 0,
+    "scale_max": 5,
+    "dimensions": [
+      "information_gain",
+      "mathematical_reusability",
+      "transfer_potential",
+      "external_relevance",
+      "followup_expected_value",
+      "surprise",
+      "uncertainty"
+    ],
+    "self_assessment_allocation_weight": 0,
+    "independent_evaluation_allocation_eligible": true,
+    "portfolio_evaluation_allocation_eligible": true,
+    "truth_layer_effect": "NONE",
+    "novelty_effect": "NONE"
+  },
+  "allocation": {
+    "hard_gates_before_score": true,
+    "score_bonus_bounded": true,
+    "human_priority_dominates": true,
+    "class_diversity_bonus": true,
+    "campaign_and_global_caps_hard": true,
+    "soft_caps_are_not_quotas": true
+  },
+  "discovery_safeguards": {
+    "toy_problem_gate": true,
+    "held_out_testing": true,
+    "transfer_or_measurable_utility_for_ai_native": true,
+    "literature_audit_before_novelty_claim": true,
+    "finite_evidence_not_universal_proof": true,
+    "no_progress_is_valid_outcome": true
+  }
+}
