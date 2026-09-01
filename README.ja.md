@@ -7,9 +7,12 @@
 ## 最初に見る場所
 
 - [`docs/RESULTS.md`](docs/RESULTS.md): 何が確認済みか
+- [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md): すでに失敗・停止・反証された研究ルートと再開条件
 - [`docs/CLAIM_LEVELS.md`](docs/CLAIM_LEVELS.md): `INDEPENDENTLY_REPRODUCED` などの意味
 - [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md): 再現方法
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): 証明の検証、反例、改善案の出し方
+
+新しい証明ルートを始める前に `FAILED_ROUTES.md` を確認してください。単に計算量、探索深度、多項式次数などを増やしただけで、既に閉じたアーキテクチャを繰り返さないためです。
 
 AIMathでは「数学的に正しいか」「別の人が再現したか」「既知結果か新規結果か」「原著者確認があるか」を別々に扱います。
 

@@ -10,7 +10,14 @@ Contributions that **disprove** an AIMath claim are as valuable as contributions
 - a clean reproduction on another platform;
 - a primary-source literature match;
 - a corrected theorem boundary;
-- a new exact computation with reproducible inputs and hashes.
+- a new exact computation with reproducible inputs and hashes;
+- a precise explanation of why a failed route can be reopened with a genuinely new ingredient.
+
+## Before starting a mathematical route
+
+Read [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md). If your proposal resembles a route marked `REFUTED`, `BOUNDED NO-GO`, `BLOCKED`, `INCONCLUSIVE`, or `HOLD`, explain what materially new ingredient changes the old obstruction.
+
+Do not reopen a closed architecture merely by increasing a finite search depth, polynomial degree, ansatz order, or compute budget unless the failure ledger explicitly says that is a meaningful unresolved direction.
 
 ## Before opening a pull request
 
@@ -29,7 +36,14 @@ For mathematical changes, include:
 - proof vs computation distinction;
 - exact reproduction command;
 - changed hashes;
-- novelty claim, if any, with primary sources.
+- novelty claim, if any, with primary sources;
+- relevant failed-route entry and reopening justification, when applicable.
+
+## When a route fails
+
+Failure is part of the research output. Update `docs/FAILED_ROUTES.md` when the result establishes a reusable blocker, bounded no-go, refutation, or strong inconclusive lesson. Record the exact scope, decisive obstruction, what remains open, and a clear reopening condition.
+
+Do not turn a bounded failure into a claim that an entire mathematical area is impossible.
 
 ## Status promotion
 
