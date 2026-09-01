@@ -11,10 +11,12 @@ REQUIRED = [
     "LICENSING.md",
     "docs/RESULTS.md",
     "docs/FAILED_ROUTES.md",
+    "docs/EXPORT_GAPS.md",
     "docs/CLAIM_LEVELS.md",
     "docs/REPRODUCIBILITY.md",
     "docs/PUBLIC_EXPORT_POLICY.md",
     "docs/PRIVACY_AND_SECURITY.md",
+    "scripts/build_public_manifest.py",
     "research/README.md",
     "reviews/README.md",
 ]
