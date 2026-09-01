@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 AIMath contributors
+# SPDX-License-Identifier: CC0-1.0
+
+schema_version: 1
+task_id: TASK-OPEN-MATH-DISCOVERY-001
+outcome_type: LITERATURE_MATCH
+summary: >-
+  Exact bounded discovery on P_m(q)=prod_{j=1}^m(1+q^j) independently
+  rediscovered the classical shifted-staircase unimodality theorem. A stronger
+  near-strict pattern, a_m(s)<a_m(s+1) for 4<=s<T_m/2, passed exact train
+  m=12..14, pre-frozen held-out m=15..30, and post-held-out stress m=31..80,
+  but no universal proof or novelty conclusion is established. Global
+  log-concavity is refuted at m=3,s=2, and standard strict unimodality is
+  refuted for every m by a_m(0)=a_m(1)=1.
+artifacts:
+  - work/TASK-OPEN-MATH-DISCOVERY-001/RESEARCH_NOTES.md
+  - work/TASK-OPEN-MATH-DISCOVERY-001/open_math_discovery_coefficients.py
+  - work/TASK-OPEN-MATH-DISCOVERY-001/SELF_ASSESSMENT.yml
+claim_ids: []
+review_required: false
+self_assessment:
+  information_gain: 3
+  mathematical_reusability: 3
+  transfer_potential: 2
+  external_relevance: 2
+  followup_expected_value: 3
+  surprise: 3
+  uncertainty: 4
+  note: >-
+    Self-assessment only; truth/allocation authority is zero. The exact
+    m>=12,s>=4 observation is worth preserving, but it is finite evidence and
+    search failure does not establish novelty.
