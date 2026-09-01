@@ -1,150 +1,104 @@
 # Public export gap audit
 
-This file tracks useful research evidence that exists in the private canonical AIMath workspace but has not yet been exported as a self-contained public package.
-
-It is intentionally **not** a list of everything in the private repository. Private conversations, raw correspondence, personal data, internal coordination logs, and unaccepted exploratory artifacts are excluded on purpose.
+This file tracks **useful canonical research evidence that is still missing from the public distribution**. It is not an inventory of the private repository. Private conversations, raw correspondence, personal data, internal routing records, opaque attachments, private Git history, and unaccepted exploratory branches are intentionally excluded.
 
 Audit basis:
 
 - private canonical `main`: `c8e61e0e398f540bc8c5de79663398d689f37473`
-- public baseline inspected before this audit: `a69805ac5b6afd82928c734ed5af4ae1fe03ed68`
+- public export branch: `public-export-completion`
 
-## Public-package completeness scale
+## Completeness scale
 
-- **FULL** — statement, proof/certificate, reproduction path, provenance, and independent review are publicly usable.
-- **INDEX_ONLY** — the result appears in `docs/RESULTS.md`, but the decisive proof/certificate/review package is not public.
-- **PARTIAL** — useful pieces are public, but a contributor still needs private evidence to reconstruct the accepted or frozen research state.
-- **MISSING_FROM_INDEX** — a canonical private claim is not even represented in the public result index.
-- **INTENTIONAL_PRIVATE** — material should not be exported merely for completeness.
+- **FULL** — a third party can determine the exact statement/scope, inspect the decisive proof or certificate, run the public executable evidence when relevant, and see what an independent reviewer checked.
+- **SUBSTANTIAL** — theorem/proof/review are public, but some large finite classification data or secondary reproduction machinery remains private.
+- **PARTIAL** — useful evidence is public, but a material accepted component is still missing.
+- **INTENTIONAL_PRIVATE** — the material is deliberately not exported.
 
-## Current headline
+## Current status
 
-At this snapshot, `C-ROOT-433` is the only major canonical mathematical claim with a substantially self-contained public proof/reproduction/review package under `research/fixed-433/` and `reviews/fixed-433/`.
-
-Most other claims in `docs/RESULTS.md` are currently discovery/index entries rather than complete public research packages.
-
-## P0 — claims already listed publicly but missing their full evidence package
-
-| Claim / area | Public state | Private evidence known to exist | Public export needed |
+| Claim / area | State | Public package | Remaining gap |
 |---|---|---|---|
-| `C-GYODA-89` | `INDEX_ONLY` | exact integer verifier, replay/tests, independent audit and scope records | frozen statement, exact replay, independent audit, provenance; keep raw correspondence private |
-| `C-433-SPRINGBORN-OBSTRUCTION` | `INDEX_ONLY` | full writer proof/reproduction/source audit and independent review/verifier | self-contained writer + reviewer package |
-| `C-433-EXISTING-THEORY-IDENTIFICATION` | `INDEX_ONLY` | definitions, proof/identification, literature map, novelty audit, exact verifier, independent review | self-contained proof/replay/review + literature status |
-| `C-B3RCC-1` | `INDEX_ONLY` | fixed universal proof, independent derivation, finite adversarial controls | statement/proof/independent review/control package |
-| `C-B3RCC-RANK-R-CARRY-PATH` | `INDEX_ONLY` | fixed writer and independent verifier/review | proof + exact finite controls + review |
-| `C-B3RCC-RANK3-COMPONENT-ATLAS` | `INDEX_ONLY` | exact 24-type atlas, independent reconstruction, controls | atlas data/code, theorem proof, independent review |
-| `C-B3RCC-RANK4-PARTIAL-CUBE-BOUNDARY` | `INDEX_ONLY` | explicit counterexample, independent partial-cube obstruction verifier | exact witness + two independent obstruction checks |
-| `C-B3RCC-RANK-R-CORE-MASK-REDUCTION` | `INDEX_ONLY` | fixed-rank reduction proof and supporting evidence | theorem/proof/reviewer package |
-| `C-B3RCC-RANK3-INTRINSIC-CHARACTERIZATION` | `INDEX_ONLY` | fixed iff proof and independent reconstruction | theorem/proof/reviewer package |
-| `C-B3RCC-RANK3-COM-OM-CLASSIFICATION` | `INDEX_ONLY` | atlas classification and independent review | classification data/proof/review |
-| `C-B3RCC-RANK-SATURATION-RIGIDITY` | `INDEX_ONLY` | all-m proof independently rederived | theorem/proof/review |
-| `C-APC-RANK4-VERTEX-DIMENSION-BOUND` | `INDEX_ONLY` | universal proof, finite controls, independent derivation | proof/review/controls |
-| `C-B3RCC-MOVE-RANK5-IDIM7-BOUND` | `INDEX_ONLY` | exact corollary proof and independent review | proof/review |
-| `C-APC-RANK-R-VERTEX-DIMENSION-BOUND` | `INDEX_ONLY` | all-rank structural proof, independent Phase-1/final review, supporting-control hashes | full theorem package; high priority because it is a major general result |
-| `C-EQUIANGULAR-R18-ETA17-SINGLETON-EXCLUSION` | `INDEX_ONLY` | fixed writer proof/artifacts plus independent Phase-1 and final review | exact spectral/deck proof, verifier/certificate if applicable, independent review |
-| `C-DITTERT-N5-Z2-MATCHING-EXCLUSION` | `INDEX_ONLY` | fixed KKT/stationarity proof and independent reviews | self-contained theorem/proof/review package |
-| `C-LRC-R2-RESIDUAL-CAPACITY` | `INDEX_ONLY` | structural proof, exact controls, p=71 certificate, independent review | theorem definition, safe-prune proof, controls/certificate/review |
-| `C-AFES-BOUNDED-SEMANTICS` | `INDEX_ONLY` | repaired implementation/evidence and narrow independent re-review | exact accepted semantic surface, executable controls and review |
-| `C-THUE-MORSE-REDISCOVERY` | `INDEX_ONLY` | exact dyadic certificate, known-object identification and independent review | certificate/replay/review with explicit non-novelty boundary |
-| `C-LOCAL-TP2` | `PARTIAL` | frozen statement, invariants, novelty audit, exact finite scans and historical reproduction bundles | exact target statement + finite baseline + novelty/literature map; must remain `PROOF_CANDIDATE` |
+| `C-GYODA-89` | **FULL** | `research/gyoda-89/`, `reviews/gyoda-89/` | raw author correspondence remains intentionally private |
+| `C-ROOT-433` | **FULL** | `research/fixed-433/`, `reviews/fixed-433/` | none for accepted public claim |
+| `C-433-SPRINGBORN-OBSTRUCTION` | **FULL** | `research/433-springborn-obstruction/`, `reviews/433-springborn-obstruction/` | publication novelty still not established |
+| `C-433-EXISTING-THEORY-IDENTIFICATION` | **FULL** | `research/433-existing-theory-identification/`, `reviews/433-existing-theory-identification/` | Button full-body literature comparison remains unresolved; novelty not established |
+| B3RCC structural claims | **SUBSTANTIAL** | `research/b3rcc-apc/` | complete rank-3 atlas generation data/code and some individual finite certificates are not yet public |
+| `C-APC-RANK-R-VERTEX-DIMENSION-BOUND` | **FULL** | `research/b3rcc-apc/APC_ALL_RANK_THEOREM.md`, `reviews/b3rcc-apc/` | historical novelty/priority not established |
+| `C-EQUIANGULAR-R18-ETA17-SINGLETON-EXCLUSION` | **FULL** | `research/equiangular-r18-eta17/`, `reviews/equiangular-r18-eta17/` | only eta=17 is accepted; other eta branches are not silently imported |
+| `C-DITTERT-N5-Z2-MATCHING-EXCLUSION` | **SUBSTANTIAL** | `research/dittert-n5-z2/`, `reviews/dittert-n5-z2/` | large symbolic permanental-minor verifier is not yet exported; proof and independent review are public |
+| `C-LRC-R2-RESIDUAL-CAPACITY` | **SUBSTANTIAL** | `research/lonely-runner-r2/`, `reviews/lonely-runner-r2/` | full independent small-state control implementation and p=71 replay are not yet public |
+| `C-AFES-BOUNDED-SEMANTICS` | **FULL for accepted narrow scope** | `research/afes-bounded/`, `reviews/afes-bounded/` | strict canonical encoding remains a separate `PROOF_CANDIDATE` because of the bool/int edge |
+| `C-THUE-MORSE-REDISCOVERY` | **FULL** | `research/thue-morse-rediscovery/`, `reviews/thue-morse-rediscovery/` | none for the accepted rediscovery/certification claim |
+| `C-LOCAL-TP2` | **PARTIAL / PROOF_CANDIDATE** | `research/local-tp2/` | universal theorem remains unproved; large exact scan generator/replay is not yet a compact public package |
 
-## P0 — canonical claims missing from the public result index
+## B3RCC/APC residual export
 
-The private claims ledger contains independently reproduced claims that are not currently represented as their own public result entries, including at least:
+The public campaign package now records the accepted all-rank theorem, the rank-3/rank-4 boundary, fixed-rank core-mask reduction, carry path, COM/OM and rank-saturation results, APC bridge claims, and the portfolio-HOLD decision.
 
-- `C-B3RCC-MOVE-RANK4-APC-BARRIER`
-- `C-B3RCC-MOVE-RANK5-APC-TARGET-REDUCTION`
-- `C-B3RCC-CORE-MASK-COMPLEMENT-PAIRING`
+A future **data/reproduction export** may still add:
 
-These should be added either as explicit result entries or as clearly named subclaims inside a complete B3RCC/APC public campaign package. Their scope qualifications are important; none should be advertised as solving a general APC/OM/Las-Vergnas problem.
+- the complete canonical 24-type rank-3 atlas data;
+- an independent atlas generator/reviewer implementation;
+- the exact rank-4 search certificate catalogue and the three non-partial-cube unlabeled types.
 
-## P1 — research memory that prevents duplicated work
+These are useful reproducibility improvements, but their absence must not be confused with absence of the accepted theorem statements or independent mathematical review.
 
-### B3RCC / APC campaign closeout
+## Dittert residual export
 
-The private repository has a campaign closeout report that records:
+The public package contains the exact support-class statement, the KKT/stationarity proof, the negative-control explanation, and the independent review. A later software export may add a compact exact symbolic verifier that reconstructs the required permanental minors from the `5 x 5` matrix rather than copying private generated logs.
 
-- which structural theorems were accepted;
-- how the programme moved from finite structure to a general APC theorem;
-- why the theme was placed on portfolio HOLD despite mathematical success;
-- which next-rank/classification directions should not be restarted by default;
-- explicit conditions that would justify reopening the campaign;
-- fixed writer/reviewer commit pointers.
+## Lonely Runner residual export
 
-A privacy-safe public version would save contributors from extending the programme by rank simply because its successful history is visible.
+The public package contains the totalized `R2` theorem, proof of safety and `R2<=R1`, the strict p=71 certificate description, the performance no-go boundary, and the independent review. A later software export may add the independent exhaustive small-state tester and the author-compatible p=71 replay after a separate source/licence review of any imported author code assumptions.
 
-### Literature and novelty work
+## Local TP2 residual export
 
-For some lanes, private packages already contain `NOVELTY_AUDIT.md`, `LITERATURE_MAP.md`, source-normalisation notes, and unresolved-source gaps. Publicly saying only `NOVELTY_NOT_ESTABLISHED` is insufficient: a new contributor cannot tell which primary sources were already checked and may repeat the same search.
+Local TP2 deliberately remains `PROOF_CANDIDATE`. The public package freezes:
 
-Priority examples:
+- the exact adjacent-minor statement and terminal endpoint;
+- orientation/zero-extension conventions;
+- reviewed proof-design invariants;
+- finite baseline counts;
+- novelty/literature boundary.
 
-- fixed-433 / Springborn / existing-theory identification;
-- Local TP2;
-- APC all-rank theorem.
+The following are still missing or open:
 
-Only source-backed, redistribution-safe summaries should be exported; inaccessible or unverified source claims must stay labelled unresolved.
+- a universal proof;
+- a compact public exact generator for the full denominator-120/140 scans;
+- theorem-native progress beyond the already blocked ansatz families documented in `docs/FAILED_ROUTES.md`.
 
-### Evidence policy
+Finite evidence must not be promoted to an infinite theorem.
 
-The private `docs/EVIDENCE_POLICY.md` contains reusable rules not fully represented by the current public docs, including durable fixed-commit identity, environment/dependency recording, implementation-independence disclosure, and immutable-artifact handling.
+## Workflow/platform material intentionally not promoted
 
-A public adaptation should preserve these research-quality rules while removing private-release-specific details that do not apply to the public repository.
+The private repository contains a larger v0.1.2 reproduction bundle with several accepted sub-gates but an overall non-accepted release state. It is **not** exported as if it were an accepted release. A later dedicated software/privacy audit may publish selected workflow components with their exact partial acceptance state.
 
-### Open contribution targets
+This is not a missing mathematical claim package.
 
-The private roadmap/current status says much more precisely what remains open and what is on HOLD. The public repository currently lacks a concise `OPEN_PROBLEMS.md` / `CONTRIBUTION_TARGETS.md` telling an external researcher:
+## Material that remains private by design
 
-- the exact unresolved subproblem;
-- accepted prerequisites;
-- already-failed routes;
-- what would count as progress;
-- which result would need independent review.
+The following are **not export gaps**:
 
-Without this, outsiders can read the archive but cannot easily join the frontier.
+- raw ChatGPT exports or rendered private conversations;
+- raw email, DM, or private correspondence;
+- personal identifiers, personal email addresses, credentials, tokens, cookies or keys;
+- private Git history or private branch topology;
+- internal coordination logs whose only purpose is workflow routing;
+- opaque private ZIP/archive attachments;
+- unmerged writer results presented as canonical;
+- raw source PDFs or third-party copyrighted artifacts when citation is sufficient.
 
-## P2 — platform/reproducibility material
-
-The private repository contains a substantial `reproduce/v0.1.2/minimal-g9-g13/` evidence bundle with dependency/runtime locking, environment contract, clean replay, inventory/hashes, mutation controls and CI evidence.
-
-This may be useful to people adopting the AIMath workflow, but it should be exported only after a separate privacy/provenance review and with its exact acceptance status preserved. Partial gate success must not be rewritten as overall release acceptance.
-
-## Material that should remain private by default
-
-These are **not export gaps**:
-
-- raw ChatGPT exports or private conversation recovery bundles;
-- raw email/DM/correspondence;
-- personal identifiers or credentials;
-- private Git history;
-- internal coordination/chat routing records when they add no mathematical evidence;
-- opaque private attachments;
-- unmerged writer branches presented as if canonical;
-- exploratory branch results whose current claim level has not been accepted into the canonical ledger.
-
-When a useful theorem lives only on a historical/fixed branch, export a clean self-contained public claim package from the fixed writer/reviewer commits rather than exposing the private branch history.
-
-## Recommended export order
-
-1. `C-433-SPRINGBORN-OBSTRUCTION` and `C-433-EXISTING-THEORY-IDENTIFICATION` — complete evidence is already on private `main`, making these comparatively low-risk exports.
-2. `C-GYODA-89` — highly understandable flagship result; export exact mathematics while excluding raw correspondence/chat material.
-3. `C-LOCAL-TP2` frozen target + exact finite baseline + literature/novelty state — important for preventing duplicated failed proof work.
-4. `C-APC-RANK-R-VERTEX-DIMENSION-BOUND` plus the B3RCC/APC campaign closeout — strongest general theorem/campaign map.
-5. Equiangular R18 and Dittert n=5 accepted packages — externally recognisable problems with fixed independent reviews.
-6. Remaining B3RCC, Lonely Runner, AFES and Thue–Morse packages.
-7. v0.1.2 workflow/reproducibility material after separate software/privacy audit.
+When useful mathematics originated on a private historical branch, the public repository should contain a clean claim package reconstructed from the fixed mathematical evidence, not the private branch history.
 
 ## Completion rule
 
-A claim should not be considered fully exported merely because it appears in `docs/RESULTS.md`.
+A mathematical public export is complete only when a reader can tell, from public material alone:
 
-For a mathematical claim whose private acceptance relies on proof, computation, or independent review, the public export is complete only when a third party can determine from the public repository alone:
-
-1. the exact frozen statement and scope;
-2. the mathematical proof or decisive certificate;
-3. the finite/universal boundary;
-4. how to reproduce executable evidence;
-5. exact durable provenance/hashes where relevant;
-6. what the independent reviewer actually checked;
-7. the current novelty/literature status;
-8. nearby failed routes or known blockers.
+1. the exact statement and scope;
+2. what is proof and what is finite computation;
+3. the decisive proof/certificate;
+4. how executable evidence is reproduced when relevant;
+5. the durable private-source commit identifiers needed for provenance without exposing private branch history;
+6. what the independent reviewer checked;
+7. the novelty/literature status;
+8. nearby failed routes or explicit open boundaries.
