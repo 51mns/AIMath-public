@@ -18,6 +18,8 @@ from village_core import (
 
 BOOTSTRAP_MAINTAINERS = {"51mns"}
 BOOTSTRAP_PROTECTED = [
+    "README.md",
+    "README.ja.md",
     "AGENTS.md",
     "CONTRIBUTING.md",
     "LICENSING.md",
@@ -54,7 +56,7 @@ BOOTSTRAP_PROTECTED = [
     "scripts/verify_public_layout.py",
 ]
 BOOTSTRAP_GOVERNANCE_ONLY = [
-    "AGENTS.md", "CONTRIBUTING.md", "LICENSING.md", "REUSE.toml", "LICENSES/**", "SECURITY.md",
+    "README.md", "README.ja.md", "AGENTS.md", "CONTRIBUTING.md", "LICENSING.md", "REUSE.toml", "LICENSES/**", "SECURITY.md",
     "docs/VILLAGE_CONSTITUTION.md", "docs/VILLAGE_ARCHITECTURE.md", "docs/VILLAGE_ARCHITECTURE_V1_1.md", "docs/CONTINUATION_GATE.md",
     "docs/GITHUB_SETTINGS_REQUIRED.md", "docs/RESEARCH_PORTFOLIO.md", "docs/RESEARCH_BOARD.md",
     "docs/DEPENDENCY_GRAPH.md", "docs/CAMPAIGN_HISTORY.md", "docs/RESEARCH_EVALUATIONS.md",
