@@ -1,0 +1,24 @@
+name: Math review
+description: Report a proof gap, counterexample, or mathematical correction
+title: "[Math review] "
+labels: []
+body:
+  - type: input
+    id: claim
+    attributes:
+      label: Claim ID
+      placeholder: C-...
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: Exact mathematical issue
+      description: Identify the lemma, equation, inference, or counterexample.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Reproduction / evidence
+      description: Give exact values, commands, code, or a self-contained argument when possible.
