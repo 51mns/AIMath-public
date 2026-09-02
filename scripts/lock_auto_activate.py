@@ -64,7 +64,28 @@ def auto_activation_preflight(
             errors.append(f"auto activation permits ACQUIRE additions only: {name}")
         if not (name.startswith("coordination/locks/") and name.endswith(".yml")):
             errors.append(f"non-lock path in auto activation candidate: {name}")
+        if not isinstance(item.get("sha"), str) or len(item.get("sha", "")) != 40:
+            errors.append(f"PR file is missing exact Git blob SHA: {name}")
     return not errors, errors
+
+
+def lock_git_object_errors(files: list[dict], tree_entries: list[dict]) -> list[str]:
+    """Require exact regular blob identity; Contents API file-ness is insufficient for symlinks."""
+    by_path = {entry.get("path"): entry for entry in tree_entries if isinstance(entry, dict)}
+    errors: list[str] = []
+    for item in files:
+        path = item.get("filename", "")
+        entry = by_path.get(path)
+        if not entry:
+            errors.append(f"lock path missing from exact head Git tree: {path}")
+            continue
+        if entry.get("mode") != "100644" or entry.get("type") != "blob":
+            errors.append(
+                f"lock path must be regular Git blob mode 100644, got {entry.get('mode')}/{entry.get('type')}: {path}"
+            )
+        if entry.get("sha") != item.get("sha"):
+            errors.append(f"PR file SHA does not match exact head Git tree blob: {path}")
+    return errors
 
 
 def _request_json(token: str, repository: str, method: str, path: str, payload=None):
@@ -108,7 +129,29 @@ def _fetch_all_pr_files(token: str, repository: str, pr_number: int) -> list[dic
     raise AutoActivationError("PR files pagination exceeded bounded limit")
 
 
-def _fetch_file_at_sha(token: str, repository: str, path: str, sha: str) -> bytes:
+def _fetch_exact_head_tree(token: str, repository: str, head_sha: str) -> list[dict]:
+    owner, repo = repository.split("/", 1)
+    commit = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/git/commits/{head_sha}")
+    tree_sha = commit.get("tree", {}).get("sha")
+    if not isinstance(tree_sha, str):
+        raise AutoActivationError("exact head commit did not expose a Git tree SHA")
+    tree = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/git/trees/{tree_sha}?recursive=1")
+    if tree.get("truncated"):
+        raise AutoActivationError("exact head recursive Git tree was truncated")
+    entries = tree.get("tree")
+    if not isinstance(entries, list):
+        raise AutoActivationError("unexpected Git tree response")
+    return entries
+
+
+def _fetch_file_at_sha(
+    token: str,
+    repository: str,
+    path: str,
+    sha: str,
+    *,
+    expected_blob_sha: str,
+) -> bytes:
     owner, repo = repository.split("/", 1)
     quoted = urllib.parse.quote(path, safe="/")
     obj = _request_json(
@@ -118,7 +161,11 @@ def _fetch_file_at_sha(token: str, repository: str, path: str, sha: str) -> byte
         f"/repos/{owner}/{repo}/contents/{quoted}?ref={sha}",
     )
     if obj.get("type") != "file" or obj.get("encoding") != "base64":
-        raise AutoActivationError(f"lock path is not an ordinary base64 file: {path}")
+        raise AutoActivationError(f"lock path is not an ordinary base64 file response: {path}")
+    if obj.get("sha") != expected_blob_sha:
+        raise AutoActivationError(
+            f"Contents API object SHA does not equal verified regular Git blob SHA: {path}"
+        )
     try:
         return base64.b64decode(obj["content"], validate=False)
     except Exception as exc:
@@ -140,7 +187,13 @@ def _materialize_lock_head(
     )
     for item in files:
         path = item["filename"]
-        data = _fetch_file_at_sha(token, repository, path, head_sha)
+        data = _fetch_file_at_sha(
+            token,
+            repository,
+            path,
+            head_sha,
+            expected_blob_sha=item["sha"],
+        )
         if len(data) > 64 * 1024:
             td.cleanup()
             raise AutoActivationError(f"lock file too large: {path}")
@@ -148,6 +201,23 @@ def _materialize_lock_head(
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
     return td
+
+
+def _strict_up_to_date_gate(token: str, repository: str) -> tuple[bool, str]:
+    """Auto activation is disabled unless GitHub confirms strict status checks on main."""
+    owner, repo = repository.split("/", 1)
+    try:
+        obj = _request_json(
+            token,
+            repository,
+            "GET",
+            f"/repos/{owner}/{repo}/branches/main/protection/required_status_checks",
+        )
+    except AutoActivationError as exc:
+        return False, f"cannot confirm Require branches to be up to date before merging: {exc}"
+    if obj.get("strict") is not True:
+        return False, "Require branches to be up to date before merging is not confirmed ON"
+    return True, "strict status checks confirmed"
 
 
 def main() -> int:
@@ -166,9 +236,7 @@ def main() -> int:
     pr = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/pulls/{pr_number}")
     ref = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/git/ref/heads/main")
     current_main_sha = ref.get("object", {}).get("sha", "")
-    maintainers_obj = json.loads(
-        Path("coordination/policy/MAINTAINERS.yml").read_text(encoding="utf-8")
-    )
+    maintainers_obj = json.loads(Path("coordination/policy/MAINTAINERS.yml").read_text(encoding="utf-8"))
     maintainers = set(maintainers_obj.get("maintainers", []))
     files = _fetch_all_pr_files(token, repository, pr_number)
     ok, errors = auto_activation_preflight(
@@ -185,10 +253,19 @@ def main() -> int:
             print(" -", error)
         return 0
 
+    tree_entries = _fetch_exact_head_tree(token, repository, pr["head"]["sha"])
+    object_errors = lock_git_object_errors(files, tree_entries)
+    if object_errors:
+        raise AutoActivationError("exact Git object validation failed: " + "; ".join(object_errors))
+
+    strict_ok, strict_reason = _strict_up_to_date_gate(token, repository)
+    if not strict_ok:
+        print("AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION")
+        print(strict_reason)
+        return 0
+
     base_state = VillageState(".").load()
-    base_errors = list(base_state.validate()) + worker_lock_errors(
-        base_state, load_actor_policy(".")
-    )
+    base_errors = list(base_state.validate()) + worker_lock_errors(base_state, load_actor_policy("."))
     if base_errors:
         raise AutoActivationError("current main Village state is invalid: " + "; ".join(base_errors[:10]))
 
@@ -196,9 +273,7 @@ def main() -> int:
     try:
         head_root = Path(td.name) / "repo"
         head_state = VillageState(head_root).load()
-        head_errors = list(head_state.validate()) + worker_lock_errors(
-            head_state, load_actor_policy(head_root)
-        )
+        head_errors = list(head_state.validate()) + worker_lock_errors(head_state, load_actor_policy(head_root))
         if head_errors:
             raise AutoActivationError("proposed lock head is invalid: " + "; ".join(head_errors[:10]))
         operation, transition_errors = validate_lock_transition(
@@ -210,22 +285,30 @@ def main() -> int:
         )
         if operation != "ACQUIRE" or transition_errors:
             raise AutoActivationError(
-                "trusted revalidation rejected lock acquisition: "
-                + "; ".join([operation, *transition_errors])
+                "trusted revalidation rejected lock acquisition: " + "; ".join([operation, *transition_errors])
             )
         added = set(head_state.lock_bundles) - set(base_state.lock_bundles)
         if len(added) != 1:
             raise AutoActivationError("ACQUIRE must add exactly one lock bundle")
         bundle = head_state.lock_bundles[next(iter(added))]
-        worker_errors = new_worker_lock_errors(
-            base_state,
-            bundle,
-            actor_policy=load_actor_policy("."),
-        )
+        worker_errors = new_worker_lock_errors(base_state, bundle, actor_policy=load_actor_policy("."))
         if worker_errors:
             raise AutoActivationError("worker lock policy failed: " + "; ".join(worker_errors))
     finally:
         td.cleanup()
+
+    # Defense in depth before the server-side strict-base merge gate.
+    final_ref = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/git/ref/heads/main")
+    if final_ref.get("object", {}).get("sha") != current_main_sha:
+        print("SKIP: main moved after revalidation; require a fresh Verify run")
+        return 0
+    final_pr = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/pulls/{pr_number}")
+    if final_pr.get("head", {}).get("sha") != pr["head"]["sha"]:
+        print("SKIP: PR head moved after revalidation")
+        return 0
+    if final_pr.get("base", {}).get("sha") != current_main_sha:
+        print("SKIP: PR base moved after revalidation")
+        return 0
 
     result = _request_json(
         token,
