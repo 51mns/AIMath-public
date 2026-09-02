@@ -932,3 +932,524 @@ CURRENTLY_ALLOWED_TO_START_PHASE_B_IMPLEMENTATION = NO, UNTIL ACCEPTED FOCUSED P
 ```
 
 If focused review finds that exact expected transport provenance cannot be established from fresh GitHub PR/commit/tree/history evidence without weakening exactness, implementation MUST stop and return to design review. It MUST NOT fall back to canonical blob equality as a substitute.
+
+## 20. Canonical acquisition identity V2 remediation
+
+This section is the frozen V2 remediation for focused independent rereview commit `7385e592d93987490d1fc91c10ec4c5b65ff4e81`, which found:
+
+```text
+H-01 HIGH   GitHub indirect merge prevents positive exact-PR-number causality proof.
+M-02 MEDIUM max numeric run_id is not a documented latest-run ordering rule.
+```
+
+Focused review blob:
+
+```text
+09a1f9c0a7318c22e80c48d8618caa37a52127b2
+```
+
+Primary GitHub semantics used by this V2 overlay:
+
+- https://docs.github.com/en/pull-requests/reference/pull-request-merges
+- https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+- https://docs.github.com/en/rest/actions/workflow-runs
+- https://docs.github.com/en/rest/commits/commits
+- https://docs.github.com/en/rest/git/commits
+
+Current implementation/context evidence frozen for this design pass:
+
+```text
+canonical main                   84a046359b299950403b68bfcb190930ebbc4c3f
+trusted lifecycle merge method   squash
+Verify workflow path             .github/workflows/verify.yml
+Verify workflow name             Verify public release
+fresh-observed workflow_id       347191396
+effective Ruleset id             22089746
+Ruleset name                     Village main strict lifecycle safety
+required status context          verify
+strict up-to-date                true
+bypass actors                    []
+current_user_can_bypass          never
+```
+
+The existing trusted lifecycle fresh-revalidates main/head/base immediately before its merge endpoint call and currently calls the endpoint with the expected candidate PR number, exact candidate head SHA, and `merge_method = "squash"`. That is useful implementation context, but **post-canonicalisation authority does not depend on proving which PR number caused the Git transition**.
+
+### 20.1 Supersession rule — PR causality and max-`run_id` are removed from authority
+
+This Section 20 supersedes Sections 8, 10, 11, 12, 14, 15, 18 and 19.1–19.8 wherever they conflict with V2. Historical wording is retained only to preserve the audit trail.
+
+The following older statements are explicitly **NON-AUTHORITATIVE** for any V2 implementation:
+
+1. any requirement or implication that `THIS exact PR number created THIS canonical acquisition`;
+2. any use of PR number, PR ref, `merged`, `merged_at`, or `merge_commit_sha` as authority for `ACTIVE_NEXT`;
+3. any rule that a different PR/ref is non-equivalent merely because its PR locator differs when it points to the same exact immutable acquisition head;
+4. any `merge-strategy neutral` claim for the `ACTIVE_NEXT` proof;
+5. any rule that the greatest numeric `run_id` is the latest or authoritative Verify run;
+6. Section 19.7 row 55 as written. It is replaced by Section 20.10 row 55 below.
+
+PR metadata remains useful for transport discovery, idempotent reuse, debugging and audit. It is not canonical acquisition security identity.
+
+The V2 security statement is:
+
+> **THIS exact immutable acquisition identity became canonical through the permitted canonical-main transition.**
+
+It is deliberately **not**:
+
+> THIS exact PR number created this acquisition.
+
+GitHub indirect-merge state therefore cannot grant or deny `ACTIVE_NEXT` by itself.
+
+### 20.2 `CanonicalAcquireIdentityV2`
+
+The authority-bearing expected acquisition is immutable Git/acquisition content:
+
+```text
+CanonicalAcquireIdentityV2 = {
+  "schema_version": 2,
+
+  "source_epoch_id": ...,
+  "continuation_context_id": ...,
+  "selection_id": ...,
+  "acquire_intent_id": ...,
+
+  "expected_base_sha": ...,
+  "expected_head_sha": ...,
+  "expected_head_tree_sha": ...,
+
+  "selected_task_id": ...,
+  "worker_id": ...,
+  "principal_id": ...,
+
+  "work_ref": ...,
+  "sorted_collision_keys": [...],
+
+  "lock_id": ...,
+  "acquired_at": ...,
+  "expires_at": ...,
+
+  "exact_lock_objects": [
+    {
+      "path": ...,
+      "mode": "100644",
+      "blob_sha": <40-hex Git blob OID>,
+      "bytes_sha256": <64 lowercase hex>
+    },
+    ... sorted lexicographically by path ...
+  ]
+}
+```
+
+The repository namespace is fixed by this frozen contract as `51mns/AIMath-public`; an observation from any other repository fails before identity comparison.
+
+`exact_lock_objects` MUST describe exactly the complete canonical collision-key lock path set. `sorted_collision_keys`, the path-derived collision keys, every decoded lock payload collision bundle, and the Task's frozen collision bundle MUST agree exactly. Every lock object MUST be a regular Git blob mode `100644`; Git OID, exact decoded bytes and `bytes_sha256` MUST agree.
+
+`expected_base_sha` MUST equal both:
+
+```text
+SelectionV1.selection_main_sha
+expected lock payload base_main_sha
+```
+
+The exact head `H = expected_head_sha` is frozen only after the deterministic ACQUIRE transport ref is first materialised. The first valid creator freezes the exact immutable head commit and its exact payload timestamp; all retries and duplicate creators for the same `acquire_intent_id` MUST adopt that exact existing valid head rather than manufacture a second head. Therefore commit metadata that participates in `H` is part of the frozen acquisition once created, not an independently regenerated approximation.
+
+For V2, the expected ACQUIRE head itself MUST be a single exact transport transition from the selection base:
+
+```text
+parents(H) == [expected_base_sha]
+tree(H).sha == expected_head_tree_sha
+compare expected_base_sha -> H changes exactly exact_lock_objects.path
+```
+
+No unrelated path may change. Every expected lock object in `tree(H)` MUST equal `CanonicalAcquireIdentityV2.exact_lock_objects` exactly.
+
+The canonical acquisition identity is:
+
+```text
+canonical_acquire_id = SHA256(canonical(CanonicalAcquireIdentityV2))
+```
+
+PR number, PR ref, PR merge fields, webhook fields, workflow delivery fields and chat/caller data are **not inputs** to `canonical_acquire_id`.
+
+A canonical lock bundle alone is still insufficient: the source epoch, continuation context, selection, acquire intent, exact base/head/tree and the canonical-main transition proof below are all required.
+
+### 20.3 `TransportLocatorV1` is audit/idempotency metadata only
+
+Transport discovery may separately retain:
+
+```text
+TransportLocatorV1 = {
+  "repository": "51mns/AIMath-public",
+  "pr_number": ...,
+  "head_ref": ...,
+  "head_sha": ...,
+  "base_ref": "main",
+  "base_sha": ...,
+  "observed_principal": ...
+}
+```
+
+This record may be used only for:
+
+- finding/reusing the deterministic ACQUIRE transport;
+- duplicate PR suppression;
+- diagnostics and human audit;
+- handing a currently eligible transport to the inherited trusted lifecycle.
+
+`TransportLocatorV1.pr_number` and `.head_ref` MUST NOT appear in `CanonicalAcquireIdentityV2` and MUST NOT be predicates that grant `ACTIVE_NEXT`.
+
+Before canonicalisation, transport reuse remains strict: a different head SHA is not reusable as the same frozen acquisition transport. After canonicalisation, PR locator equality is irrelevant to acquisition authority; immutable acquisition identity and canonical history control.
+
+### 20.4 Security equivalence under V2
+
+The equivalence rules are exact:
+
+#### Different head SHA
+
+If another PR/ref points to `H2 != expected_head_sha`, it is **NON-EQUIVALENT** for this acquisition even when its lock bytes are byte-identical. Different immutable commit identity means a different acquisition candidate. It cannot satisfy this `canonical_acquire_id`.
+
+#### Same head SHA, different PR/ref
+
+If another PR/ref points to the exact same `H = expected_head_sha`, its PR identity is different but its immutable Git head is the same. It may represent the same acquisition **only when every other field of `CanonicalAcquireIdentityV2` and every canonical-main condition in Section 20.7 also matches**.
+
+No PR is called the creator. The result is either:
+
+```text
+CANONICAL_ACQUIRE_IDENTITY_CONFIRMED
+```
+
+or a fail-closed canonical identity/transition mismatch.
+
+#### Same head SHA but any acquisition-field mismatch
+
+Same `H` does not waive Task, worker, principal, source epoch, continuation, selection, acquire intent, work ref, collision bundle, lock id, timestamps, base SHA, tree SHA, blob OIDs or byte hashes. Any mismatch fails closed.
+
+### 20.5 Documented Verify lineage ordering — M-02 replacement
+
+The V2 Verify identity is fixed to the repository/workflow lineage, not to numeric `run_id` chronology:
+
+```text
+repository    = "51mns/AIMath-public"
+workflow_id   = 347191396
+workflow_path = ".github/workflows/verify.yml"
+workflow_name = "Verify public release"
+event         = "pull_request"
+head_sha      = CanonicalAcquireIdentityV2.expected_head_sha
+```
+
+The implementation MUST fresh-list the **complete relevant workflow-run set** for that exact workflow identity and exact `head_sha`.
+
+GitHub documents:
+
+- `run_id` is unique for a workflow run and does not change on rerun;
+- `run_number` begins at 1 for a workflow's first run and **increments with each new run** of that workflow;
+- `run_number` does not change on rerun;
+- `run_attempt` begins at 1 for a workflow run and increments with each rerun.
+
+Therefore V2 freezes:
+
+```text
+authoritative_run_number = max(run_number among the complete matching run set)
+```
+
+`run_id` is retained only as the immutable lookup identifier for the selected lineage. **Its magnitude is never compared for ordering.**
+
+For the unique highest-`run_number` lineage:
+
+1. fresh-read its current run object by `run_id`;
+2. require the same repository/workflow_id/path/name/event/head SHA;
+3. require the currently observed `run_number == authoritative_run_number`;
+4. record the currently observed `run_attempt`;
+5. require `status = completed` and `conclusion = success` now.
+
+Any current state other than completed-success, including failure, cancelled, timed_out, action_required, queued, in_progress, requested, waiting, pending, neutral, skipped, stale or malformed/unknown, is **NOT eligible**.
+
+If duplicate rows expose the same `run_number` with inconsistent `run_id`, workflow identity, head SHA, status or other lineage identity, observation fails closed rather than choosing one.
+
+#### Older-run rerun policy
+
+Suppose matching lineages exist:
+
+```text
+run_number 10 = success
+run_number 11 = failure
+```
+
+If run 10 is rerun later and succeeds again, its `run_number` remains 10. It **does not** overtake 11. Run 11 remains the authoritative lineage, so the acquisition remains NOT eligible.
+
+Recovery from rerunning a **non-authoritative older lineage** requires either:
+
+- a new matching workflow run with a higher `run_number`, for example 12, which completes successfully; or
+- successful completion of a rerun of the already-authoritative highest lineage itself, in which case that same highest `run_number` remains authoritative and its current `run_attempt` / current status controls.
+
+If the authoritative highest lineage is currently being rerun and the current run object is queued/in-progress, old successful attempts are stale for authority and the acquisition is NOT eligible until that current attempt reaches completed-success.
+
+### 20.6 Workflow-run completeness is a global fail-closed prerequisite
+
+No inherited one-page helper is sufficient for V2.
+
+Fresh pagination MUST continue until the implementation can establish the complete relevant result set for the exact workflow identity/head. The REST API is paginated (maximum 100 rows per page), and GitHub documents that filtered workflow-run searches may be capped at 1,000 results. The implementation MUST therefore fail closed if the query/result envelope cannot prove completeness.
+
+At minimum, any of the following returns a machine-readable Verify observation failure and grants no PENDING/merge/`ACTIVE_NEXT` authority:
+
+```text
+VERIFY_WORKFLOW_IDENTITY_AMBIGUOUS
+VERIFY_RUNSET_PAGINATION_FAILED
+VERIFY_RUNSET_TRUNCATED
+VERIFY_RUNSET_RESULT_CAP_UNPROVEN
+VERIFY_RUNSET_MALFORMED
+VERIFY_RUN_NUMBER_DUPLICATE_INCONSISTENT
+VERIFY_AUTHORITATIVE_LINEAGE_UNREADABLE
+VERIFY_AUTHORITATIVE_ATTEMPT_NOT_SUCCESS
+```
+
+A cached result, webhook payload or old green run cannot substitute for fresh complete observation.
+
+### 20.7 Exact canonical-main transition proof
+
+Let:
+
+```text
+B   = CanonicalAcquireIdentityV2.expected_base_sha
+H   = CanonicalAcquireIdentityV2.expected_head_sha
+T_H = CanonicalAcquireIdentityV2.expected_head_tree_sha
+C   = fresh refs/heads/main SHA
+```
+
+`ACTIVE_NEXT` may be returned only after fresh GitHub commit/tree/history evidence proves **all** of the following.
+
+#### A. Frozen acquisition derivation
+
+1. `B == SelectionV1.selection_main_sha`.
+2. `B == expected lock payload base_main_sha`.
+3. `H` is the exact frozen head for the same `acquire_intent_id`.
+4. `parents(H) == [B]`.
+5. `tree(H) == T_H`.
+6. compare `B -> H` changes exactly the expected canonical lock paths and no other path.
+7. the lock objects at `H` are exact regular `100644` objects with the frozen OIDs/bytes hashes.
+
+#### B. Fresh canonical first-parent history
+
+8. fresh current main `C` descends from `B`.
+9. Starting at `C`, fresh-read Git commit objects and follow **parent index 0** toward `B`. The observation must be complete enough to prove the first-parent chain; cached or partially listed history is not authority.
+10. Identify `M` as the unique child of `B` on that observed first-parent path — the canonical transition immediately after `B`.
+11. `M` MUST have exactly one parent, and that parent MUST be `B`:
+
+```text
+parents(M) == [B]
+```
+
+This is the frozen strict canonical shape. A multi-parent merge commit, an unrelated intervening first-parent commit, a multi-step rebase sequence, missing history, ambiguous parent data, or any shape that cannot prove this exact transition fails closed.
+
+#### C. Exact canonical tree transition
+
+12. `tree(M).sha == T_H`.
+13. compare `B -> M` changes exactly `CanonicalAcquireIdentityV2.exact_lock_objects.path` and no unrelated path.
+14. for every expected path, the object at `M` is mode `100644` and has exactly the expected Git blob OID and byte SHA-256.
+15. no expected lock path already existed at `B` as the same active acquisition.
+
+The canonical acquisition transition is therefore an exact single transition from the frozen base to the frozen intended head tree. `M` MAY equal `H`; equality is not required. Commit message, PR number and PR merge metadata are not acquisition authority.
+
+#### D. Current-main persistence and active read-back
+
+16. `M` remains in the fresh first-parent ancestry of current main `C`.
+17. fresh current-main tree still contains the exact expected lock object bundle.
+18. fresh canonical Village state reports exactly that bundle active and unexpired.
+19. Task, worker, principal, work ref, collision keys, lock id, `base_main_sha`, `acquired_at`, `expires_at`, source epoch, continuation context, selection and acquire intent all still equal `CanonicalAcquireIdentityV2`.
+20. a later renewal, replacement or reacquisition is a different acquisition and does not satisfy the old `canonical_acquire_id`, even when selected Task/worker/principal remain the same.
+
+#### E. Effective Ruleset proof
+
+21. fresh effective/default-branch rule observation MUST positively prove all of:
+
+```text
+enforcement = active
+target applies to default branch
+required status context includes "verify"
+strict_required_status_checks_policy = true
+bypass_actors = []
+current_user_can_bypass = "never"
+```
+
+If effective-rule observation is unavailable, malformed, contradictory, or any bypass actor exists, V2 fails closed. This lane does not change repository settings.
+
+### 20.8 Merge-shape policy — not merge-strategy neutral
+
+V2 does **not** trust a merge method name. It trusts only the observed canonical shape in Section 20.7.
+
+Current trusted lifecycle uses `merge_method = "squash"`, with final main/head/base revalidation immediately before the merge API call. GitHub documents squash merging as producing one combined commit on the base branch; that is compatible with the frozen single-parent/single-transition proof when the observed result actually satisfies `parents(M) == [B]` and `tree(M) == tree(H)`.
+
+Other GitHub merge modes are not automatically accepted:
+
+- a normal merge commit is expected to be multi-parent and therefore fails `parents(M) == [B]`;
+- a multi-commit rebase produces multiple canonical first-parent transitions and therefore fails the single-transition proof;
+- a one-step result from any mechanism is acceptable only if the **observed immutable Git shape** satisfies every V2 clause. The design never infers safety from the method label.
+
+If GitHub behaviour for a candidate produces a shape that cannot be positively proved, return:
+
+```text
+NONCANONICAL_ACQUIRE_MERGE_SHAPE
+```
+
+not `ACTIVE_NEXT`.
+
+### 20.9 Indirect merge and same-head/different-locator handling
+
+#### Reviewer H-01 attack — fail closed
+
+Construct:
+
+```text
+expected PR A: ref A, head H, base B
+other    PR B: ref B, same exact head H, base B
+```
+
+If the other PR is merged using a merge-commit path, GitHub may later mark expected PR A indirectly merged. Under V2, `A.merged`, `A.merged_at` and `A.merge_commit_sha` are irrelevant to acquisition authority.
+
+The canonical merge-commit transition has a noncanonical multi-parent shape, so Section 20.7 fails:
+
+```text
+status = NONCANONICAL_ACQUIRE_MERGE_SHAPE
+ACTIVE_NEXT = false
+```
+
+This closes the focused-review H-01 without attempting impossible PR-number causality attribution.
+
+#### Same immutable acquisition through another PR locator — may confirm
+
+If a different PR/ref points to the same exact head `H`, and fresh canonical main instead contains an exact single transition `M` such that:
+
+```text
+parents(M) == [B]
+tree(M) == tree(H)
+compare B -> M == exact expected lock-only object set
+all CanonicalAcquireIdentityV2 fields match
+Verify lineage policy passes
+Ruleset proof passes
+fresh active canonical lock read-back passes
+```
+
+then the intended immutable acquisition itself became canonical. V2 returns:
+
+```text
+CANONICAL_ACQUIRE_IDENTITY_CONFIRMED
+```
+
+It does **not** say that PR A or the other PR was proved to be the creator.
+
+### 20.10 Machine-readable V2 boundary and preregistered tests
+
+The positive boundary is exactly:
+
+```text
+CANONICAL_ACQUIRE_IDENTITY_CONFIRMED
+```
+
+Representative fail-closed codes include:
+
+```text
+CANONICAL_ACQUIRE_IDENTITY_MISMATCH
+CANONICAL_ACQUIRE_BASE_MISMATCH
+CANONICAL_ACQUIRE_HEAD_MISMATCH
+CANONICAL_ACQUIRE_HEAD_PARENT_MISMATCH
+CANONICAL_ACQUIRE_HEAD_TREE_MISMATCH
+CANONICAL_ACQUIRE_TRANSITION_MISMATCH
+NONCANONICAL_ACQUIRE_MERGE_SHAPE
+CANONICAL_ACQUIRE_TREE_MISMATCH
+CANONICAL_ACQUIRE_DELTA_MISMATCH
+CANONICAL_ACQUIRE_HISTORY_UNPROVEN
+CANONICAL_LOCK_READBACK_MISMATCH
+CANONICAL_LOCK_NOT_ACTIVE
+RULESET_PROOF_UNAVAILABLE
+RULESET_BYPASS_PRESENT
+LATEST_VERIFY_NOT_SUCCESS
+VERIFY_RUNSET_INCOMPLETE
+```
+
+The historical matrix remains mandatory, except that Section 19.7 row 55 is **replaced** by V2 row 55. Rows 56–62 are new non-padding regressions. The exact V2 total is **62 mandatory rows**.
+
+55. **highest documented `run_number` lineage controls exact-head eligibility:** for one unchanged `H`, fresh-complete matching run observation selects the maximum `run_number`, never maximum `run_id`. If that authoritative lineage is failure, cancelled, timed_out, action_required, queued, in-progress or otherwise not current completed-success, the transport/acquisition is NOT eligible and cannot reach `ACTIVE_NEXT`, regardless of any older green lineage.
+56. **same head / different ref / indirect merge-commit attack:** expected PR A/ref A and other PR B/ref B point to the same exact `H`; B is merged with a multi-parent merge-commit shape and A may appear indirectly merged. PR merged metadata is ignored; the canonical transition is noncanonical; return `NONCANONICAL_ACQUIRE_MERGE_SHAPE`, NOT `ACTIVE_NEXT`.
+57. **same head / different PR locator / exact canonical single transition:** a different PR locator points to exact `H`; canonical main contains one exact `M` with `parents(M) == [B]`, `tree(M) == tree(H)`, exact lock-only delta, exact identity/Verify/Ruleset/read-back. Confirm `CANONICAL_ACQUIRE_IDENTITY_CONFIRMED`; assert no PR-number creator attribution is required or emitted.
+58. **older-run rerun cannot outrank newer failure:** run 10 success, run 11 failure, then rerun run 10 and observe its newer attempt succeed. Because rerun keeps `run_number = 10`, run 11 remains authoritative and the acquisition remains NOT eligible.
+59. **new higher successful lineage recovers:** run 10 success, run 11 failure, then a new matching run 12 completes success. Run 12 is authoritative and Verify eligibility passes if all other acquisition conditions pass.
+60. **authoritative lineage currently rerunning/in-progress:** the highest `run_number` previously had a successful attempt but its current rerun attempt is queued/in-progress. Fresh current run object is not completed-success, so the acquisition is NOT eligible; stale attempt success cannot be reused.
+61. **canonical first-parent history incomplete/ambiguous/non-single-transition:** inability to follow fresh parent[0] chain from current main to B, an unrelated first-parent commit immediately after B, a multi-parent M, or a multi-step canonicalisation returns `CANONICAL_ACQUIRE_HISTORY_UNPROVEN` or `NONCANONICAL_ACQUIRE_MERGE_SHAPE`; never `ACTIVE_NEXT`.
+62. **Ruleset bypass/unreadable regression:** effective main Ruleset unreadable/malformed, strict verify proof absent, `bypass_actors` nonempty, or `current_user_can_bypass != never` returns Ruleset fail-closed and cannot confirm `ACTIVE_NEXT`.
+
+Rows 51–54 remain mandatory as previously frozen. Row 51 continues to prove that a byte-identical transport with a **different head SHA** is not the same acquisition. V2 rows 56–57 separately cover the same-head/different-locator distinction that focused review exposed.
+
+### 20.11 V2 threat-control reassessment
+
+| Threat | Frozen V2 result |
+|---|---|
+| different bytes, same PR locator | FAIL CLOSED: head/tree/object identity mismatch |
+| different head SHA | NON-EQUIVALENT / NOT `ACTIVE_NEXT` |
+| same head SHA, different ref | PR locator irrelevant after canonicalisation; only exact canonical identity/transition can confirm |
+| expected PR marked indirectly merged | merged metadata ignored; canonical shape decides |
+| merge-commit canonical shape | multi-parent => `NONCANONICAL_ACQUIRE_MERGE_SHAPE` |
+| rebase / multi-step canonical shape | multiple first-parent transitions => fail closed |
+| single-transition exact tree | may confirm only if every identity/Verify/Ruleset/read-back clause passes |
+| direct unrelated main change | tree/delta or first-parent immediate-transition mismatch => fail closed |
+| stale expected base | B/selection/lock-base mismatch => fail closed |
+| later lock renewal | old identity no longer active => fail closed |
+| later lock replacement | OID/bytes/timestamps/identity mismatch => fail closed |
+| old acquisition epoch | source/selection/acquire-intent mismatch => fail closed |
+| incomplete main history | `CANONICAL_ACQUIRE_HISTORY_UNPROVEN` |
+| first-parent ambiguity | fail closed |
+| Ruleset unreadable | `RULESET_PROOF_UNAVAILABLE` |
+| Ruleset bypass nonempty | `RULESET_BYPASS_PRESENT` |
+| old green / newer failure | highest `run_number` failure remains authoritative |
+| rerun older run after newer failure | older run_number cannot outrank newer lineage |
+| new successful higher run number | highest new lineage may restore Verify eligibility |
+| partial workflow pagination | `VERIFY_RUNSET_INCOMPLETE` / fail closed |
+
+### 20.12 Inherited security boundaries remain unchanged
+
+V2 changes the proof identity, not the authority surface.
+
+The following remain frozen:
+
+- accepted Phase A stops at `ACQUIRE_PENDING` and never emits/certifies `ACTIVE_NEXT`;
+- no Phase A GitHub mutation authority;
+- no Truth authority;
+- no review authority or autonomous I2/I3;
+- no automatic `RENEW`;
+- no automatic `TAKEOVER`;
+- no new PAT or secret;
+- no Ruleset/settings change;
+- no `pull_request_target`;
+- no PR-head code in trusted write context;
+- worker ID is not a credential;
+- `PENDING_CLAIM` and open/green PRs are not ownership;
+- RELEASE remains higher priority than ACQUIRE;
+- at most one trusted canonical lifecycle mutation occurs per trusted run;
+- current-main/head/base revalidation immediately before trusted mutation remains mandatory;
+- candidate-local malformed GitHub observations remain candidate-local where the repository-wide substrate is otherwise complete;
+- repository-wide incomplete observations remain global fail-closed;
+- Task/Campaign creation and strategic continuation authority remain outside Phase B;
+- the trusted lifecycle is not broadened by this design.
+
+### 20.13 Writer-side remediation status and focused rereview gate
+
+Focused review H-01 is addressed by removing the unsupported exact-PR creator claim entirely and requiring immutable `CanonicalAcquireIdentityV2` plus a strict canonical-main single-transition proof.
+
+Focused review M-02 is addressed by replacing numeric `run_id` chronology with GitHub's documented workflow `run_number` lineage ordering and current `run_attempt` state, with complete pagination/fail-closed requirements.
+
+Writer-side design assessment:
+
+```text
+H-01_INDIRECT_MERGE = REMEDIATED_IN_V2_DESIGN_CANDIDATE
+PR_NUMBER_AUTHORITY = REMOVED
+M-02_RUN_ORDERING = REMEDIATED_IN_V2_DESIGN_CANDIDATE
+CANONICAL_ACQUIRE_IDENTITY_V2 = FROZEN
+CANONICAL_MAIN_SINGLE_TRANSITION = REQUIRED
+PREREGISTERED_TEST_TOTAL = 62
+CRITICAL_KNOWN = 0
+HIGH_KNOWN = 0
+MEDIUM_KNOWN = 0
+INDEPENDENT_FOCUSED_REREVIEW = REQUIRED
+PHASE_B_IMPLEMENTATION_ALLOWED_NOW = NO
+READY_FOR_FOCUSED_REREVIEW = YES
+```
+
+This writer does not self-promote the V2 candidate to accepted. Phase B implementation remains blocked until a new independent focused security review fixes this exact commit/blob and returns PASS with no CRITICAL/HIGH/MEDIUM blocker.
