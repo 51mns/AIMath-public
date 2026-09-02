@@ -44,6 +44,8 @@ from village_v1_2 import (
 )
 
 
+REQUIRED_STATUS_CHECK_CONTEXT = "verify"
+
 # Observation/shape failures for one candidate must never authorize that
 # candidate, but they also must not make an invalid lower PR reservation
 # authority over later valid work. These exceptions arise while decoding or
@@ -58,25 +60,67 @@ _CANDIDATE_LOCAL_OBSERVATION_ERRORS = (
 
 
 def _strict_up_to_date_gate(token: str, repository: str) -> tuple[bool, str]:
-    """Compatibility-preserving strict gate using this module's request seam.
+    """Require positive proof of strict status checks from effective branch rules.
 
-    Existing v1.2/v1.2.1 tests patch lock_auto_activate._request_json directly.
-    Keeping the gate here preserves that public test seam while retaining the
-    exact fail-closed semantics of the frozen Phase A implementation.
+    The effective branch-rules endpoint is readable with the built-in workflow
+    token's Metadata permission. The gate is intentionally independent of a
+    specific Ruleset ID: only rules GitHub reports as effective for main count.
+    Any malformed required-status-check rule fails closed.
     """
     owner, repo = repository.split("/", 1)
     try:
-        obj = _request_json(
+        rules = _request_json(
             token,
             repository,
             "GET",
-            f"/repos/{owner}/{repo}/branches/main/protection/required_status_checks",
+            f"/repos/{owner}/{repo}/rules/branches/main",
         )
     except AutoActivationError as exc:
         return False, f"cannot confirm Require branches to be up to date before merging: {exc}"
-    if obj.get("strict") is not True:
-        return False, "Require branches to be up to date before merging is not confirmed ON"
-    return True, "strict status checks confirmed"
+
+    if not isinstance(rules, list):
+        return False, "effective branch rules response is not a list"
+
+    positive_proof = False
+    for rule in rules:
+        if not isinstance(rule, dict):
+            return False, "effective branch rules contain a malformed rule entry"
+        if rule.get("type") != "required_status_checks":
+            continue
+
+        parameters = rule.get("parameters")
+        if not isinstance(parameters, dict):
+            return False, "required_status_checks rule has malformed parameters"
+
+        strict = parameters.get("strict_required_status_checks_policy")
+        if not isinstance(strict, bool):
+            return False, "required_status_checks rule has malformed strict policy"
+
+        required_checks = parameters.get("required_status_checks")
+        if not isinstance(required_checks, list):
+            return False, "required_status_checks rule has malformed required checks"
+
+        contexts = []
+        for item in required_checks:
+            if not isinstance(item, dict):
+                return False, "required_status_checks rule has malformed check entry"
+            context = item.get("context")
+            if not isinstance(context, str) or not context:
+                return False, "required_status_checks rule has malformed check context"
+            contexts.append(context)
+
+        if strict is True and REQUIRED_STATUS_CHECK_CONTEXT in contexts:
+            positive_proof = True
+
+    if not positive_proof:
+        return False, (
+            "effective branch rules do not confirm strict status checks with required "
+            f"context {REQUIRED_STATUS_CHECK_CONTEXT!r}"
+        )
+    return True, (
+        "effective branch rules confirm strict status checks with required "
+        f"context {REQUIRED_STATUS_CHECK_CONTEXT!r}"
+    )
 
 
 @dataclass(frozen=True)
