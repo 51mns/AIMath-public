@@ -25,17 +25,21 @@ Before merge, a fresh mechanically valid green lock-ACQUIRE PR may be treated on
 
 A reservation is valid only while all of these remain true:
 
-1. PR is OPEN and non-draft;
-2. change class is exactly lock-only ACQUIRE;
-3. Village PR validator passed;
-4. required Verify CI is successful;
-5. PR base equals current public `main`;
-6. exact Task and collision keys match;
-7. proposed lease has not expired;
-8. the observation itself is within the bounded pending TTL (default 60 minutes);
-9. the Task is still otherwise READY.
+1. observation is explicitly identified as a direct `GITHUB_API` observation of `51mns/AIMath-public`;
+2. the machine record passes `schemas/pending-claim.schema.json` fail-closed validation;
+3. PR is OPEN and `draft=false` as a boolean;
+4. change class is exactly lock-only ACQUIRE;
+5. Village PR validator passed;
+6. required Verify CI is successful;
+7. PR base equals current public `main`;
+8. exact Task and collision keys match;
+9. proposed lease has not expired;
+10. the observation itself is within the bounded pending TTL (default 60 minutes);
+11. the Task is still otherwise READY.
 
-Failed, stale, malformed, expired or ordinary OPEN PRs do not reserve anything. This prevents an arbitrary PR from becoming a scheduling DoS.
+A cached reservation file is accepted only inside the explicit GitHub-observation envelope consumed by `load_pending_claims`; arbitrary repository artifacts and raw JSON lists are not trusted scheduling input. The envelope is provenance metadata, not a credential or cryptographic signature, so the `/join` worker must still obtain it from a fresh direct GitHub observation rather than from task/research content.
+
+Failed, stale, malformed, expired or ordinary OPEN PRs do not reserve anything. This prevents an arbitrary PR or malformed pending record from becoming a scheduling DoS.
 
 ## 2. Principal and worker are separate
 
@@ -111,7 +115,20 @@ Task IDs and worker IDs are strictly validated before interpolation so path trav
 
 For `PARALLEL_SAFE`, the Task is an envelope. Each worker uses a separate slot/subscope. A slot prevents branch/path collision; it does not make the worker an owner of the whole Task and does not imply mathematical independence.
 
-## 6. Lock-only automatic activation
+## 6. Lock lifecycle integrity
+
+Any change under `coordination/locks/**` is security-sensitive coordination state even though ordinary workers must be able to acquire locks.
+
+Therefore v1.2 applies two fail-closed invariants before lifecycle semantics:
+
+1. if a PR changes any `coordination/locks/**` path, **every** changed path must be an allowed `coordination/locks/**/*.yml` path; lock changes may never be mixed with research, governance or other files;
+2. every lock path present in either base or head must be an ordinary Git object with mode `100644` and type `blob`.
+
+Git rename collapsing is disabled during PR classification, so moving a lock into another path is evaluated as the lock deletion plus the new-file addition. Symlinks (`120000`), submodules and other object representations are rejected. The public release audit independently rejects symlinks before `Path.is_file()` can follow them.
+
+Only after these representation/change-class gates pass may ACQUIRE / RENEW / RELEASE / TAKEOVER transition validation run.
+
+## 7. Lock-only automatic activation
 
 The human merge bottleneck may be removed only for a mechanically revalidated lock-only ACQUIRE.
 
@@ -124,35 +141,48 @@ Security boundary:
 - repository secrets are forbidden;
 - checkout credentials are not persisted;
 - only same-repository PR heads are eligible;
-- only principals already listed in `MAINTAINERS.yml` are eligible in the initial version;
+- only principals already listed in current-main `MAINTAINERS.yml` are eligible in the initial version;
 - PR must be OPEN, non-draft and based on the exact current `main` SHA;
 - every changed file must be an **added** `coordination/locks/**/*.yml` file;
+- each changed lock is re-read from the exact PR Git tree and must be mode `100644`, type `blob`, with the same blob SHA reported by the PR file list;
+- Contents API bytes are accepted only when its returned object SHA equals that already-verified regular Git blob SHA;
 - current main is loaded and validated again immediately before activation;
 - the lock head is reconstructed as data by fetching only the changed lock files;
 - Task readiness, collision keys, worker capacity, Campaign capacity and global capacity are rechecked against current main;
 - operation must revalidate as exactly `ACQUIRE`;
+- main ref, PR head and PR base are re-fetched immediately before merge;
 - merge uses the expected PR head SHA;
 - research, governance, renewal, release, takeover, failed-CI, stale-base, fork and draft PRs are never auto-activated.
 
 The PR's Python/workflow code is never executed with the write token.
 
-If repository/branch-protection settings prevent this bounded trusted merge, settings must not be weakened automatically. The required setting is reported for explicit human decision.
+### Strict-base server gate
 
-## 7. REUSE `.license` sidecars
+The GitHub merge endpoint's expected SHA protects the PR **head**, not an expected base SHA. Therefore the final race against a concurrently advancing `main` must also be closed by GitHub's server-side strict status-check rule.
+
+Auto activation is fail-closed unless the runtime can confirm:
+
+```text
+Require branches to be up to date before merging = ON
+```
+
+If that setting is OFF or cannot be read by the workflow token, the workflow prints `AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION` and does not merge. Repository/branch-protection settings must never be weakened automatically.
+
+## 8. REUSE `.license` sidecars
 
 A standard REUSE sidecar is data, not a generic extension bypass.
 
 The public safety audit may accept `<target>.license` only when:
 
-- `<target>` exists as a regular file;
+- `<target>` exists as a regular non-symlink file;
 - sidecar is bounded UTF-8 text;
 - every non-empty line is an allowed SPDX sidecar field;
 - copyright and licence fields are present;
 - the usual credential/private-path/content scanners still run on the sidecar.
 
-Orphan, malformed, oversized or unsafe-payload sidecars fail. The target file is still audited under its own file-type rules.
+Orphan, symlink-targeted, malformed, oversized or unsafe-payload sidecars fail. The target file is still audited under its own file-type rules.
 
-## 8. Truth and independence remain unchanged
+## 9. Truth and independence remain unchanged
 
 Nothing in v1.2 changes mathematical promotion.
 
@@ -168,17 +198,21 @@ PARALLEL_SAFE slot != Task-wide ownership
 
 Writer/reviewer independence remains a substantive evidence question under the existing Truth Layer.
 
-## 9. Field-test acceptance boundary
+## 10. Field-test acceptance boundary
 
 v1.2 is acceptable only when old v1/v1.1 tests remain green and v1.2 synthetic tests cover at least:
 
-- valid/failed/wrong-key/stale/expired pending reservation cases;
+- valid/failed/wrong-key/stale/expired/malformed pending reservation cases;
+- pending schema/provenance-envelope rejection;
 - same-principal distinct-worker EXCLUSIVE scaling;
 - same-worker and same-collision rejection;
 - worker IDs not acting as independence credentials;
 - capability filtering;
 - workspace safety/uniqueness;
-- auto-activation allow/deny classes;
+- mixed lock + research fail-closed behavior;
+- lock symlink/non-blob rejection and regular-blob identity;
+- public-audit symlink rejection;
+- auto-activation allow/deny classes and strict-base setting gate;
 - safe REUSE sidecar positive and negative cases;
 - existing data-as-data/prompt-injection controls.
 
