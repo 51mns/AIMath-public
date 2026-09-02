@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "phase": "V1_2_1_PHASE_A",
+  "phase": "V1_2_1_PHASE_B",
   "automatic_release_principals": [
     "51mns"
   ],
   "release_head_ref_format": "release/<TASK-ID>/<worker-id>",
-  "automatic_acquire_policy": "UNCHANGED_V1_2_MAINTAINERS_ONLY",
+  "automatic_acquire_policy": "DISCOVER_CURRENT_GREEN_MAINTAINER_ACQUIRE_PRS_ONLY",
   "automatic_renew": false,
   "automatic_takeover": false,
   "worker_id_is_credential": false,
   "sybil_resistance": "NOT_SOLVED",
-  "note": "Phase A automatic RELEASE requires both the authorized GitHub principal and an exact task/worker binding. worker_id is scheduling metadata, not authentication."
+  "note": "Phase B keeps the v1.2 maintainer-only ACQUIRE authority set but may discover multiple already-created lock-only ACQUIRE PRs. Every candidate is freshly revalidated against current main and exact green CI before deterministic ordering; Task selection and PR creation remain outside trusted automation."
 }
