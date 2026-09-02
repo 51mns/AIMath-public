@@ -55,6 +55,8 @@ class NextPhase(str, Enum):
     RELEASED = "RELEASED"
     NEXT_SELECTION = "NEXT_SELECTION"
     ACQUIRE_PENDING = "ACQUIRE_PENDING"
+    # Frozen state-machine name retained for Phase B. Phase A never emits it:
+    # exact acquisition/request-epoch binding is transport authority.
     ACTIVE_NEXT = "ACTIVE_NEXT"
 
 
@@ -64,6 +66,7 @@ class NextStatus(str, Enum):
     WAITING_PORTFOLIO = "WAITING_PORTFOLIO"
     NO_ELIGIBLE_TASK = "NO_ELIGIBLE_TASK"
     ACQUIRE_REQUIRED = "ACQUIRE_REQUIRED"
+    # Frozen status retained for Phase B; the Phase-A pure core never returns it.
     ACTIVE_NEXT = "ACTIVE_NEXT"
     RANK_FAILED = "RANK_FAILED"
     FAIL_CLOSED = "FAIL_CLOSED"
@@ -159,11 +162,29 @@ def _state_errors(state: Any, book: Any) -> tuple[str, ...]:
     return tuple(dict.fromkeys(str(x) for x in errors if x))
 
 
-def _canonical_lock_for_task(state: Any, task_id: str) -> tuple[Any | None, tuple[str, ...]]:
+def _canonical_lock_for_task(
+    state: Any,
+    task_id: str,
+) -> tuple[Any | None, bool, tuple[str, ...]]:
+    """Return the active source lock and whether a stale/expired artifact exists.
+
+    Phase A must not silently treat an expired canonical bundle as either active
+    ownership or clean canonical absence. Cleanup/reobservation is a lifecycle
+    concern outside this pure derivation layer.
+    """
+
     bundles = list(state.lock_for_task(task_id, active_only=False))
     if len(bundles) > 1:
-        return None, (f"multiple canonical lock bundles exist for {task_id}",)
-    return (bundles[0], ()) if bundles else (None, ())
+        return None, False, (f"multiple canonical lock bundles exist for {task_id}",)
+    if not bundles:
+        return None, False, ()
+
+    active = list(state.lock_for_task(task_id, active_only=True))
+    if len(active) > 1:
+        return None, False, (f"multiple active canonical lock bundles exist for {task_id}",)
+    if not active:
+        return None, True, ()
+    return active[0], False, ()
 
 
 def _identity_errors(bundle: Any, request: NextRequest) -> tuple[str, ...]:
@@ -546,24 +567,13 @@ def select_next_task(
     )
 
 
-def _canonical_next_lock(state: Any, request: NextRequest) -> tuple[Any | None, tuple[str, ...]]:
-    matches = []
-    for bundle in state.active_lock_bundles():
-        payload = bundle.payload
-        if payload.get("task_id") == request.task_id:
-            continue
-        if payload.get("worker_id") != request.worker_id:
-            continue
-        if payload.get("actor", {}).get("id") != request.principal_id:
-            continue
-        matches.append(bundle)
-    if len(matches) > 1:
-        return None, ("multiple canonical active-next locks match this worker/principal",)
-    return (matches[0], ()) if matches else (None, ())
-
-
 def derive_next_state(state: Any, book: Any, request: NextRequest) -> NextResult:
-    """Derive the v1.3 Phase-A `/next` state without performing any mutation."""
+    """Derive the v1.3 Phase-A `/next` state without performing any mutation.
+
+    This pure core intentionally stops at ACQUIRE_PENDING. A bare canonical
+    next-task lock is not sufficient proof of this `/next` acquisition epoch;
+    exact ACTIVE_NEXT confirmation is deferred to Phase B.
+    """
 
     if not validate_worker_id(request.worker_id):
         return NextResult(
@@ -620,7 +630,7 @@ def derive_next_state(state: Any, book: Any, request: NextRequest) -> NextResult
             errors=errors,
         )
 
-    source_lock, lock_errors = _canonical_lock_for_task(state, request.task_id)
+    source_lock, source_stale, lock_errors = _canonical_lock_for_task(state, request.task_id)
     if lock_errors:
         return NextResult(
             phase=NextPhase.ACTIVE_WORK,
@@ -633,6 +643,19 @@ def derive_next_state(state: Any, book: Any, request: NextRequest) -> NextResult
             required_action=RequiredAction.NONE,
             canonical_ownership=False,
             errors=lock_errors,
+        )
+    if source_stale:
+        return NextResult(
+            phase=NextPhase.ACTIVE_WORK,
+            status=NextStatus.FAIL_CLOSED,
+            trace=(NextPhase.ACTIVE_WORK,),
+            terminal=None,
+            continuation=None,
+            selected_task_id=None,
+            selected_relation=None,
+            required_action=RequiredAction.NONE,
+            canonical_ownership=False,
+            errors=("source canonical lock is expired/stale and requires lifecycle cleanup/reobservation",),
         )
     if source_lock is not None:
         identity = _identity_errors(source_lock, request)
@@ -658,9 +681,9 @@ def derive_next_state(state: Any, book: Any, request: NextRequest) -> NextResult
     )
 
     if source_lock is not None and terminal is None:
-        # An exact canonical lock with no repository-recognised terminal evidence
-        # remains ordinary active work. Invalid terminal files are surfaced but
-        # never terminalise the acquisition.
+        # An exact active canonical lock with no repository-recognised terminal
+        # evidence remains ordinary active work. Invalid terminal files are
+        # surfaced but never terminalise the acquisition.
         nonabsence_errors = tuple(
             error for error in terminal_errors if error != "no canonical terminal evidence"
         )
@@ -707,34 +730,9 @@ def derive_next_state(state: Any, book: Any, request: NextRequest) -> NextResult
             canonical_ownership=True,
         )
 
-    active_next, active_next_errors = _canonical_next_lock(state, request)
-    if active_next_errors:
-        return NextResult(
-            phase=NextPhase.NEXT_SELECTION,
-            status=NextStatus.FAIL_CLOSED,
-            trace=terminal_trace + (NextPhase.RELEASED, NextPhase.NEXT_SELECTION),
-            terminal=terminal,
-            continuation=continuation,
-            selected_task_id=None,
-            selected_relation=None,
-            required_action=RequiredAction.NONE,
-            canonical_ownership=False,
-            errors=active_next_errors,
-        )
-    if active_next is not None:
-        task_id = active_next.payload.get("task_id")
-        return NextResult(
-            phase=NextPhase.ACTIVE_NEXT,
-            status=NextStatus.ACTIVE_NEXT,
-            trace=terminal_trace + (NextPhase.RELEASED, NextPhase.NEXT_SELECTION, NextPhase.ACQUIRE_PENDING, NextPhase.ACTIVE_NEXT),
-            terminal=terminal,
-            continuation=continuation,
-            selected_task_id=task_id,
-            selected_relation=_selection_relation(state, request.task_id, task_id),
-            required_action=RequiredAction.NONE,
-            canonical_ownership=True,
-        )
-
+    # H-01 remediation: Phase A never infers ACTIVE_NEXT from canonical locks.
+    # Exact task/epoch/worker/principal/work_ref/collision/ACQUIRE binding belongs
+    # to Phase B, so every released snapshot must traverse continuation + rank.
     selection = select_next_task(state, book, request, continuation)
     base_trace = terminal_trace + (NextPhase.RELEASED, NextPhase.NEXT_SELECTION)
     if selection.status == NextStatus.ACQUIRE_REQUIRED:
