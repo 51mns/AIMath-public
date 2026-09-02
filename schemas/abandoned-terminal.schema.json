@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Village abandoned terminal",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "worker_id",
+    "reason",
+    "abandoned_at",
+    "abandonment_count",
+    "truth_layer_effect"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "task_id": {"type": "string", "pattern": "^TASK-[A-Z0-9-]+$"},
+    "worker_id": {"type": "string", "pattern": "^w-[0-9a-f]{16,32}$"},
+    "reason": {
+      "enum": [
+        "NO_REUSABLE_PROGRESS",
+        "BLOCKED",
+        "SCOPE_STOP",
+        "RESOURCE_LIMIT",
+        "IMPLEMENTATION_FAILURE",
+        "EXTERNAL_DEPENDENCY"
+      ]
+    },
+    "abandoned_at": {"type": "string", "minLength": 1},
+    "abandonment_count": {"type": "integer", "minimum": 1},
+    "last_work_head": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+    "truth_layer_effect": {"const": "NONE"}
+  },
+  "additionalProperties": false
+}
