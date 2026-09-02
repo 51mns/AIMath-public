@@ -70,6 +70,7 @@
     "SECURITY.md",
     "coordination/campaigns/**/CAMPAIGN.yml",
     "coordination/tasks/**/TASK.yml",
+    "scripts/public_release_audit.py",
     "scripts/village.py",
     "scripts/village_core.py",
     "scripts/village_rank.py",
