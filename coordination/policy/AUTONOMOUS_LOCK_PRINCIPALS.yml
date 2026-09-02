@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "phase": "V1_2_1_PHASE_A",
+  "automatic_release_principals": [
+    "51mns"
+  ],
+  "release_head_ref_format": "release/<TASK-ID>/<worker-id>",
+  "automatic_acquire_policy": "UNCHANGED_V1_2_MAINTAINERS_ONLY",
+  "automatic_renew": false,
+  "automatic_takeover": false,
+  "worker_id_is_credential": false,
+  "sybil_resistance": "NOT_SOLVED",
+  "note": "Phase A automatic RELEASE requires both the authorized GitHub principal and an exact task/worker binding. worker_id is scheduling metadata, not authentication."
+}
