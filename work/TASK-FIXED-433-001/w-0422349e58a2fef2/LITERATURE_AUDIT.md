@@ -8,118 +8,151 @@ SPDX-License-Identifier: CC-BY-4.0
 - Worker: `w-0422349e58a2fef2`
 - Public base: `71547cb5d757afaace54b558f2d0a4a49fad5656`
 - Search date: 2026-09-02
+- Current PR: `#27`
 - Outcome: **BOUNDED_UNRESOLVED_WITH_CLOSE_PRECEDENT**
 - Novelty: **NOT_ESTABLISHED**
+- Truth-layer effect: **NONE**
+
+Detailed per-source adjudication is in `SOURCE_MAP.md`. Exact search inputs, access failures and the stop rule are frozen in `SEARCH_LOG.md`.
 
 ## Frozen question
 
-The public AIMath claim proves, for every `k >= 0`,
+The accepted AIMath public proof gives, for every `k >= 0`,
 
 \[
-\frac{U_k}{M_k}=\frac45-\mu\!\left(\frac{9k+8}{15k+13}\right),
+\frac{U_k}{M_k}=\frac45-\mu\!\left(\frac{9k+8}{15k+13}\right).
 \]
 
-or, writing the Markov fraction as `p_k/M_k`,
+If
 
 \[
-5p_k+5U_k=4M_k.
+\mu\!\left(\frac{9k+8}{15k+13}\right)=\frac{p_k}{M_k},
 \]
 
-The literature task is narrower than proving that identity again: determine whether the exact fixed affine map
+then equivalently
 
 \[
-R_5(z)=\frac45-z
+5p_k+5U_k=4M_k,
+\qquad
+U_k=r_k-\frac{M_k}{5}.
 \]
 
-or the equivalent fixed-433 representative relation is explicit in prior primary literature, and record the closest source-backed placement if an exact match is not located.
-
-## Frozen search envelope
-
-The bounded audit inspected the following primary-source neighbourhood and exact-expression variants (`4/5-x`, `4/5`, `5p`, `4M-5U`, the fixed Farey ray, `433`, reflection/affine symmetry, root representatives):
-
-1. J. O. Button, *Markoff Numbers, Principal Ideals and Continued Fraction Expansions*, Journal of Number Theory 87 (2001), 77–95, DOI `10.1006/jnth.2000.2578`. Publisher-version PDF is available from Oxford ORA: `https://ora.ox.ac.uk/objects/uuid%3Afc6f3446-4389-41e2-9cb4-d75505137821`.
-2. Enrico Bombieri, *Continued fractions and the Markoff tree*, Expositiones Mathematicae 25 (2007), 187–213, DOI `10.1016/j.exmath.2006.10.002`.
-3. Boris Springborn, *The worst approximable rational numbers*, Journal of Number Theory 263 (2024), 153–205, final arXiv `2209.15542v3`.
-4. A. P. Veselov, *Markov fractions and Cohn matrices*, arXiv `2604.17401v1` (2026).
-
-This is not claimed to be an exhaustive historical-priority search. Search failure is not novelty evidence.
-
-## Source placement
-
-### Springborn 2024
-
-Section 2.2 explicitly describes the Markov-fraction subtree in `[1/2,1]` as the reflection of the subtree in `[0,1/2]`, replacing each Markov fraction `x` by `1-x`; integer translates `x+n` generate the trees in other integer intervals. Thus the source supplies the natural integer-affine reflection/translation framework for Markov fractions.
-
-No source-canonical `x -> 4/5-x` symmetry was located in the bounded inspection. In particular, the fixed AIMath map is not one of the displayed `x -> 1-x` / integer-translation symmetries.
-
-### Veselov 2026
-
-Proposition 2.1, equations (6)–(9), gives the oriented determinant identities for local Markov-fraction triples. Equations (12)–(15) and Theorem 3.1 identify Springborn's Markov fraction with the index of the corresponding Cohn matrix; equation (14) is the bridge `mu(t)=I_t(0)` used by the public AIMath proof.
-
-The paper also places Markov fractions in a fundamental domain for the natural integer-affine action `x -> ±x+m`. The bounded inspection located no `4/5-x` map and no statement identifying the fixed-433 `U_k/M_k` family with the reflected Markov-fraction ray.
-
-### Button 2001 — closest located predecessor
-
-Button's page 85 construction starts from a Markoff triple `(a,b,c)`, lets `alpha` be the inverse of `a` modulo `c`, and chooses a quadratic-order root representative
+This literature task asks where the fixed rational-affine map
 
 \[
-x \equiv 3c-2b\alpha \pmod{2c}.
+R_5(x)=\frac45-x
 \]
 
-The subsequent symmetric comparison (around p. 87 in the publisher pagination) gives the corresponding swapped representatives with the exact constant-sum relation
+or an algebraically equivalent fixed-433 representative identity sits in prior primary literature. It does not re-prove the AIMath theorem.
+
+## Scope separation from PR #26
+
+Parallel PR `#26` is Button-centered: it removes an old access blocker for Button 2001 and inspects the modular representative / Theorem 7 neighbourhood.
+
+This continuation deliberately did **not** make Button 2001 its main work. The new search moved backward into Markoff/Cassels/Cohn/Baragar, then through Bombieri, Springborn, Button-citing downstream work, and Veselov's Cohn-index framework. The earlier Button result is retained only as context.
+
+## Main result of the expanded placement
+
+The source neighbourhood separates into two layers.
+
+### Layer A — classical Markoff forms, triples, ideals and words
+
+Markoff 1879 starts from indefinite binary quadratic forms and their minima. Cassels' Markoff-chain treatment and Cohn's modular/geodesic/primitive-word programme belong to this classical object layer. Baragar 1996 gives an especially concrete bridge to the ideal-theoretic side: for fixed Markoff number `m`, the Markoff equation is rewritten as
 
 \[
-x+x'=4c
+x^2+y^2-3mxy=-m^2
 \]
 
-in the nontrivial range under discussion.
+and then as a norm equation in the real quadratic order of discriminant `9m^2-4`.
 
-This is a genuinely close predecessor to the *shape* of the AIMath relation: both use a reflection with constant `4` after choosing representatives. However it is not, on the inspected definitions, the same statement. Button's `x,x'` are quadratic-order root representatives attached to a Markoff form/ideal construction; AIMath's `p_k,U_k` are respectively a Markov-fraction numerator and the fixed-433 continuant numerator.
+This is structurally close to the later Button ideal/representative construction, but its exact objects are Markoff-triple coordinates, quadratic-order elements and principal ideals — not Springborn's Markov-fraction numerator `p_k` and not the fixed-433 numerator `U_k`.
 
-Mechanically dividing Button's relation by `5c` would produce a formal `4/5` constant, but that rescaling is not the source's canonical normalization and does not identify Button's `x` with `5p_k` or `5U_k`.
+Consequently these sources provide ancestry and nearby algebra, not an exact `R_5` match in the material that was inspectable here.
 
-## Exact finite diagnostic of the possible Button identification
+Cassels/Cohn body-level access remained incomplete for several primary items; those rows are classified `ACCESS_LIMITED` in `SOURCE_MAP.md`, not as negative prior-art findings.
 
-`button_overlap_check.py` evaluates the first three fixed-433 cases using exact integers. For each case it:
+### Layer B — the same Markov-fraction object
 
-- reconstructs `M_k`, `U_k`, the preceding ray value `Y_k`, and the source Cohn numerator `p_k`;
-- verifies `(433,Y_k,M_k)` is a Markoff triple;
-- constructs Button's representative for `(433,Y_k,M_k)` and for the swapped `(Y_k,433,M_k)`;
-- verifies Button's pair sums to `4M_k`;
-- verifies AIMath's scaled pair `(5p_k,5U_k)` also sums to `4M_k`;
-- checks that the two unordered pairs are different in each tested case.
+The strongest normalization boundary comes from Springborn 2024 and Veselov 2026 because they work directly with the same Markov-fraction object `mu(t)`.
 
-| k | M | Button pair `(x,x')` | AIMath scaled pair `(5p,5U)` | equal? |
-|---:|---:|---|---|---|
-| 0 | 48,928,105 | (106,330,881, 89,381,539) | (101,133,585, 94,578,835) | no |
-| 1 | 107,246,981,290,506,205 | (233,069,848,202,991,781, 195,918,076,959,033,039) | (221,677,739,171,317,085, 207,310,185,990,707,735) | no |
-| 2 | 235,077,875,914,593,228,457,734,305 | (510,872,792,837,723,470,826,982,681, 429,438,710,820,649,443,003,954,539) | (485,902,087,265,140,536,365,550,585, 454,409,416,393,232,377,465,386,635) | no |
+Springborn states that the approximation constant is invariant under the integer-affine action
 
-These three rows are **finite diagnostics only**. They are not used to prove an all-`k` non-identification. The literature distinction is primarily definitional: the sources attach the two pairs to different mathematical objects.
+\[
+x\longmapsto \pm x+n,\qquad n\in\mathbb Z,
+\]
+
+in equation (4). On p.157 the Markov-fraction subtree in `[1/2,1]` is obtained from `[0,1/2]` by the reflection
+
+\[
+x\longmapsto 1-x,
+\]
+
+and integer translates supply the other unit intervals. Definition 2.1, equations (6)–(7), separately defines the companion sequences.
+
+Veselov then gives the direct Cohn-index bridge. With
+
+\[
+C_t(a)=\begin{pmatrix}a_t&m_t\\c_t&3m_t-a_t\end{pmatrix},
+\qquad
+I_t(a)=\frac{a_t}{m_t},
+\]
+
+Theorem 3.1, equation (14), states
+
+\[
+\mu(t)=I_t(0).
+\]
+
+The same passage identifies `[0,1/2]` as a fundamental domain for the group acting by `x -> +/-x+m`, `m in Z`.
+
+This is a useful exact placement: AIMath's map is not merely one of those displayed standard symmetries, because its translation part is `4/5`, not an integer. In the accepted AIMath language, this is consistent with `R_5` lying in `PGL_2(Q)` but not `PGL_2(Z)`.
+
+This does **not** establish publication novelty. A source may encode the same fixed-433 identity through a different representative, normalization, ideal, word or matrix relation without displaying the map as a canonical affine symmetry.
 
 ## Bombieri 2007
 
-Bombieri remains useful classical background for the Markoff tree, continued fractions and Cohn-matrix structure. The bounded exact-expression/source-neighbourhood search did not locate the fixed `R_5` transformation or an equivalent fixed-433 representative identity there.
+Bombieri's publisher record confirms that the article develops Markoff's badly-approximable-number theorem using classical continued fractions and Harvey Cohn's free-group word method for the periods of Markov irrationals.
 
-## Decision
+The current runtime did not expose enough of the article body for an equation-by-equation comparison with `R_5`. Bombieri is therefore retained as a strong framework source with an explicit access boundary, not as a checked nonmatch.
 
-The bounded primary-source audit does **not** support either of the following stronger statements:
+## Button-citing downstream control: Srinivasan 2009
 
-- “the AIMath identity is already explicit in the inspected literature”; or
-- “the AIMath identity is publication-new”.
+Srinivasan works with discriminant
 
-The safe placement is:
+\[
+d=9c^2-4
+\]
 
-> Button 2001 contains a close prior constant-`4` reflection relation for a distinct pair of Markoff-form root representatives. Springborn 2024 and Veselov 2026 supply the canonical Markov-fraction tree, integer-affine symmetry, determinant and Cohn-index framework. Within this frozen source/query envelope, the exact fixed map `U_k/M_k = 4/5 - mu((9k+8)/(15k+13))` was not located.
+and ambiguous binary quadratic-form classes / associated ideals for a fixed Markoff number `c`. The article explicitly cites Button 2001 as an existing uniqueness criterion near p.769.
 
-Accordingly this Task closes only as **BOUNDED_UNRESOLVED_WITH_CLOSE_PRECEDENT**. Publication novelty remains **NOT_ESTABLISHED**, and no canonical claim level is changed by this worker result.
+This later primary source confirms that Button's ideal/form machinery continued to be used in the Markoff uniqueness problem, but it does not identify Button's representative with Springborn's Markov-fraction numerator or with AIMath's `(5p_k,5U_k)` pair in the inspected passages.
 
-## Reproduction
+Thus the downstream lineage remains **near but on a different object**.
 
-From a repository checkout containing this worker path:
+## Earlier Button result retained, not re-audited
+
+The first phase of PR #27 found a close constant-`4` relation in Button's quadratic-order representative construction and an exact finite diagnostic showing that, for `k=0,1,2`, Button's unordered representative pair is not AIMath's unordered scaled pair `(5p_k,5U_k)`, although both pairs sum to `4M_k`.
+
+That result remains a finite diagnostic and a different-object distinction. It is not promoted to an all-`k` non-identification theorem and was not the main research target of this continuation.
+
+The exact checker remains:
 
 ```bash
 python3 work/TASK-FIXED-433-001/w-0422349e58a2fef2/button_overlap_check.py
 ```
 
-The expected top-level result is `BUTTON_ROOT_PAIR_DIFFERS_FROM_AIMATH_SCALED_PAIR_IN_TESTED_CASES`, with `pairs_equal: false` for `k=0,1,2`.
+## Decision
+
+The expanded bounded primary-source audit supports the following placement and no stronger one:
+
+> The fixed-433 identity sits inside a classical Markoff lineage of forms, triples, real-quadratic ideals, continued fractions and Cohn words/matrices. The older inspectable sources are generally on different mathematical objects. Springborn and Veselov reach the same Markov-fraction object and give an exact integer-affine normalization/Cohn-index framework, but the displayed standard action is `x -> +/-x+n`, not `x -> 4/5-x`. Within the frozen source/query envelope, an exact prior primary-source statement equivalent to AIMath's fixed `R_5` map was not located.
+
+This is a **bounded unresolved prior-art placement with close precedents**, not a novelty determination.
+
+Accordingly:
+
+- `novelty = NOT_ESTABLISHED` remains unchanged;
+- no canonical claim level changes;
+- no author/prior-art priority claim is made;
+- search failure is not converted into novelty;
+- access-limited Cassels/Cohn/Bombieri items remain open historical-priority gaps rather than negative evidence.
