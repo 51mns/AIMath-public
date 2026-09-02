@@ -62,8 +62,8 @@ def read_utf8(path: Path, rel: str, findings: list[str]) -> str | None:
 def validate_reuse_sidecar(path: Path, root: Path, findings: list[str]) -> str | None:
     rel = norm(path, root)
     target = Path(str(path)[:-len(".license")])
-    if not target.is_file():
-        findings.append(f"orphan REUSE .license sidecar: {rel}")
+    if not target.is_file() or target.is_symlink():
+        findings.append(f"orphan/unsafe REUSE .license sidecar: {rel}")
         return None
     if path.stat().st_size > SIDECAR_MAX_BYTES:
         findings.append(f"oversized REUSE .license sidecar: {rel}")
@@ -116,6 +116,10 @@ def main() -> int:
         if any(rel.startswith(p) for p in FORBIDDEN_PREFIXES):
             findings.append(f"forbidden private-workspace prefix: {rel}")
             continue
+        # Fail closed before Path.is_file(), because is_file() follows symlinks.
+        if path.is_symlink():
+            findings.append(f"symlink requires manual review and is forbidden in public release: {rel}")
+            continue
         if path.name in HIGH_RISK_FILENAMES:
             findings.append(f"high-risk filename: {rel}")
         if path.suffix.lower() in FORBIDDEN_SUFFIXES:
@@ -143,7 +147,7 @@ def main() -> int:
             print(" -", item)
         return 1
     print(
-        "PASS: no blocked private paths, opaque payloads, obvious credentials, emails, "
+        "PASS: no blocked private paths, symlinks, opaque payloads, obvious credentials, emails, "
         "home/runtime paths, connector file ids, private ChatGPT conversation URLs, or unsafe REUSE sidecars detected"
     )
     return 0
