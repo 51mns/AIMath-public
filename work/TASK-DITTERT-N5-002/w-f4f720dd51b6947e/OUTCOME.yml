@@ -5,24 +5,34 @@ task_id: TASK-DITTERT-N5-002
 worker_id: w-f4f720dd51b6947e
 public_base: 71547cb5d757afaace54b558f2d0a4a49fad5656
 outcome: STRUCTURAL_REDUCTION
-reproduction_status: PARTIAL_INCONCLUSIVE
+reproduction_status: FULL_FRESH_REPRODUCTION_UNREVIEWED
 claim_level_effect: NONE
 independence:
   existing_aimath_proof_read_before_freeze: false
   writer_code_imported: false
   writer_generated_output_imported: false
+  public_readme_high_level_skeleton_seen: true
+  information_blind_independence_claimed: false
 result:
   reduced_support_form: seven_parameter_same_zero_pattern_average
-  proved_necessary_condition: "(d-b)(e-f) < 0"
-  exact_cycle_equations_frozen: 2
-  full_z2_exclusion_reproduced: false
+  zero_entry_chamber: "u*g + 6*beta*gamma <= 0"
+  orientation: "beta=x>0, gamma=-y<0, H=6*x*y-u*g>=0"
+  positive_stationarity_equalities_used: 2
+  contradiction: "beta equation forces alpha>0 while gamma equation forces alpha<0"
+  full_z2_exclusion_reproduced: true
 verification:
-  command: "python3 work/TASK-DITTERT-N5-002/w-f4f720dd51b6947e/verify_chamber_identity.py"
-  expected_stdout: "PASS: exact chamber and cycle identities"
-  local_exit_code: 0
-  verifier_sha256: e21b9e39b74cb0398f3f79c6f37c79e809d5fc08ac2d026dfd59bb4312af9e24
+  chamber_regression:
+    command: "python3 work/TASK-DITTERT-N5-002/w-f4f720dd51b6947e/verify_chamber_identity.py"
+    expected_stdout: "PASS: exact chamber and cycle identities"
+    verifier_sha256: e21b9e39b74cb0398f3f79c6f37c79e809d5fc08ac2d026dfd59bb4312af9e24
+  universal_symbolic:
+    command: "python3 work/TASK-DITTERT-N5-002/w-f4f720dd51b6947e/verify_stationarity_contradiction.py"
+    expected_stdout: "PASS: exact universal stationarity-contradiction identities"
+    local_exit_code: 0
+    verifier_sha256_preupload: 1c5dbacbca5fc08a48553ca5ad09dc3b93453b68e9e7966eff3e3c5b20afd630
 boundaries:
-  - finite regression checks do not prove the universal exclusion
-  - numerical stationary reconnaissance is not load-bearing
+  - checker verifies algebraic identities; the sign implication is evaluated in REPRODUCTION.md
+  - canonical claim level is not changed by this worker
+  - information-blind I3-style independence is not claimed because the public README skeleton was visible
   - publication novelty not assessed
-best_next_step: "Eliminate the remaining positive-entry stationary system inside the strict chamber without reading the existing AIMath proof if derivational independence is to be preserved."
+best_next_step: "Repository CI and independent intake/review of the fresh derivation; do not self-promote the canonical claim."
