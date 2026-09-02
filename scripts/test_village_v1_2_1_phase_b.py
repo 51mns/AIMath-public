@@ -15,6 +15,7 @@ from lock_auto_activate import (
     _has_successful_verify,
     _scan_acquires,
     _scan_releases,
+    _strict_up_to_date_gate,
     auto_acquire_preflight,
     choose_acquire_candidate,
 )
@@ -48,6 +49,17 @@ def _release_pr(number: int, *, head=HEAD_A):
 
 def _files(*, status="added", path="coordination/locks/x/shared.yml"):
     return [{"filename": path, "status": status, "sha": "d" * 40}]
+
+
+def _required_rule(*, strict=True, context="verify"):
+    return {
+        "type": "required_status_checks",
+        "parameters": {
+            "strict_required_status_checks_policy": strict,
+            "do_not_enforce_on_create": False,
+            "required_status_checks": [{"context": context}],
+        },
+    }
 
 
 class PhaseB(unittest.TestCase):
@@ -219,6 +231,74 @@ class PhaseB(unittest.TestCase):
                 maintainers={"51mns"},
             )
         self.assertEqual([c.pr["number"] for c in got], [20])
+
+    def test_14_ruleset_strict_true_verify_context_passes(self):
+        with patch("lock_auto_activate._request_json", return_value=[_required_rule()]) as request:
+            ok, reason = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertTrue(ok, reason)
+        self.assertEqual(
+            request.call_args.args[3],
+            "/repos/51mns/AIMath-public/rules/branches/main",
+        )
+
+    def test_15_ruleset_strict_false_fails_closed(self):
+        with patch("lock_auto_activate._request_json", return_value=[_required_rule(strict=False)]):
+            ok, _ = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertFalse(ok)
+
+    def test_16_ruleset_wrong_required_context_fails_closed(self):
+        with patch("lock_auto_activate._request_json", return_value=[_required_rule(context="other")]):
+            ok, _ = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertFalse(ok)
+
+    def test_17_ruleset_missing_required_status_rule_fails_closed(self):
+        with patch("lock_auto_activate._request_json", return_value=[{"type": "pull_request"}]):
+            ok, _ = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertFalse(ok)
+
+    def test_18_ruleset_api_error_fails_closed(self):
+        with patch(
+            "lock_auto_activate._request_json",
+            side_effect=AutoActivationError("rules API unavailable"),
+        ):
+            ok, _ = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertFalse(ok)
+
+    def test_19_ruleset_non_list_response_fails_closed(self):
+        with patch("lock_auto_activate._request_json", return_value={"rules": []}):
+            ok, _ = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertFalse(ok)
+
+    def test_20_ruleset_malformed_parameters_fail_closed(self):
+        malformed = [{"type": "required_status_checks", "parameters": []}]
+        with patch("lock_auto_activate._request_json", return_value=malformed):
+            ok, _ = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertFalse(ok)
+
+    def test_21_ruleset_malformed_check_entry_fails_closed(self):
+        malformed = [_required_rule()]
+        malformed[0]["parameters"]["required_status_checks"] = [None]
+        with patch("lock_auto_activate._request_json", return_value=malformed):
+            ok, _ = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertFalse(ok)
+
+    def test_22_multiple_effective_rules_accept_positive_strict_proof(self):
+        rules = [
+            _required_rule(strict=False),
+            _required_rule(strict=True, context="verify"),
+        ]
+        with patch("lock_auto_activate._request_json", return_value=rules):
+            ok, reason = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertTrue(ok, reason)
+
+    def test_23_malformed_required_rule_blocks_otherwise_positive_proof(self):
+        rules = [
+            {"type": "required_status_checks", "parameters": {"strict_required_status_checks_policy": True}},
+            _required_rule(),
+        ]
+        with patch("lock_auto_activate._request_json", return_value=rules):
+            ok, _ = _strict_up_to_date_gate("t", "51mns/AIMath-public")
+        self.assertFalse(ok)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # AIMath Village Architecture v1.2.1 — Trusted Lock Lifecycle
 
-**Status:** PHASE-A SECURITY-REVIEWED / PHASE-B REMEDIATED IMPLEMENTATION CANDIDATE / FOCUSED SECURITY REREVIEW REQUIRED  
+**Status:** V1.2.1 MERGED / RULESET STRICT-GATE PATCH CANDIDATE / FOCUSED SECURITY REVIEW REQUIRED  
 **Extends:** Village v1.0, v1.1 and v1.2 without weakening their Truth/Portfolio/security boundaries.  
 **Phase A scope:** automatic `RELEASE` only.  
 **Phase B scope:** broaden trusted automatic `ACQUIRE` activation only; Task selection and lock-PR creation remain worker `/join`/future `/next` responsibilities. `RENEW` and `TAKEOVER` remain nonautomatic.
@@ -27,7 +27,7 @@ Immutable review evidence:
 
 Phase A code is accepted as the reviewed baseline for Phase B diff review. This provenance record is a later governance/documentation commit and does not change the frozen Phase A code boundary.
 
-Live automatic mutation remains **SETTING_CONFIRMATION_REQUIRED** until trusted runtime can confirm `required_status_checks.strict=true`. Unreadable/OFF/malformed state must continue to fail closed; this repository change does not alter GitHub security settings or add credentials.
+The first live v1.2.1 field test correctly failed closed because the trusted runtime could not read the Administration-scoped classic branch-protection strict endpoint. On 2026-09-02 an active repository Ruleset, `Village main strict lifecycle safety` (observed ID `22089746`), was configured for the default branch with required context `verify`, `strict_required_status_checks_policy=true`, and no bypass actors. The current patch candidate changes only the strict-setting attestation source to GitHub's effective branch-rules endpoint; automatic mutation remains review-gated until that code change receives focused independent security review and integration.
 
 ## Phase B review/remediation provenance
 
@@ -48,7 +48,7 @@ returned `PASS_WITH_REQUIRED_CHANGES` / `REQUIRES_FIX`: no CRITICAL/HIGH issue, 
 
 The remediation keeps the Phase A implementation blob frozen and changes only the Phase B wrapper and Phase B regression tests relative to that reviewed Phase B target. RELEASE and ACQUIRE candidate scans now isolate fail-closed candidate observation/shape failures so one invalid candidate cannot become blocking authority over later valid work. Regression controls cover the bounded RELEASE pagination failure, nested malformed candidate observations, and malformed open-PR rows.
 
-The remediated Phase B target must be frozen only after its final provenance commit and exact-head CI. A separate focused rereview must inspect the old rejected target -> remediated fixed target delta and confirm M-01 closure before integration.
+The remediated Phase B target was frozen only after its final provenance commit and exact-head CI. A separate focused rereview inspected the old rejected target -> remediated fixed target delta, confirmed M-01 closure, and Phase B was integrated in PR #28. This later Ruleset attestation patch does not reopen or broaden the reviewed RELEASE/ACQUIRE authority boundary.
 
 ## 1. Authority boundary
 
@@ -136,13 +136,24 @@ Current main, PR head and PR base are re-fetched immediately before merge. Movem
 
 ## 7. Strict server gate
 
-The write workflow remains fail-closed unless GitHub confirms:
+The write workflow remains fail-closed unless GitHub's **effective branch rules for `main`** positively confirm:
 
 ```text
-Require branches to be up to date before merging = ON
+required_status_checks.parameters.strict_required_status_checks_policy = true
+required_status_checks.parameters.required_status_checks[*].context = "verify"
 ```
 
-The merge API's expected SHA protects the PR head, not the base. Server-side strict status checks therefore remain mandatory. If the setting endpoint is OFF or unreadable, the bot prints `AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION` and performs no merge. v1.2.1 does not alter repository settings, Actions default permissions, secrets, PATs or GitHub Apps.
+The trusted code reads:
+
+```text
+GET /repos/51mns/AIMath-public/rules/branches/main
+```
+
+using the built-in `GITHUB_TOKEN`; the read requires only Metadata permission and introduces no PAT, GitHub App or secret. The production code deliberately does not hard-code a Ruleset ID. A Ruleset may be replaced or layered, but only rules GitHub reports as effective for `main` are authority for this gate.
+
+The workflow display name remains `Verify public release`; `verify` is the actual required check/job context. An unreadable response, a non-list response, missing `required_status_checks`, `strict=false`, missing/wrong `verify` context, or malformed relevant rule data fails closed with `AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION` and performs no merge. Multiple effective rules may coexist: a well-formed rule with `strict=false` does not defeat a separate well-formed positive proof with `strict=true` and context `verify`, because all applicable GitHub rules are enforced; however malformed relevant rule data is never silently ignored.
+
+At external setup/read-back on 2026-09-02, Ruleset `Village main strict lifecycle safety` (observed ID `22089746`) was active on `~DEFAULT_BRANCH`, required `verify`, had `strict_required_status_checks_policy=true`, and had `bypass_actors=[]`. That ID is provenance only, not runtime authority. Classic branch protection remains present during the transition and is not weakened by this patch.
 
 ## 8. Workflow governance hardening
 
@@ -156,9 +167,9 @@ The primary security boundary remains GitHub permissions + protected governance/
 
 Phase A is frozen and independently reviewed at `bb8701f551dbf3c155a4352931aa9f17f4588339`.
 
-Phase B may broaden automatic `ACQUIRE` candidate discovery/activation, but it may not create Tasks, choose research on behalf of `/join` workers, create worker lock PRs, automate `RENEW`/`TAKEOVER`, change Truth Layer semantics, or weaken Phase A RELEASE security.
+Phase B broadened automatic `ACQUIRE` candidate discovery/activation, but it did not create Tasks, choose research on behalf of `/join` workers, create worker lock PRs, automate `RENEW`/`TAKEOVER`, change Truth Layer semantics, or weaken Phase A RELEASE security. Its remediated fixed target received focused independent security rereview before PR #28 was integrated.
 
-The final remediated Phase B fixed commit must receive focused independent security rereview of the remediation delta before PR #28 may merge.
+The Ruleset strict-gate patch is a later deployment/security attestation change only. It may change the source used to prove the existing strict server invariant, but it may not expand RELEASE/ACQUIRE authority or alter the Phase A frozen implementation. It requires its own fixed-head focused independent security review before integration.
 
 ## 10. Frozen v1.3 carry-forward prerequisites
 
