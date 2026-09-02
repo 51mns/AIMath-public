@@ -13,6 +13,7 @@
 /docs/VILLAGE_ARCHITECTURE.md @51mns
 /docs/VILLAGE_ARCHITECTURE_V1_1.md @51mns
 /docs/VILLAGE_ARCHITECTURE_V1_2.md @51mns
+/docs/VILLAGE_ARCHITECTURE_V1_2_1.md @51mns
 /docs/CONTINUATION_GATE.md @51mns
 /docs/GITHUB_SETTINGS_REQUIRED.md @51mns
 /docs/RESEARCH_PORTFOLIO.md @51mns
@@ -34,10 +35,12 @@
 /scripts/village_rank.py @51mns
 /scripts/village_v1_2.py @51mns
 /scripts/lock_auto_activate.py @51mns
+/scripts/workflow_security.py @51mns
 /scripts/check_dco.py @51mns
 /scripts/check_village_pr.py @51mns
 /scripts/test_village_acceptance.py @51mns
 /scripts/test_village_v1_1.py @51mns
 /scripts/test_village_v1_2.py @51mns
+/scripts/test_village_v1_2_1.py @51mns
 /scripts/verify_public_layout.py @51mns
 /research/**/CLAIM.yml @51mns
