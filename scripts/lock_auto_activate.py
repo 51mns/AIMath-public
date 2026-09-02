@@ -23,7 +23,6 @@ from lock_auto_activate_phase_a import (
     _materialize_acquire_head,
     _merge_candidate,
     _request_json,
-    _strict_up_to_date_gate,
     _trusted_main_state,
     auto_activation_preflight,
     auto_release_preflight,
@@ -43,6 +42,28 @@ from village_v1_2 import (
     release_terminal_state,
     worker_lock_errors,
 )
+
+
+def _strict_up_to_date_gate(token: str, repository: str) -> tuple[bool, str]:
+    """Compatibility-preserving strict gate using this module's request seam.
+
+    Existing v1.2/v1.2.1 tests patch lock_auto_activate._request_json directly.
+    Keeping the gate here preserves that public test seam while retaining the
+    exact fail-closed semantics of the frozen Phase A implementation.
+    """
+    owner, repo = repository.split("/", 1)
+    try:
+        obj = _request_json(
+            token,
+            repository,
+            "GET",
+            f"/repos/{owner}/{repo}/branches/main/protection/required_status_checks",
+        )
+    except AutoActivationError as exc:
+        return False, f"cannot confirm Require branches to be up to date before merging: {exc}"
+    if obj.get("strict") is not True:
+        return False, "Require branches to be up to date before merging is not confirmed ON"
+    return True, "strict status checks confirmed"
 
 
 @dataclass(frozen=True)
