@@ -1,6 +1,6 @@
 # AIMath Village Architecture v1.3 — `/next` Phase A pure core
 
-**Status:** PHASE A IMPLEMENTED / PHASE B TRANSPORT DEFERRED / INDEPENDENT REVIEW REQUIRED  
+**Status:** PHASE A IMPLEMENTED / PHASE B TRANSPORT + ACTIVE_NEXT CONFIRMATION DEFERRED / INDEPENDENT REVIEW REQUIRED  
 **Frozen specification commit:** `5eed8cc40243eba166afee651104f3c4a79d99ac`  
 **Frozen specification path:** `reviews/village-v1-3-next-preflight/NEXT_FROZEN_SPEC.md`  
 **Frozen specification blob:** `ad851bd4fece0f3f45126ae12da3b54a3a7a5832`  
@@ -14,7 +14,7 @@ The writer of this Phase A implementation is not its independent security/code r
 
 `scripts/village_next.py` is a pure derivation layer over an already-observed repository snapshot. It receives `VillageState`, the canonical `EvaluationBook`, retained worker/principal identity, capability data, optional already-observed `PENDING_CLAIM` rows, and explicit continuation-gate metadata. It returns state and action **intent** only.
 
-The eight frozen ephemeral control phases are represented explicitly:
+The eight frozen ephemeral control phases remain represented explicitly:
 
 1. `ACTIVE_WORK`
 2. `RESULT_RECORDED`
@@ -25,9 +25,15 @@ The eight frozen ephemeral control phases are represented explicitly:
 7. `ACQUIRE_PENDING`
 8. `ACTIVE_NEXT`
 
-Intermediate phases appear in the deterministic transition trace even when they are not the final returned phase. They are not new canonical Task states or ownership states.
+Intermediate phases appear in the deterministic transition trace when Phase A actually derives them. They are not new canonical Task states or ownership states.
 
-`RELEASE_PENDING` means only **prepare/reuse a RELEASE transport in Phase B**. `ACQUIRE_PENDING` means only **prepare/reuse an ACQUIRE transport in Phase B**. Neither is canonical ownership. `ACTIVE_NEXT` is returned only when the supplied canonical snapshot already contains the exact active lock for the retained worker/principal on the next Task.
+`RELEASE_PENDING` means only **prepare/reuse a RELEASE transport in Phase B**. `ACQUIRE_PENDING` means only **prepare/reuse an ACQUIRE transport in Phase B**. Neither is canonical ownership.
+
+`ACTIVE_NEXT` is retained as the frozen state-machine name but **Phase A does not emit or certify it**. A bare canonical lock, even on a Task that looks like the expected candidate and even with the same worker/principal, is insufficient to prove that it belongs to the current `/next` request/acquisition epoch. Exact `ACTIVE_NEXT` confirmation is deferred to Phase B, which must bind at least the intended selected Task, immutable request/acquisition epoch, exact worker, exact principal, deterministic `work_ref`, exact collision-key bundle, and canonical ACQUIRE transport/lifecycle evidence before returning that state.
+
+Accordingly, the Phase A responsibility ends at:
+
+`terminal recognition -> continuation decision -> RELEASE intent -> RELEASED snapshot -> NEXT_SELECTION -> ACQUIRE_PENDING intent`.
 
 ## 2. Terminal evidence authority and outcome preservation
 
@@ -53,7 +59,9 @@ No success/failure boolean is introduced. Negative and inconclusive outcomes rem
 
 `ABANDONED_TERMINAL` remains a separate scheduling record and must retain `truth_layer_effect = NONE`. A malformed result cannot become terminal authority; the inherited v1.2.1 rule still permits an independently valid current-acquisition abandonment record to terminalise instead.
 
-A structurally valid terminal result can move an exact current lock to `RELEASE_PENDING` even when independent review is still required. Review demand is recorded separately and never extends writer ownership.
+A structurally valid terminal result can move an exact **active** current lock to `RELEASE_PENDING` even when independent review is still required. Review demand is recorded separately and never extends writer ownership.
+
+An expired/non-active source lock artifact is not ownership. Phase A fails closed on such an artifact with `canonical_ownership=False` and no RELEASE or ACQUIRE intent, requiring lifecycle cleanup/reobservation outside the pure core rather than silently treating the artifact as either active ownership or clean release.
 
 ## 3. Continuation policy
 
@@ -96,7 +104,7 @@ Any eligibility/rank exception returns `RANK_FAILED` with no fallback Task. Ther
 
 ## 5. Identity and ownership boundary
 
-`worker_id` remains non-secret scheduling identity. Phase A requires exact current canonical lock binding to:
+`worker_id` remains non-secret scheduling identity. Phase A requires an actually active current canonical source lock to bind to:
 
 - source `task_id`
 - retained `worker_id`
@@ -104,11 +112,13 @@ Any eligibility/rank exception returns `RANK_FAILED` with no fallback Task. Ther
 
 A different principal presenting the same worker ID, or the same principal presenting a different worker ID, cannot derive automatic RELEASE eligibility for that lock.
 
-`PENDING_CLAIM` remains a reservation observation only. An open/green transport cannot produce `ACTIVE_NEXT`. Only a fresh supplied canonical active lock can do so.
+An expired/non-active source lock artifact does not satisfy this ownership predicate and causes a fail-closed cleanup/reobservation result without mutation intent.
+
+`PENDING_CLAIM` remains a reservation observation only. An open/green transport cannot produce `ACTIVE_NEXT`. Phase A also does not treat a bare canonical next-task lock as proof of `ACTIVE_NEXT`; exact acquisition-epoch binding is a Phase B responsibility.
 
 ## 6. Phase B deferred boundary
 
-Phase B owns every operation that needs fresh GitHub transport state or can create GitHub-side objects. It is not implemented in Phase A:
+Phase B owns every operation that needs fresh GitHub transport state or exact transport/acquisition binding. It is not implemented in Phase A:
 
 - GitHub/API observation adapter for open PRs, exact head/base and exact-head Verify
 - duplicate RELEASE/ACQUIRE transport discovery and idempotent reuse
@@ -121,6 +131,7 @@ Phase B owns every operation that needs fresh GitHub transport state or can crea
 - two-worker/collision/capacity races at merge time
 - candidate-local GitHub observation failure isolation in `/next` transport discovery
 - lifecycle handoff to the already-reviewed v1.2.1 trusted writer
+- exact `ACTIVE_NEXT` confirmation binding the selected Task to an immutable request/acquisition epoch, worker, principal, deterministic workspace/`work_ref`, exact collision bundle, and canonical ACQUIRE transport/lifecycle identity
 
 Phase B must continue to keep Task selection and PR creation outside `scripts/lock_auto_activate.py`. It must not weaken the inherited `eligible RELEASE > eligible ACQUIRE`, exact object, exact current-main, strict-status, candidate-local failure isolation, or at-most-one trusted mutation gates.
 
@@ -152,6 +163,7 @@ Review-candidate immutable H tree/path/blob binding, exact `REVIEW_UNAVAILABLE`,
 | `TAKEOVER` | **NONE** |
 | Worker prose as Portfolio authority | **NONE** |
 | `PENDING_CLAIM` as ownership | **NONE** |
+| Bare canonical next lock as current `/next` epoch proof | **NONE** |
 
 The pure core contains no GitHub HTTP client, token handling, ref-write path, PR-write path, merge path, or filesystem write. It uses the snapshot time supplied by `VillageState`; there is no hidden wall-clock or network dependency in Phase A tests.
 
@@ -161,13 +173,13 @@ Every one of the 38 frozen Section 14 tests is accounted for exactly once below.
 
 | # | Frozen test | Disposition | Phase boundary note |
 |---:|---|---|---|
-| 1 | happy path through RELEASE transport, canonical release, ACQUIRE transport, canonical next lock | `DEFERRED_TO_PHASE_B` | Phase A derives every pure phase/intended action; actual transport and merge observations are Phase B. |
+| 1 | happy path through RELEASE transport, canonical release, ACQUIRE transport, canonical next lock | `DEFERRED_TO_PHASE_B` | Phase A derives only through `ACQUIRE_PENDING`; transport, canonical merge observation, exact acquisition binding and `ACTIVE_NEXT` confirmation are Phase B. |
 | 2 | negative outcome preserved and legitimate RELEASE allowed | `IMPLEMENTED_IN_PHASE_A` | Exact negative `outcome_type` is preserved and yields `RELEASE_PENDING`. |
 | 3 | abandonment release plus 24h same-pair reacquire rejection | `DEFERRED_TO_PHASE_B` | Phase A recognizes truth-neutral abandonment and reuses cooldown filtering; full release/reacquire transport integration remains Phase B. |
 | 4 | `INCONCLUSIVE` preserved | `IMPLEMENTED_IN_PHASE_A` | No boolean/result rewrite exists. |
 | 5 | no eligible Task | `IMPLEMENTED_IN_PHASE_A` | Returns `NO_ELIGIBLE_TASK`; creates nothing. |
 | 6 | duplicate `/next` reuses at most one RELEASE/ACQUIRE transport | `DEFERRED_TO_PHASE_B` | Requires open-PR observation and transport creation/reuse. |
-| 7 | replayed old acquisition epoch cannot control newer acquisition | `DEFERRED_TO_PHASE_B` | Requires transport/acquisition-epoch GitHub binding beyond the pure current snapshot. |
+| 7 | replayed old acquisition epoch cannot control newer acquisition | `DEFERRED_TO_PHASE_B` | Exact transport/acquisition-epoch binding is Phase B; this deferral is safe because Phase A never emits `ACTIVE_NEXT` from a bare canonical lock. |
 | 8 | two workers choose same Task | `DEFERRED_TO_PHASE_B` | Canonical merge race belongs to transport/lifecycle integration. |
 | 9 | two workers same collision key | `DEFERRED_TO_PHASE_B` | Merge-time collision race belongs to Phase B; Phase A inherits current-snapshot collision filtering. |
 | 10 | last Campaign slot race | `DEFERRED_TO_PHASE_B` | Requires fresh final transport revalidation. |
@@ -179,11 +191,11 @@ Every one of the 38 frozen Section 14 tests is accounted for exactly once below.
 | 16 | CI failure gives no reservation/activation | `DEFERRED_TO_PHASE_B` | CI observation adapter not in pure core. |
 | 17 | strict gate unavailable gives no automatic merge | `DEFERRED_TO_PHASE_B` | Existing trusted lifecycle gate remains unchanged; `/next` transport handoff is deferred. |
 | 18 | review unavailable does not retain writer/global halt | `DEFERRED_TO_REVIEW_AUTONOMY_PHASE` | Phase A already separates review demand and permits writer RELEASE; exact reviewer-supply/`REVIEW_UNAVAILABLE` half is deferred. |
-| 19 | worker spoof attempt | `IMPLEMENTED_IN_PHASE_A` | Exact Task/worker/principal lock binding fails closed before release intent. |
+| 19 | worker spoof attempt | `IMPLEMENTED_IN_PHASE_A` | Exact Task/worker/principal active-source-lock binding fails closed before release intent. |
 | 20 | same-principal different workers stay separate | `IMPLEMENTED_IN_PHASE_A` | Exact worker binding and inherited worker-cap semantics are retained. |
 | 21 | malformed outcome | `IMPLEMENTED_IN_PHASE_A` | Invalid RESULT cannot terminalise; independently valid abandonment fallback is inherited. |
 | 22 | malformed GitHub candidate is local failure; later valid candidate continues | `DEFERRED_TO_PHASE_B` | Candidate GitHub observation layer is not present in Phase A. |
-| 23 | `PENDING_CLAIM` is not ownership | `IMPLEMENTED_IN_PHASE_A` | `ACTIVE_NEXT` requires canonical active lock, never PENDING input. |
+| 23 | `PENDING_CLAIM` is not ownership | `IMPLEMENTED_IN_PHASE_A` | PENDING never creates ownership; Phase A also never emits `ACTIVE_NEXT`, whose exact canonical acquisition proof is deferred to Phase B. |
 | 24 | continuation human gate | `IMPLEMENTED_IN_PHASE_A` | Only matching canonical `HUMAN_MAINTAINER` decision can satisfy the gate. |
 | 25 | self-evaluation has zero authority | `IMPLEMENTED_IN_PHASE_A` | Self-evaluation neither creates candidate Tasks nor bypasses READY/hard gates. |
 | 26 | deterministic rank | `IMPLEMENTED_IN_PHASE_A` | Reuses `rank_v12`; stable Task ID remains final tie-break. |
@@ -200,25 +212,40 @@ Every one of the 38 frozen Section 14 tests is accounted for exactly once below.
 | 37 | at-most-one trusted mutation; RELEASE before ACQUIRE | `DEFERRED_TO_PHASE_B` | Trusted writer remains unchanged; `/next` transport handoff is Phase B. |
 | 38 | candidate-local observation failure isolation | `DEFERRED_TO_PHASE_B` | Existing v1.2.1 trusted lifecycle keeps this gate; new `/next` GitHub adapter must reproduce it in Phase B. |
 
+The disposition count remains exactly:
+
+- `IMPLEMENTED_IN_PHASE_A`: **15**
+- `DEFERRED_TO_PHASE_B`: **17**
+- `DEFERRED_TO_REVIEW_AUTONOMY_PHASE`: **6**
+- total: **38**
+
 ## 10. Phase A direct acceptance coverage
 
-`scripts/test_village_v1_3_next.py` independently checks the Phase A core, including:
+`scripts/test_village_v1_3_next.py` directly checks the Phase A core, including:
 
 - active exact worker + no terminal → `ACTIVE_WORK`
+- expired/non-active source lock → fail closed with no ownership or mutation intent
 - exact outcome preservation for positive, negative and `INCONCLUSIVE` results
 - truth-neutral abandonment and malformed-result fallback
 - malformed result fail-closed
 - branch/chat-only non-authority
-- terminal + lock → `RELEASE_PENDING`
+- terminal + active lock → `RELEASE_PENDING`
 - released snapshot → selection / global fallback / `NO_ELIGIBLE_TASK`
 - human Continuation Gate and canonical human decision
 - review-demand separation from writer release
 - self-evaluation non-authority
 - deterministic `rank_v12` reuse and fail-closed rank failure
-- PENDING non-ownership and canonical-only `ACTIVE_NEXT`
+- PENDING non-ownership
+- bare candidate-looking, unrelated, replayed, wrong-`work_ref`, or wrong-collision canonical locks do not produce `ACTIVE_NEXT`
 - worker/principal spoof rejection
 - global pause semantics
 - absence of mutation/Truth/`RENEW`/`TAKEOVER` authority
 - no filesystem/network mutation by pure derivation
 
-`scripts/village.py test` includes this v1.3 direct suite. No production `/next` CLI transport is introduced in Phase A.
+PR #34 contains this direct suite, but its current policy-separated scope intentionally does not modify `scripts/village.py`. Therefore the v1.3 suite must be invoked explicitly at this stage:
+
+```bash
+python3 scripts/test_village_v1_3_next.py
+```
+
+Registration in `scripts/village.py test` is staged separately in companion governance PR #35. PR #35 must not be merged against the current pre-#34 base; after a corrected PR #34 is independently accepted and merged, #35 must be rebased/recreated on fresh `main` and pass fresh exact-head CI. No production `/next` CLI transport is introduced in Phase A.
