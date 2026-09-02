@@ -4,7 +4,7 @@ In-repository policy cannot protect itself if repository settings allow an unrev
 
 - protect `main`;
 - require pull requests before merge;
-- require the `Verify public release` status check;
+- require the `verify` status check (the workflow display name is `Verify public release`, but the required check context is the job/check name `verify`);
 - require the branch to be up to date before merge;
 - block force pushes;
 - block branch deletion;
@@ -28,7 +28,7 @@ Use this mode while only one human maintainer can honestly approve protected-pat
 
 - required approving reviews: **0**;
 - keep pull requests mandatory;
-- keep required status check `Verify public release` mandatory;
+- keep required status check `verify` mandatory;
 - keep strict up-to-date-before-merge enabled;
 - keep force pushes and branch deletion blocked;
 - keep `CODEOWNERS` committed for ownership/documentation and future multi-maintainer use;
@@ -56,16 +56,47 @@ Switching modes is a governance/settings change and should reflect the real peop
 
 `main` must require branches to be up to date before merge. Renewal and trusted lifecycle CI evaluate current canonical state. The merge endpoint's expected head SHA does not pin the base SHA, so strict server-side status checking is part of lock correctness, not a performance option.
 
-## Village v1.2.1 Phase A trusted RELEASE gate
+## Village v1.2.1 trusted lifecycle strict gate
 
-The Phase A write workflow uses `GITHUB_TOKEN` only for GitHub Actions/PR reads and the narrowly revalidated contents merge path. It does not change branch protection.
+The trusted write workflow uses `GITHUB_TOKEN` only for GitHub Actions/PR reads and the narrowly revalidated contents merge path. It does not change branch protection or Rulesets.
 
-Before any automatic RELEASE or existing automatic ACQUIRE merge, trusted-main code calls:
+The original v1.2.1 implementation attempted to read classic branch protection at:
 
 ```text
 GET /repos/51mns/AIMath-public/branches/main/protection/required_status_checks
 ```
 
-and requires the returned `strict` field to be exactly `true`. OFF, malformed or unreadable responses fail closed with `AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION`.
+and required the returned `strict` field to be exactly `true`. The live field test confirmed that the normal workflow token cannot read that Administration-scoped endpoint and therefore correctly failed closed with `AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION`.
 
-Reading this branch-protection endpoint requires repository **Administration: read** permission under GitHub's fine-grained permission model. Normal workflow `GITHUB_TOKEN` permissions do not expose an `administration` scope. If the runtime token cannot read the endpoint, do not weaken protection and do not add a PAT/App/secret automatically. A human must explicitly approve a minimal read-only Administration credential or another audited GitHub-supported way to attest the same effective strict setting before live auto-merge can be enabled. Existing `GITHUB_TOKEN` remains the merge credential; the setting-reader credential should not receive write Administration permission.
+The replacement attestation source is GitHub's effective branch-rules endpoint:
+
+```text
+GET /repos/51mns/AIMath-public/rules/branches/main
+```
+
+Automatic mutation may proceed only when the effective rules positively prove both:
+
+```text
+required_status_checks.parameters.strict_required_status_checks_policy = true
+required_status_checks.parameters.required_status_checks[*].context = "verify"
+```
+
+The required context is the Actions job/check name `verify`; the workflow display name remains `Verify public release` and is still used when validating workflow-run provenance. OFF, missing, malformed, wrong-context or unreadable effective rule responses fail closed with `AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION`.
+
+This effective-rules read needs only repository Metadata read access, which the built-in `GITHUB_TOKEN` already has. No PAT, GitHub App, repository secret or environment secret is required for strict-setting attestation.
+
+At setup/read-back on 2026-09-02 the repository Ruleset was observed as:
+
+```text
+name: Village main strict lifecycle safety
+ruleset id: 22089746
+enforcement: active
+target: ~DEFAULT_BRANCH
+required context: verify
+strict_required_status_checks_policy: true
+bypass_actors: []
+```
+
+The production gate must **not** trust or hard-code Ruleset ID `22089746`. It trusts only the rules GitHub reports as effective for `main`, so replacement/layered Rulesets cannot silently inherit authority from this recorded setup identifier.
+
+Classic branch protection remains in place during this transition. The Ruleset path is an additional positive attestation source and must not be used as a reason to weaken classic protection. Changes to bypass actors, required checks, strictness, force-push/deletion policy or protection mode remain human governance/security-setting changes.
