@@ -10,14 +10,16 @@ import re
 import secrets
 from typing import Any, Iterable
 
-from village_core import parse_time
-from village_rank import PRIORITY_BASE, RankedTask, rank_ready_tasks
+from village_core import parse_time, validate_schema
+from village_rank import RankedTask, rank_ready_tasks
 
 WORKER_ID_RE = re.compile(r"^w-[0-9a-f]{16,32}$")
 TASK_ID_RE = re.compile(r"^TASK-[A-Z0-9-]+$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 PRINCIPAL_RE = re.compile(r"^gh:[A-Za-z0-9_.-]+$")
 DEFAULT_PENDING_TTL_MINUTES = 60
+PENDING_OBSERVATION_SOURCE = "GITHUB_API"
+PENDING_REPOSITORY = "51mns/AIMath-public"
 
 
 class VillageV12Error(ValueError):
@@ -81,7 +83,7 @@ class V12RankedTask:
 
 
 def generate_worker_id() -> str:
-    """Return a non-secret session identifier. It is coordination metadata, not a credential."""
+    """Return non-secret session metadata; never use it as an authority credential."""
     return "w-" + secrets.token_hex(8)
 
 
@@ -117,7 +119,6 @@ def _worker_slot_key(payload: dict[str, Any]) -> tuple[str, str]:
 
 
 def worker_lock_errors(state, actor_policy: dict[str, Any] | None = None) -> list[str]:
-    """Validate worker-level EXCLUSIVE capacity without treating worker IDs as trust credentials."""
     policy = actor_policy or {}
     cap = int(policy.get("exclusive_worker_lock_cap_default", 1))
     errors: list[str] = []
@@ -142,9 +143,7 @@ def worker_lock_errors(state, actor_policy: dict[str, Any] | None = None) -> lis
             work_refs[work_ref] = bundle.lock_id
     for (principal, worker), count in counts.items():
         if count > cap:
-            errors.append(
-                f"{principal}/{worker}: active EXCLUSIVE locks {count} exceed worker cap {cap}"
-            )
+            errors.append(f"{principal}/{worker}: active EXCLUSIVE locks {count} exceed worker cap {cap}")
     return errors
 
 
@@ -155,13 +154,12 @@ def new_worker_lock_errors(
     actor_policy: dict[str, Any] | None = None,
 ) -> list[str]:
     policy = actor_policy or {}
-    errors: list[str] = []
     required = bool(policy.get("worker_id_required_for_new_lock", False))
     worker_id = bundle.payload.get("worker_id")
     if required and not isinstance(worker_id, str):
         return ["v1.2 new lock acquisition requires worker_id"]
     if worker_id is None:
-        return errors
+        return []
     if not validate_worker_id(str(worker_id)):
         return ["worker_id must match ^w-[0-9a-f]{16,32}$"]
     tid = bundle.payload.get("task_id")
@@ -169,6 +167,7 @@ def new_worker_lock_errors(
         workspace = worker_workspace(tid, worker_id)
     except VillageV12Error as exc:
         return [str(exc)]
+    errors: list[str] = []
     if bundle.payload.get("work_ref") != workspace.branch:
         errors.append(f"work_ref must equal deterministic worker branch {workspace.branch}")
     cap = int(policy.get("exclusive_worker_lock_cap_default", 1))
@@ -179,10 +178,7 @@ def new_worker_lock_errors(
             otid = old.payload.get("task_id")
             if base_state.tasks.get(otid, {}).get("parallelism") != "EXCLUSIVE":
                 continue
-            if (
-                old.payload.get("actor", {}).get("id") == principal
-                and old.payload.get("worker_id") == worker_id
-            ):
+            if old.payload.get("actor", {}).get("id") == principal and old.payload.get("worker_id") == worker_id:
                 active += 1
         if active >= cap:
             errors.append(f"worker EXCLUSIVE lock cap {cap} already reached")
@@ -190,14 +186,25 @@ def new_worker_lock_errors(
 
 
 def _pending_ttl_minutes(state) -> int:
-    value = state.portfolio.get("governance", {}).get(
-        "pending_claim_ttl_minutes", DEFAULT_PENDING_TTL_MINUTES
-    )
+    value = state.portfolio.get("governance", {}).get("pending_claim_ttl_minutes", DEFAULT_PENDING_TTL_MINUTES)
     try:
         value = int(value)
     except (TypeError, ValueError):
         return DEFAULT_PENDING_TTL_MINUTES
     return max(5, min(240, value))
+
+
+def pending_schema_path() -> Path:
+    return Path(__file__).resolve().parent.parent / "schemas/pending-claim.schema.json"
+
+
+def validate_pending_claim_schema(record: dict[str, Any], schema_path: Path | None = None) -> list[str]:
+    path = schema_path or pending_schema_path()
+    try:
+        schema = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"pending claim schema unavailable/invalid: {exc}"]
+    return validate_schema(record, schema, "PENDING_CLAIM")
 
 
 def validate_pending_claim(
@@ -207,15 +214,19 @@ def validate_pending_claim(
     current_main_sha: str,
     now: datetime | None = None,
 ) -> tuple[bool, list[str]]:
-    """Validate advisory live PR/CI observation. Never creates ownership or Truth state."""
+    """Validate an advisory GitHub observation. It never creates ownership or Truth state."""
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    errors: list[str] = []
+    errors = validate_pending_claim_schema(record)
+    if record.get("observation_source") != PENDING_OBSERVATION_SOURCE:
+        errors.append("pending observation source is not direct GitHub API")
+    if record.get("repository") != PENDING_REPOSITORY:
+        errors.append("pending observation repository mismatch")
     if record.get("reservation_kind") != "PENDING_CLAIM":
         errors.append("reservation_kind must be PENDING_CLAIM")
     if record.get("pr_state") != "OPEN":
         errors.append("PR is not OPEN")
-    if record.get("draft") is True:
-        errors.append("draft PR is not a reservation")
+    if record.get("draft") is not False:
+        errors.append("pending reservation requires draft=false boolean")
     if record.get("change_class") != "LOCK_ONLY":
         errors.append("change_class is not LOCK_ONLY")
     if record.get("lock_operation") != "ACQUIRE":
@@ -244,13 +255,14 @@ def validate_pending_claim(
     else:
         if task.get("parallelism") != "EXCLUSIVE":
             errors.append("PENDING_CLAIM reservation is only for EXCLUSIVE tasks")
-        if set(record.get("collision_keys", [])) != set(task.get("collision_keys", [])):
+        keys = record.get("collision_keys")
+        if not isinstance(keys, list) or set(keys) != set(task.get("collision_keys", [])):
             errors.append("pending collision_keys do not exactly match Task")
         ready, reasons = state.readiness(tid)
         if not ready:
             errors.append("task is no longer READY: " + "; ".join(reasons))
     try:
-        observed = parse_time(str(record["observed_at"]))
+        observed = parse_time(record["observed_at"])
         age = (now - observed).total_seconds() / 60
         if age < -5:
             errors.append("pending observation is from the future")
@@ -259,11 +271,11 @@ def validate_pending_claim(
     except Exception:
         errors.append("invalid observed_at")
     try:
-        if parse_time(str(record["lock_expires_at"])) <= now:
+        if parse_time(record["lock_expires_at"]) <= now:
             errors.append("proposed lock lease already expired")
     except Exception:
         errors.append("invalid lock_expires_at")
-    return not errors, errors
+    return not errors, list(dict.fromkeys(errors))
 
 
 def valid_pending_claims(
@@ -275,9 +287,7 @@ def valid_pending_claims(
 ) -> list[dict[str, Any]]:
     out = []
     for record in records:
-        ok, _ = validate_pending_claim(
-            state, record, current_main_sha=current_main_sha, now=now
-        )
+        ok, _ = validate_pending_claim(state, record, current_main_sha=current_main_sha, now=now)
         if ok:
             out.append(record)
     return out
@@ -291,11 +301,8 @@ def task_has_pending_claim(
     current_main_sha: str,
     now: datetime | None = None,
 ) -> bool:
-    task = state.tasks[task_id]
-    task_keys = set(task.get("collision_keys", []))
-    for record in valid_pending_claims(
-        state, records, current_main_sha=current_main_sha, now=now
-    ):
+    task_keys = set(state.tasks[task_id].get("collision_keys", []))
+    for record in valid_pending_claims(state, records, current_main_sha=current_main_sha, now=now):
         if record.get("task_id") == task_id:
             return True
         if task_keys.intersection(record.get("collision_keys", [])):
@@ -304,14 +311,35 @@ def task_has_pending_claim(
 
 
 def load_pending_claims(path: str | Path | None) -> list[dict[str, Any]]:
+    """Load only an explicit direct-GitHub observation envelope; repository artifacts are not trusted input."""
     if not path:
         return []
-    value = json.loads(Path(path).read_text(encoding="utf-8"))
-    if isinstance(value, dict):
-        value = value.get("reservations", [])
-    if not isinstance(value, list) or not all(isinstance(x, dict) for x in value):
-        raise VillageV12Error("pending reservation file must contain a JSON list or {reservations:[...]}")
-    return value
+    try:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise VillageV12Error(f"invalid pending observation cache: {exc}") from exc
+    if not isinstance(value, dict):
+        raise VillageV12Error("pending observations require a GitHub API envelope object")
+    allowed = {"schema_version", "observation_source", "repository", "reservations"}
+    extra = set(value) - allowed
+    if extra:
+        raise VillageV12Error(f"pending observation envelope has unexpected keys: {sorted(extra)}")
+    if value.get("schema_version") != 1:
+        raise VillageV12Error("pending observation envelope schema_version must be 1")
+    if value.get("observation_source") != PENDING_OBSERVATION_SOURCE:
+        raise VillageV12Error("pending observation cache must come from direct GitHub API observation")
+    if value.get("repository") != PENDING_REPOSITORY:
+        raise VillageV12Error(f"pending observation cache repository must be {PENDING_REPOSITORY}")
+    rows = value.get("reservations")
+    if not isinstance(rows, list) or not all(isinstance(x, dict) for x in rows):
+        raise VillageV12Error("pending observation envelope requires reservations: [object, ...]")
+    for i, record in enumerate(rows):
+        errors = validate_pending_claim_schema(record)
+        if errors:
+            raise VillageV12Error(f"pending reservation #{i} failed schema: {'; '.join(errors)}")
+        if record.get("observation_source") != PENDING_OBSERVATION_SOURCE or record.get("repository") != PENDING_REPOSITORY:
+            raise VillageV12Error(f"pending reservation #{i} provenance mismatch")
+    return rows
 
 
 def capability_eligible(state, task_id: str, profile: CapabilityProfile | None) -> tuple[bool, str]:
@@ -357,6 +385,9 @@ def rank_v12(
         raise VillageV12Error("current_main_sha is required when pending reservations are supplied")
     rows: list[V12RankedTask] = []
     for row in rank_ready_tasks(state, book):
+        eligible, _ = capability_eligible(state, row.task_id, capabilities)
+        if not eligible:
+            continue
         if pending and task_has_pending_claim(
             state,
             row.task_id,
@@ -364,9 +395,6 @@ def rank_v12(
             current_main_sha=current_main_sha or "",
             now=now,
         ):
-            continue
-        eligible, _ = capability_eligible(state, row.task_id, capabilities)
-        if not eligible:
             continue
         rows.append(V12RankedTask(row, capability_fit(state, row.task_id, capabilities)))
     priority_order = {"P0": 0, "P1": 1, "P2": 2, "HOLD": 3}
@@ -382,7 +410,6 @@ def rank_v12(
 
 
 def trusted_lock_activation_workflow_errors(text: str) -> list[str]:
-    """Strict allow-list for the one trusted default-branch workflow_run writer."""
     errors: list[str] = []
     low = text.lower()
     required = (
