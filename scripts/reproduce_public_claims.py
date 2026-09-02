@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Run every executable public claim package using the current Python.
 
-This is intentionally a public-snapshot replay suite. Claims whose accepted
-public evidence is prose/proof only are checked by layout/review presence, not
-invented executable tests.
+This temporary review-validation branch also executes the otherwise-unregistered
+Village v1.3 Phase A direct suite from the exact fixed target blobs before the
+normal public replay suite. The branch/PR must never be merged.
 """
 from __future__ import annotations
 
@@ -26,6 +26,16 @@ REPLAYS = [
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     failures: list[str] = []
+
+    v13 = root / "scripts/test_village_v1_3_next.py"
+    print("\n=== REVIEW VALIDATION Village v1.3 Phase A direct suite ===", flush=True)
+    completed = subprocess.run([sys.executable, str(v13)], cwd=root)
+    if completed.returncode != 0:
+        print(f"FAIL Village v1.3 direct suite exit={completed.returncode}")
+        failures.append("scripts/test_village_v1_3_next.py")
+    else:
+        print("PASS Village v1.3 direct suite")
+
     for rel in REPLAYS:
         path = root / rel
         if not path.is_file():
