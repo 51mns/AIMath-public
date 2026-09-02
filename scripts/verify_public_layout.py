@@ -6,7 +6,7 @@ import sys
 REQUIRED = [
     "README.md", "README.ja.md", "AGENTS.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSING.md", "REUSE.toml",
     "LICENSES/Apache-2.0.txt", "LICENSES/CC-BY-4.0.txt", "LICENSES/CC0-1.0.txt",
-    "docs/VILLAGE_CONSTITUTION.md", "docs/VILLAGE_ARCHITECTURE.md", "docs/VILLAGE_ARCHITECTURE_V1_1.md", "docs/CONTINUATION_GATE.md",
+    "docs/VILLAGE_CONSTITUTION.md", "docs/VILLAGE_ARCHITECTURE.md", "docs/VILLAGE_ARCHITECTURE_V1_1.md", "docs/VILLAGE_ARCHITECTURE_V1_2.md", "docs/CONTINUATION_GATE.md",
     "docs/RESEARCH_PORTFOLIO.md", "docs/RESEARCH_BOARD.md", "docs/DEPENDENCY_GRAPH.md", "docs/CAMPAIGN_HISTORY.md", "docs/RESEARCH_EVALUATIONS.md",
     "docs/RESULTS.md", "docs/FAILED_ROUTES.md", "docs/EXPORT_GAPS.md", "docs/CONTRIBUTION_TARGETS.md",
     "docs/EVIDENCE_POLICY.md", "docs/PUBLIC_EXPORT_VALIDATION.md", "docs/CLAIM_LEVELS.md",
@@ -21,13 +21,14 @@ REQUIRED = [
     "coordination/tasks/TASK-AIMATH-ND-001/TASK.yml",
     "coordination/tasks/TASK-AIMATH-ND-002/TASK.yml",
     "schemas/portfolio.schema.json", "schemas/campaign.schema.json", "schemas/task.schema.json",
-    "schemas/lock.schema.json", "schemas/claim.schema.json", "schemas/review.schema.json",
+    "schemas/lock.schema.json", "schemas/pending-claim.schema.json", "schemas/claim.schema.json", "schemas/review.schema.json",
     "schemas/failed-route.schema.json", "schemas/continuation.schema.json", "schemas/decision.schema.json",
     "schemas/proposal.schema.json", "schemas/outcome.schema.json", "schemas/evaluation.schema.json",
     "scripts/build_public_manifest.py", "scripts/reproduce_public_claims.py",
-    "scripts/village_core.py", "scripts/village.py", "scripts/village_rank.py",
-    "scripts/test_village_acceptance.py", "scripts/test_village_v1_1.py",
+    "scripts/village_core.py", "scripts/village.py", "scripts/village_rank.py", "scripts/village_v1_2.py",
+    "scripts/lock_auto_activate.py", "scripts/test_village_acceptance.py", "scripts/test_village_v1_1.py", "scripts/test_village_v1_2.py",
     "scripts/check_dco.py", "scripts/check_village_pr.py", "scripts/verify_public_layout.py",
+    ".github/workflows/verify.yml", ".github/workflows/lock-auto-activate.yml",
     "research/README.md", "reviews/README.md",
     "research/fixed-433/README.md",
     "research/433-springborn-obstruction/README.md",
@@ -43,6 +44,7 @@ REQUIRED = [
     "research/afes-bounded/README.md", "reviews/afes-bounded/INDEPENDENT_REVIEW.md",
     "research/thue-morse-rediscovery/README.md", "reviews/thue-morse-rediscovery/INDEPENDENT_REVIEW.md",
 ]
+
 
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
@@ -66,6 +68,7 @@ def main() -> int:
         f"{campaign_count} campaigns, {task_count} tasks, {claim_meta_count} claim metadata records)"
     )
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
