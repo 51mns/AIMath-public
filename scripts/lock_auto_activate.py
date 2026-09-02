@@ -44,6 +44,19 @@ from village_v1_2 import (
 )
 
 
+# Observation/shape failures for one candidate must never authorize that
+# candidate, but they also must not make an invalid lower PR reservation
+# authority over later valid work. These exceptions arise while decoding or
+# validating untrusted GitHub candidate data; handling them is fail-closed.
+_CANDIDATE_LOCAL_OBSERVATION_ERRORS = (
+    AutoActivationError,
+    AttributeError,
+    KeyError,
+    TypeError,
+    ValueError,
+)
+
+
 def _strict_up_to_date_gate(token: str, repository: str) -> tuple[bool, str]:
     """Compatibility-preserving strict gate using this module's request seam.
 
@@ -195,6 +208,70 @@ def _eligible_acquire_candidate(
         td.cleanup()
 
 
+def _candidate_number(pr: object) -> object:
+    return pr.get("number", "UNKNOWN") if isinstance(pr, dict) else "UNKNOWN"
+
+
+def _candidate_head_ref(pr: object) -> str | None:
+    if not isinstance(pr, dict):
+        return None
+    head = pr.get("head")
+    if not isinstance(head, dict):
+        return None
+    ref = head.get("ref")
+    return ref if isinstance(ref, str) else None
+
+
+def _scan_releases(
+    token: str,
+    repository: str,
+    open_prs: list[dict],
+    *,
+    current_main_sha: str,
+    current_main_tree: list[dict],
+    base_state: VillageState,
+    maintainers: set[str],
+    release_principals: set[str],
+) -> list[AutoReleaseCandidate]:
+    """Find RELEASE candidates without letting one bad observation block later work."""
+    eligible: list[AutoReleaseCandidate] = []
+    for pr in open_prs:
+        number = _candidate_number(pr)
+        head_ref = _candidate_head_ref(pr)
+        if head_ref is None:
+            if not isinstance(pr, dict):
+                print("LIFECYCLE_PR_UNKNOWN_INELIGIBLE")
+                print(" - malformed open PR observation")
+            continue
+        if parse_release_head_ref(head_ref) is None:
+            continue
+        try:
+            candidate, errors = _eligible_release_candidate(
+                token,
+                repository,
+                pr,
+                current_main_sha=current_main_sha,
+                current_main_tree=current_main_tree,
+                base_state=base_state,
+                maintainers=maintainers,
+                release_principals=release_principals,
+            )
+        except _CANDIDATE_LOCAL_OBSERVATION_ERRORS as exc:
+            print(f"RELEASE_PR_{number}_INELIGIBLE")
+            print(
+                " - candidate inspection failed closed:",
+                f"{type(exc).__name__}: {exc}",
+            )
+            continue
+        if candidate is not None:
+            eligible.append(candidate)
+        else:
+            print(f"RELEASE_PR_{number}_INELIGIBLE")
+            for error in errors:
+                print(" -", error)
+    return eligible
+
+
 def _scan_acquires(
     token: str,
     repository: str,
@@ -206,9 +283,15 @@ def _scan_acquires(
 ) -> list[AutoAcquireCandidate]:
     eligible: list[AutoAcquireCandidate] = []
     for pr in open_prs:
-        if parse_release_head_ref(pr.get("head", {}).get("ref")) is not None:
+        number = _candidate_number(pr)
+        head_ref = _candidate_head_ref(pr)
+        if head_ref is None:
+            if not isinstance(pr, dict):
+                print("LIFECYCLE_PR_UNKNOWN_INELIGIBLE")
+                print(" - malformed open PR observation")
             continue
-        number = pr.get("number")
+        if parse_release_head_ref(head_ref) is not None:
+            continue
         try:
             candidate, errors = _eligible_acquire_candidate(
                 token,
@@ -218,11 +301,14 @@ def _scan_acquires(
                 base_state=base_state,
                 maintainers=maintainers,
             )
-        except AutoActivationError as exc:
+        except _CANDIDATE_LOCAL_OBSERVATION_ERRORS as exc:
             # Candidate-local observation failure cannot make a lower/invalid PR
             # reservation authority over later valid candidates.
             print(f"ACQUIRE_PR_{number}_INELIGIBLE")
-            print(" - candidate inspection failed closed:", exc)
+            print(
+                " - candidate inspection failed closed:",
+                f"{type(exc).__name__}: {exc}",
+            )
             continue
         if candidate is not None:
             eligible.append(candidate)
@@ -270,27 +356,18 @@ def main() -> int:
     release_principals = set(autonomous.get("automatic_release_principals", []))
     open_prs = _fetch_open_prs(token, repository)
 
-    # Frozen Phase A ordering: RELEASE always wins over ACQUIRE.
-    eligible_releases: list[AutoReleaseCandidate] = []
-    for pr in open_prs:
-        if parse_release_head_ref(pr.get("head", {}).get("ref")) is None:
-            continue
-        candidate, errors = _eligible_release_candidate(
-            token,
-            repository,
-            pr,
-            current_main_sha=current_main_sha,
-            current_main_tree=current_main_tree,
-            base_state=base_state,
-            maintainers=maintainers,
-            release_principals=release_principals,
-        )
-        if candidate is not None:
-            eligible_releases.append(candidate)
-        else:
-            print(f"RELEASE_PR_{pr.get('number')}_INELIGIBLE")
-            for error in errors:
-                print(" -", error)
+    # Frozen Phase A ordering: RELEASE always wins over ACQUIRE, but one invalid
+    # RELEASE observation cannot block later valid lifecycle candidates.
+    eligible_releases = _scan_releases(
+        token,
+        repository,
+        open_prs,
+        current_main_sha=current_main_sha,
+        current_main_tree=current_main_tree,
+        base_state=base_state,
+        maintainers=maintainers,
+        release_principals=release_principals,
+    )
 
     release_candidate = choose_release_candidate(eligible_releases)
     if release_candidate is not None:
