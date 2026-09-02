@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from datetime import timedelta
 from pathlib import Path
 import copy
 import json
@@ -128,6 +129,30 @@ def _add_global_task(state, task_id="TASK-Y-1"):
         "owned_paths": ["work/y1/**"],
     }
     return task_id
+
+
+def _add_worker_lock(
+    state,
+    task_id,
+    *,
+    lock_id="LOCK-NEXT",
+    worker=W_A,
+    actor=PRINCIPAL,
+    collision_key=None,
+    work_ref=None,
+):
+    key = collision_key or state.tasks[task_id]["collision_keys"][0]
+    add_lock(state, lock_id, task_id, key, actor=actor)
+    bundle = state.lock_bundles[lock_id]
+    bundle.payload["worker_id"] = worker
+    bundle.payload["work_ref"] = work_ref or f"research/{task_id}/{worker}"
+    return bundle
+
+
+def _expire_source_lock(state) -> None:
+    bundle = state.lock_bundles["LOCK-SOURCE"]
+    bundle.payload["acquired_at"] = (NOW - timedelta(hours=2)).isoformat()
+    bundle.payload["expires_at"] = (NOW - timedelta(hours=1)).isoformat()
 
 
 def _request(**overrides) -> NextRequest:
@@ -351,19 +376,82 @@ class VillageV13NextPhaseA(unittest.TestCase):
             self.assertNotEqual(got.status, NextStatus.ACTIVE_NEXT)
             self.assertFalse(got.canonical_ownership)
 
-    def test_20_active_next_requires_actual_canonical_active_lock(self):
+    def test_20_candidate_canonical_lock_without_epoch_binding_is_not_active_next(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td); _write_schemas(root); _write_outcome(root, "NO_REUSABLE_PROGRESS")
             state = _state(root); _add_same_campaign_task(state)
-            add_lock(state, "LOCK-NEXT", "TASK-X-2", state.tasks["TASK-X-2"]["collision_keys"][0], actor=PRINCIPAL)
-            bundle = state.lock_bundles["LOCK-NEXT"]
-            bundle.payload["worker_id"] = W_A
-            bundle.payload["work_ref"] = f"research/TASK-X-2/{W_A}"
+            _add_worker_lock(state, "TASK-X-2")
             got = derive_next_state(state, _book(state), _request())
-            self.assertEqual(got.phase, NextPhase.ACTIVE_NEXT)
-            self.assertEqual(got.status, NextStatus.ACTIVE_NEXT)
-            self.assertTrue(got.canonical_ownership)
-            self.assertEqual(got.selected_task_id, "TASK-X-2")
+            self.assertEqual(got.status, NextStatus.NO_ELIGIBLE_TASK)
+            self.assertNotEqual(got.phase, NextPhase.ACTIVE_NEXT)
+            self.assertNotIn(NextPhase.ACTIVE_NEXT, got.trace)
+            self.assertFalse(got.canonical_ownership)
+            self.assertIsNone(got.selected_task_id)
+
+    def test_20b_unrelated_lock_cannot_bypass_missing_human_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); _write_schemas(root); _write_outcome(root, "STRUCTURAL_REDUCTION")
+            state = _state(root); _add_same_campaign_task(state)
+            _add_worker_lock(state, "TASK-X-2", lock_id="LOCK-UNRELATED")
+            got = derive_next_state(state, _book(state), _request())
+            self.assertEqual(got.status, NextStatus.WAITING_PORTFOLIO)
+            self.assertNotEqual(got.phase, NextPhase.ACTIVE_NEXT)
+            self.assertFalse(got.canonical_ownership)
+            self.assertIsNone(got.selected_task_id)
+
+    def test_20c_unrelated_lock_cannot_bypass_global_pause(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); _write_schemas(root); _write_outcome(root, "NO_REUSABLE_PROGRESS")
+            state = _state(root); _add_same_campaign_task(state)
+            _add_worker_lock(state, "TASK-X-2", lock_id="LOCK-UNRELATED")
+            state.portfolio["global_admission"] = "PAUSED"
+            got = derive_next_state(state, _book(state), _request())
+            self.assertEqual(got.status, NextStatus.WAITING_PORTFOLIO)
+            self.assertNotEqual(got.phase, NextPhase.ACTIVE_NEXT)
+            self.assertFalse(got.canonical_ownership)
+
+    def test_20d_unrelated_lock_is_never_treated_as_selected_next_acquisition(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); _write_schemas(root); _write_outcome(root, "NO_REUSABLE_PROGRESS")
+            state = _state(root); _add_same_campaign_task(state); _add_global_task(state)
+            _add_worker_lock(state, "TASK-Y-1", lock_id="LOCK-UNRELATED")
+            got = derive_next_state(state, _book(state), _request())
+            self.assertNotEqual(got.status, NextStatus.ACTIVE_NEXT)
+            self.assertNotEqual(got.phase, NextPhase.ACTIVE_NEXT)
+            self.assertFalse(got.canonical_ownership)
+            self.assertNotEqual(got.selected_task_id, "TASK-Y-1")
+
+    def test_20e_replayed_old_same_worker_principal_lock_is_not_next_epoch_proof(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); _write_schemas(root); _write_outcome(root, "NO_REUSABLE_PROGRESS")
+            state = _state(root); _add_global_task(state, "TASK-OLD-1"); _add_same_campaign_task(state)
+            _add_worker_lock(state, "TASK-OLD-1", lock_id="LOCK-OLD-EPOCH")
+            got = derive_next_state(state, _book(state), _request())
+            self.assertNotEqual(got.status, NextStatus.ACTIVE_NEXT)
+            self.assertNotIn(NextPhase.ACTIVE_NEXT, got.trace)
+            self.assertFalse(got.canonical_ownership)
+            self.assertNotEqual(got.selected_task_id, "TASK-OLD-1")
+
+    def test_20f_candidate_looking_lock_with_wrong_binding_is_not_active_next(self):
+        cases = (
+            ("wrong-work-ref", None, "research/TASK-X-2/w-deadbeefdeadbeef"),
+            ("wrong-collision", "x/not-the-task-bundle", None),
+        )
+        for label, collision_key, work_ref in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as td:
+                root = Path(td); _write_schemas(root); _write_outcome(root, "NO_REUSABLE_PROGRESS")
+                state = _state(root); _add_same_campaign_task(state)
+                _add_worker_lock(
+                    state,
+                    "TASK-X-2",
+                    lock_id=f"LOCK-{label.upper()}",
+                    collision_key=collision_key,
+                    work_ref=work_ref,
+                )
+                got = derive_next_state(state, _book(state), _request())
+                self.assertNotEqual(got.status, NextStatus.ACTIVE_NEXT)
+                self.assertNotEqual(got.phase, NextPhase.ACTIVE_NEXT)
+                self.assertFalse(got.canonical_ownership)
 
     def test_21_worker_or_principal_spoof_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
@@ -431,6 +519,30 @@ class VillageV13NextPhaseA(unittest.TestCase):
             got = derive_next_state(state, _book(state), _request(fresh_observation_valid=False))
             self.assertEqual(got.status, NextStatus.RANK_FAILED)
             self.assertIsNone(got.selected_task_id)
+
+    def test_27_expired_source_lock_without_terminal_fails_closed_without_ownership(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); _write_schemas(root)
+            state = _state(root, source_lock=True); _expire_source_lock(state)
+            got = derive_next_state(state, _book(state), _request())
+            self.assertEqual(got.status, NextStatus.FAIL_CLOSED)
+            self.assertNotEqual(got.status, NextStatus.ACTIVE_WORK)
+            self.assertFalse(got.canonical_ownership)
+            self.assertEqual(got.required_action, RequiredAction.NONE)
+            self.assertTrue(any("expired/stale" in error for error in got.errors))
+
+    def test_28_expired_source_lock_with_terminal_still_fails_closed_for_cleanup(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); _write_schemas(root); _write_outcome(root, "NO_REUSABLE_PROGRESS")
+            state = _state(root, source_lock=True); _expire_source_lock(state)
+            got = derive_next_state(state, _book(state), _request())
+            self.assertEqual(got.status, NextStatus.FAIL_CLOSED)
+            self.assertFalse(got.canonical_ownership)
+            self.assertEqual(got.required_action, RequiredAction.NONE)
+            self.assertNotEqual(got.required_action, RequiredAction.PREPARE_RELEASE)
+            self.assertNotEqual(got.required_action, RequiredAction.PREPARE_ACQUIRE)
+            self.assertIsNone(got.selected_task_id)
+            self.assertTrue(any("cleanup/reobservation" in error for error in got.errors))
 
 
 if __name__ == "__main__":
