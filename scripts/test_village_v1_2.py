@@ -18,6 +18,7 @@ from lock_auto_activate import (
     AutoActivationError,
     _strict_up_to_date_gate,
     auto_activation_preflight,
+    final_revalidation_errors,
     lock_git_object_errors,
 )
 from test_village_acceptance import LockBundle, NOW, add_lock, base_state
@@ -313,6 +314,42 @@ class VillageV12Acceptance(unittest.TestCase):
             self.assertFalse(_strict_up_to_date_gate("t", "51mns/AIMath-public")[0])
         with patch("lock_auto_activate._request_json", side_effect=AutoActivationError("403")):
             self.assertFalse(_strict_up_to_date_gate("t", "51mns/AIMath-public")[0])
+
+    def test_28_main_or_pr_movement_after_revalidation_blocks_merge(self):
+        final_pr = {
+            "head": {"sha": "c" * 40},
+            "base": {"sha": MAIN_SHA},
+        }
+        self.assertEqual(
+            final_revalidation_errors(
+                original_main_sha=MAIN_SHA,
+                original_head_sha="c" * 40,
+                final_main_sha=MAIN_SHA,
+                final_pr=final_pr,
+            ),
+            [],
+        )
+        moved_main = final_revalidation_errors(
+            original_main_sha=MAIN_SHA,
+            original_head_sha="c" * 40,
+            final_main_sha="e" * 40,
+            final_pr=final_pr,
+        )
+        self.assertTrue(any("main moved" in e for e in moved_main))
+        moved_head = copy.deepcopy(final_pr); moved_head["head"]["sha"] = "f" * 40
+        self.assertTrue(final_revalidation_errors(
+            original_main_sha=MAIN_SHA,
+            original_head_sha="c" * 40,
+            final_main_sha=MAIN_SHA,
+            final_pr=moved_head,
+        ))
+        moved_base = copy.deepcopy(final_pr); moved_base["base"]["sha"] = "f" * 40
+        self.assertTrue(final_revalidation_errors(
+            original_main_sha=MAIN_SHA,
+            original_head_sha="c" * 40,
+            final_main_sha=MAIN_SHA,
+            final_pr=moved_base,
+        ))
 
     def _audit_sidecar(self, sidecar: str, *, expect_ok: bool, expected: str = ""):
         root = Path(__file__).resolve().parent.parent
