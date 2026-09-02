@@ -11,8 +11,10 @@ from unittest.mock import patch
 from lock_auto_activate import (
     AutoActivationError,
     AutoAcquireCandidate,
+    AutoReleaseCandidate,
     _has_successful_verify,
     _scan_acquires,
+    _scan_releases,
     auto_acquire_preflight,
     choose_acquire_candidate,
 )
@@ -36,6 +38,12 @@ def _pr(number: int, *, head=HEAD_A, actor="51mns", base=MAIN_SHA, draft=False, 
         },
         "user": {"login": actor},
     }
+
+
+def _release_pr(number: int, *, head=HEAD_A):
+    pr = _pr(number, head=head)
+    pr["head"]["ref"] = f"release/TASK-X-1/{W_A}"
+    return pr
 
 
 def _files(*, status="added", path="coordination/locks/x/shared.yml"):
@@ -153,6 +161,64 @@ class PhaseB(unittest.TestCase):
         root = Path(__file__).resolve().parent.parent
         text = (root / "docs/VILLAGE_ARCHITECTURE_V1_2_1.md").read_text(encoding="utf-8")
         self.assertIn("`RENEW` and `TAKEOVER` remain nonautomatic", text)
+
+    def test_11_m01_release_observation_failure_does_not_block_later_valid(self):
+        bad = _release_pr(10, head=HEAD_A)
+        good = _release_pr(20, head=HEAD_B)
+        valid = AutoReleaseCandidate(good, [], "L20", "RESULT_TERMINAL")
+        with patch(
+            "lock_auto_activate._eligible_release_candidate",
+            side_effect=[
+                AutoActivationError("PR files pagination exceeded bounded limit"),
+                (valid, []),
+            ],
+        ):
+            got = _scan_releases(
+                "t",
+                "51mns/AIMath-public",
+                [bad, good],
+                current_main_sha=MAIN_SHA,
+                current_main_tree=[],
+                base_state=object(),
+                maintainers={"51mns"},
+                release_principals={"51mns"},
+            )
+        self.assertEqual([c.pr["number"] for c in got], [20])
+
+    def test_12_malformed_nested_candidate_data_is_candidate_local(self):
+        bad = _pr(10, head=HEAD_A)
+        good = _pr(20, head=HEAD_B)
+        valid = AutoAcquireCandidate(good, _files(), "L20", "TASK-X-20", W_A)
+        with patch(
+            "lock_auto_activate._eligible_acquire_candidate",
+            side_effect=[AttributeError("non-object GitHub list element"), (valid, [])],
+        ):
+            got = _scan_acquires(
+                "t",
+                "51mns/AIMath-public",
+                [bad, good],
+                current_main_sha=MAIN_SHA,
+                base_state=object(),
+                maintainers={"51mns"},
+            )
+        self.assertEqual([c.pr["number"] for c in got], [20])
+
+    def test_13_malformed_open_pr_row_does_not_abort_scan(self):
+        good = _pr(20, head=HEAD_B)
+        valid = AutoAcquireCandidate(good, _files(), "L20", "TASK-X-20", W_A)
+        with patch(
+            "lock_auto_activate._eligible_acquire_candidate",
+            return_value=(valid, []),
+        ):
+            got = _scan_acquires(
+                "t",
+                "51mns/AIMath-public",
+                [None, good],
+                current_main_sha=MAIN_SHA,
+                base_state=object(),
+                maintainers={"51mns"},
+            )
+        self.assertEqual([c.pr["number"] for c in got], [20])
 
 
 if __name__ == "__main__":
