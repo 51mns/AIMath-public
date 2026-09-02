@@ -35,6 +35,7 @@
 /scripts/village_rank.py @51mns
 /scripts/village_v1_2.py @51mns
 /scripts/lock_auto_activate.py @51mns
+/scripts/lock_auto_activate_phase_a.py @51mns
 /scripts/workflow_security.py @51mns
 /scripts/check_dco.py @51mns
 /scripts/check_village_pr.py @51mns
@@ -42,5 +43,6 @@
 /scripts/test_village_v1_1.py @51mns
 /scripts/test_village_v1_2.py @51mns
 /scripts/test_village_v1_2_1.py @51mns
+/scripts/test_village_v1_2_1_phase_b.py @51mns
 /scripts/verify_public_layout.py @51mns
 /research/**/CLAIM.yml @51mns
