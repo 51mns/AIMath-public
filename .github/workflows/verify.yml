@@ -83,6 +83,9 @@ jobs:
       - name: Village v1.2.1 Phase A acceptance tests
         run: python3 scripts/test_village_v1_2_1.py
 
+      - name: Village v1.2.1 Phase B acceptance tests
+        run: python3 scripts/test_village_v1_2_1_phase_b.py
+
       - name: Install pinned REUSE tool
         run: python3 -m pip install --disable-pip-version-check 'reuse==6.2.0'
 
