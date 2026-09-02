@@ -2220,3 +2220,76 @@ Until the next independent fixed-commit review returns PASS with no CRITICAL/HIG
 ```text
 PHASE_B_IMPLEMENTATION_ALLOWED_NOW = NO
 ```
+
+### 21.20 M-03 Row-20 test-contract remediation
+
+Independent V3 final review commit `432bc26d6f107ae1381d1e79282b450280cb5f61` / review blob `64079097856a04fb27f38b72c2d5ac9864ae4b16` accepted the V3 authority model and found one remaining blocking MEDIUM test-contract gap, `M-03`. This subsection changes **only the preregistered Row 20 contract**. It does not change `CanonicalAcquireIdentityV3`, `next_binding` persistence, tree identity, H/H2 equivalence, transport Verify separation, source/release provenance, continuation/ranking authority, the Ruleset gate, canonical transition semantics, or the Phase A boundary. The exact preregistered test total remains **73**; no Row 74 is created.
+
+For V3, Section 21.16's Row 20 is replaced by the following exact mandatory test contract:
+
+**Row 20 revised — forged, internally self-consistent `next_binding` cannot self-authenticate:** implement one parameterized adversarial end-to-end pre-merge test. The trusted expected semantic IDs MUST be derived and frozen **before candidate `next_binding` is parsed as an observation** and without using any candidate binding value as an input to the expected derivation:
+
+1. fresh canonical source acquisition plus exact terminal/RELEASE evidence -> construct `SourceAcquisitionV1` -> freeze `source_epoch_id_expected`;
+2. fresh canonical continuation state plus the applicable human Continuation Gate -> construct `ContinuationContextV1` -> freeze `continuation_context_id_expected`;
+3. fresh post-RELEASE main plus fresh validated PENDING observations, hard filtering, `rank_v12`, fresh candidate eligibility and capacity -> construct `SelectionV1` -> freeze `selection_id_expected`;
+4. from those independently frozen trusted records -> construct `AcquireIntentV1` -> freeze `acquire_intent_id_expected`;
+5. only after all four expected IDs are frozen, parse the candidate lock bundle and compare each persisted `next_binding` primitive for exact equality.
+
+The adversarial candidate MUST be otherwise valid and MUST NOT be rejected merely for malformed structure. It must have a valid Task, worker, principal, base, collision bundle, work-ref and lock paths; valid JSON/schema shape; four syntactically valid lowercase 64-hex `next_binding` values; and, after the selected forged semantic primitive is changed, the fixture MUST recompute the candidate's own exact lock bytes, bytes SHA-256, Git blob OIDs, `exact_lock_objects`, and candidate tree consistently. The candidate is therefore cryptographically/object-internally self-consistent with **its own** forged semantic binding.
+
+Parameterize the same negative control independently over exactly these four cases while keeping unrelated candidate fields valid:
+
+- A. forged `source_epoch_id` != `source_epoch_id_expected`;
+- B. forged `continuation_context_id` != `continuation_context_id_expected`;
+- C. forged `selection_id` != `selection_id_expected`;
+- D. forged `acquire_intent_id` != `acquire_intent_id_expected`.
+
+For every parameterized case, the candidate MUST be **PRE-MERGE INELIGIBLE** and must receive a deterministic fail-closed semantic-binding mismatch result equivalent to `CANONICAL_ACQUIRE_SEMANTIC_BINDING_MISMATCH` / the already-frozen semantic-binding mismatch family. It receives no trusted merge eligibility, no ACQUIRE authority, no canonical ownership, and no `ACTIVE_NEXT`.
+
+This Row 20 explicitly covers review threat 29:
+
+```text
+candidate semantic binding is internally self-consistent
+but
+candidate semantic binding != trusted independently-derived records
+=> FAIL CLOSED before trusted merge eligibility
+```
+
+`next_binding` values are candidate observations only. The following implementation is forbidden and does **not** satisfy Row 20:
+
+```text
+candidate next_binding
+-> adopt candidate X/Y/Z/Q as expected IDs
+-> recompute/observe an internally consistent candidate tree
+-> accept
+```
+
+The required implementation is:
+
+```text
+fresh trusted upstream evidence
+-> independently derive expected X/Y/Z/Q
+-> freeze expected X/Y/Z/Q
+-> parse candidate next_binding
+-> compare exact equality
+-> only then may the candidate remain eligible
+```
+
+A comparison against another process-memory copy that was itself originally populated from the candidate does not satisfy this test. Likewise, an implementation that does not independently reconstruct `SourceAcquisitionV1`, `ContinuationContextV1`, `SelectionV1`, and `AcquireIntentV1` from the required fresh/trusted evidence does not satisfy Row 20.
+
+Rows 66, 67, 70 and 71 remain mandatory supporting tests and are not substitutes for this end-to-end Row 20. All other V3 rows retain their already-frozen meaning. Recounting the matrix yields exactly **73 mandatory rows**.
+
+Writer-side M-03 status after this test-contract-only remediation:
+
+```text
+M-03_FORGED_SELF_CONSISTENT_BINDING_TEST = REMEDIATED_IN_DESIGN_CANDIDATE
+PREREGISTERED_TEST_TOTAL                 = 73
+OTHER_V3_AUTHORITY_CHANGED              = NO
+CRITICAL_KNOWN                           = 0
+HIGH_KNOWN                               = 0
+MEDIUM_KNOWN                             = 0
+PHASE_B_IMPLEMENTATION_ALLOWED_NOW       = NO
+READY_FOR_FOCUSED_REREVIEW               = YES
+```
+
+This writer does not self-promote M-03 to independently accepted closure. Phase B implementation remains blocked until a focused independent rereview of this fixed commit returns PASS.
