@@ -1453,3 +1453,770 @@ READY_FOR_FOCUSED_REREVIEW = YES
 ```
 
 This writer does not self-promote the V2 candidate to accepted. Phase B implementation remains blocked until a new independent focused security review fixes this exact commit/blob and returns PASS with no CRITICAL/HIGH/MEDIUM blocker.
+
+## 21. Canonical acquisition content V3 remediation
+
+This section is the frozen V3 remediation for independent final review commit `2e98d428f20518d2f4cfe8543303a810291688b0` / review blob `be05b885edac35d23ce59c539d84b3443a95fa36`, which accepted the V2 repairs for H-01 and M-02 but found one new blocking HIGH and one LOW hardening item:
+
+```text
+H-01 CLOSED   exact PR-number causality is not ACTIVE_NEXT authority
+M-02 CLOSED   Verify chronology uses documented run_number lineage, not numeric run_id ordering
+H-02 HIGH     exact source-head SHA is not positively observable after squash canonicalisation
+L-01 LOW      duplicate exact_lock_objects paths need explicit fail-closed rejection
+```
+
+V3 adopts reviewer Option A. It does **not** preserve exact source commit SHA as post-canonical acquisition authority, does **not** change away from the trusted lifecycle's squash merge merely to preserve that SHA, and does **not** reintroduce PR causality.
+
+The V3 security model is:
+
+```text
+transport commit identity != canonical acquisition identity
+```
+
+A transport commit is an independently verified pre-merge representation of expected canonical content. The canonical acquisition identity is the exact authority-bearing content that can be reconstructed from canonical Git state after squash.
+
+### 21.1 Supersession rule — V3 controls all conflicting older wording
+
+Section 21 supersedes Sections 7.3, 8, 10, 11, 12, 14, 15, 18, 19.1–19.8, and 20.1–20.13 wherever they conflict with V3. All older text remains in this file only as audit history.
+
+The following historical statements are explicitly **NON-AUTHORITATIVE** for Phase B V3 implementation:
+
+1. `expected_head_sha` is part of `canonical_acquire_id` or other post-canonical acquisition authority;
+2. `H2 != H` automatically means a different canonical acquisition when both commits have the same frozen base, same expected full tree, and the same exact V3 semantic lock identity;
+3. a post-canonical proof must recover or positively identify the transport head SHA that supplied the canonical tree;
+4. a PR number/ref or `merged`, `merged_at`, `merge_commit_sha` proves which acquisition caused canonicalisation;
+5. maximum numeric `run_id` gives the latest or authoritative Verify run;
+6. Section 7.3's old statement that no `/next` field is added to canonical lock authority;
+7. Section 19.1's old statement that exact lock bytes do not carry `/next` authority;
+8. Section 19.7 / V2 row 51's rule that byte-identical different-head transport commits are automatically different canonical acquisitions.
+
+Items 6–7 are superseded narrowly: a v1.3 `/next` lock MUST persist the primitive `next_binding` fields defined below so that the V3 semantic identity remains independently observable after squash. Canonical lock bytes are still **not sufficient by themselves** to grant ownership: the exact base/tree transition, current active/unexpired read-back, Ruleset proof, and the pre-merge transport Verify gate remain mandatory.
+
+The following V2 repairs remain authoritative and unchanged:
+
+- H-01 indirect-merge control and removal of exact PR-number causality;
+- M-02 `run_number` lineage ordering, current `run_attempt`, and complete/fail-closed workflow observation;
+- strict current Ruleset proof;
+- strict single first-parent canonical transition;
+- Phase A's read-only `ACQUIRE_PENDING` boundary;
+- RELEASE priority and at-most-one trusted canonical lifecycle mutation per run.
+
+### 21.2 Canonical observability invariant
+
+Every authority-bearing semantic field in V3 MUST satisfy at least one of these conditions:
+
+A. it is serialized in the exact canonical lock bytes themselves; or
+
+B. it is deterministically and uniquely derivable from `expected_base_sha`, the exact canonical lock bytes/tree, and canonical repository data.
+
+No authority-bearing V3 semantic field may exist only in chat state, `/next` process memory, temporary `ExpectedAcquire` / `AcquireIntent` records, PR metadata, branch/ref metadata, webhook/event payloads, transport commit metadata, or a noncanonical cache.
+
+For V3 `/next` acquisition confirmation, the following invariant is mandatory:
+
+```text
+same expected_base_sha
+AND same expected_canonical_tree_sha
+AND same exact_lock_objects
+=> same persisted authority-bearing semantic identity
+```
+
+Conversely, changing any of:
+
+```text
+source_epoch_id
+continuation_context_id
+selection_id
+acquire_intent_id
+```
+
+MUST change the persisted canonical lock bytes and therefore at least one lock `blob_sha` / `bytes_sha256`, which necessarily changes the expected canonical tree SHA.
+
+If two observations claim both:
+
+```text
+same exact canonical tree / same exact lock bytes
+AND different authority-bearing semantic IDs
+```
+
+then the evidence is internally inconsistent. Return:
+
+```text
+CANONICAL_ACQUIRE_SEMANTIC_BINDING_INCONSISTENT
+```
+
+and never `ACTIVE_NEXT`. The implementation MUST NOT silently choose process-memory IDs over canonical bytes or vice versa.
+
+### 21.3 Required persisted `next_binding` for v1.3 `/next` locks
+
+Every lock created specifically through Village v1.3 `/next` MUST serialize an exact binding object equivalent to:
+
+```text
+"next_binding": {
+  "schema_version": 1,
+  "source_epoch_id": <64 lowercase hex>,
+  "continuation_context_id": <64 lowercase hex>,
+  "selection_id": <64 lowercase hex>,
+  "acquire_intent_id": <64 lowercase hex>
+}
+```
+
+The object is part of the deterministic lock payload serialized in the repository's existing JSON-subset `.yml` representation. It MUST be present identically in every lock object in the collision bundle.
+
+The ordering is load-bearing:
+
+1. derive `source_epoch_id`, `continuation_context_id`, `selection_id`, and `acquire_intent_id` from the already-frozen upstream records;
+2. serialize those primitive IDs in `next_binding` together with the existing Task/worker/principal/base/timestamps/work-ref/collision/lock fields;
+3. freeze the exact lock bytes;
+4. freeze each lock blob OID and exact-byte SHA-256;
+5. freeze the exact complete `exact_lock_objects` set;
+6. compute/freeze `expected_canonical_tree_sha` from the exact base tree plus those exact lock additions;
+7. construct `CanonicalAcquireIdentityV3` from the frozen primitives;
+8. compute `canonical_acquire_id` externally.
+
+A process-memory copy of the four IDs is useful while preparing transport, but it is **not** post-canonical evidence. Canonical-main read-back MUST parse the IDs from fresh exact lock bytes and require equality with the V3 record.
+
+#### No self-referential canonical ID
+
+`canonical_acquire_id` MUST NOT itself be serialized into any lock bytes that are inputs to `CanonicalAcquireIdentityV3`. No fixed-point or recursive digest definition is permitted.
+
+The only persisted V3 semantic binding primitive is `next_binding` plus the existing lock payload fields. `canonical_acquire_id` is computed after the lock bytes, object identities, and expected tree are frozen.
+
+### 21.4 Schema compatibility and implementation requirement
+
+Fresh-read canonical `schemas/lock.schema.json` at main `84a046359b299950403b68bfcb190930ebbc4c3f` has root `additionalProperties: true`. The generic schema therefore already permits a `next_binding` extension without invalidating historical/manual lock payloads.
+
+V3 does **not** globally require `next_binding` for legacy/manual locks. Instead, Phase B implementation MUST enforce this invariant for locks created or confirmed specifically as Village v1.3 `/next` acquisitions:
+
+```text
+v1.3 /next acquisition => required valid next_binding
+```
+
+A legacy lock may remain valid under the generic Village lock schema and existing lifecycle policy, but it cannot satisfy a v1.3 `/next` `ACTIVE_NEXT` proof merely because human-readable Task/worker/principal fields resemble the expected acquisition.
+
+For a `/next` acquisition, missing/malformed/nonidentical `next_binding` is fail closed. At minimum:
+
+```text
+CANONICAL_ACQUIRE_NEXT_BINDING_MISSING
+CANONICAL_ACQUIRE_NEXT_BINDING_MALFORMED
+CANONICAL_ACQUIRE_SEMANTIC_BINDING_INCONSISTENT
+```
+
+No schema/settings change is required by this design candidate. If implementation later discovers that a protected schema/policy change is necessary for enforcement, it MUST record the exact proposed production change and return to the appropriate governance/security gate rather than weaken V3 observability.
+
+### 21.5 `CanonicalAcquireIdentityV3`
+
+The post-canonical authority-bearing acquisition record is exactly the following logical structure:
+
+```text
+CanonicalAcquireIdentityV3 = {
+  "schema_version": 3,
+
+  "source_epoch_id": ...,
+  "continuation_context_id": ...,
+  "selection_id": ...,
+  "acquire_intent_id": ...,
+
+  "expected_base_sha": ...,
+  "expected_canonical_tree_sha": ...,
+
+  "selected_task_id": ...,
+  "worker_id": ...,
+  "principal_id": ...,
+
+  "work_ref": ...,
+  "sorted_collision_keys": [...],
+
+  "lock_id": ...,
+  "acquired_at": ...,
+  "expires_at": ...,
+
+  "exact_lock_objects": [
+    {
+      "path": ...,
+      "mode": "100644",
+      "blob_sha": <40-hex Git blob OID>,
+      "bytes_sha256": <64 lowercase hex>
+    },
+    ... sorted lexicographically by path ...
+  ]
+}
+```
+
+The repository namespace is fixed by this frozen contract as `51mns/AIMath-public`; observations from another repository fail before identity comparison.
+
+The canonical ID is:
+
+```text
+canonical_acquire_id = SHA256(canonical(CanonicalAcquireIdentityV3))
+```
+
+using the canonical encoding frozen in Section 3.
+
+The V3 identity MUST NOT contain or derive identity from any of:
+
+```text
+expected_head_sha
+PR number
+PR ref
+merged
+merged_at
+merge_commit_sha
+commit message
+author
+committer
+transport commit timestamp
+webhook/event delivery identity
+workflow run_id magnitude
+```
+
+The exact transport head SHA still exists and remains important **before merge** for candidate inspection and CI; it is simply not a post-canonical acquisition-identity field.
+
+#### Canonical-field observability map
+
+For v1.3 `/next`, every V3 field is post-squash observable as follows:
+
+| V3 field | Canonical source |
+|---|---|
+| `source_epoch_id` | exact lock bytes `next_binding.source_epoch_id` |
+| `continuation_context_id` | exact lock bytes `next_binding.continuation_context_id` |
+| `selection_id` | exact lock bytes `next_binding.selection_id` |
+| `acquire_intent_id` | exact lock bytes `next_binding.acquire_intent_id` |
+| `expected_base_sha` | exact lock payload `base_main_sha`, required equal to frozen B and canonical transition base |
+| `expected_canonical_tree_sha` | deterministic full-tree result from B + exact lock objects and fresh canonical Git tree |
+| `selected_task_id` | exact lock payload `task_id` |
+| `worker_id` | exact lock payload `worker_id`; required for a v1.3 `/next` acquisition even though generic legacy schema keeps it optional |
+| `principal_id` | exact lock payload `actor.id` |
+| `work_ref` | exact lock payload `work_ref` |
+| `sorted_collision_keys` | exact lock payload `collision_keys`, exact path-derived set, and Task collision bundle |
+| `lock_id` | exact lock payload `lock_id` |
+| `acquired_at` | exact lock payload `acquired_at` |
+| `expires_at` | exact lock payload `expires_at` |
+| `exact_lock_objects` | fresh canonical tree mode/OID + fetched exact blob bytes and SHA-256 |
+
+Thus no authority-bearing V3 semantic field depends solely on a noncanonical transport record after squash.
+
+### 21.6 `exact_lock_objects` uniqueness — L-01 closure
+
+`exact_lock_objects` is an exact ordered serialization of a mathematical path set. Paths MUST be unique before canonical hashing.
+
+The implementation MUST require, before V3 construction:
+
+```text
+len(exact_lock_objects)
+==
+len(set(object.path for object in exact_lock_objects))
+```
+
+and each expected path MUST occur exactly once. The list is then sorted lexicographically by `path`.
+
+A duplicate path is not normalized, deduplicated, or last-write-wins. It fails closed with:
+
+```text
+CANONICAL_ACQUIRE_DUPLICATE_LOCK_PATH
+```
+
+Missing paths, extra paths, duplicate paths, non-`100644` modes, OID mismatch, or byte-hash mismatch all prevent construction/confirmation of the V3 identity.
+
+### 21.7 Deterministic `expected_canonical_tree_sha`
+
+Let:
+
+```text
+B = expected_base_sha
+```
+
+and let `Tree(B)` be the exact full repository tree at B. Before any transport candidate can become eligible, Phase B MUST deterministically construct the intended full repository tree by applying exactly the frozen `exact_lock_objects` additions to `Tree(B)` and changing no other path.
+
+Call its root tree SHA:
+
+```text
+T = expected_canonical_tree_sha
+```
+
+The derivation MUST satisfy all of:
+
+1. every expected lock path is absent/in the exact allowed pre-acquire state at B;
+2. each inserted object has mode `100644` and exactly the frozen Git blob OID;
+3. the resulting recursive Git tree is computed from B plus only those object replacements/additions;
+4. no unrelated path, tree entry, mode, or blob changes;
+5. `expected_canonical_tree_sha` equals the root tree SHA of that exact intended full tree;
+6. the candidate head and later canonical transition are checked *against this already-frozen T*; T MUST NOT be defined by trusting whichever candidate head happens to appear.
+
+The exact lock bytes are serialized and their blob identities are frozen before T. T is then frozen before transport eligibility and before `canonical_acquire_id` is computed.
+
+### 21.8 Separate `TransportCandidateV3`
+
+Transport-specific state is retained separately:
+
+```text
+TransportCandidateV3 = {
+  "repository": "51mns/AIMath-public",
+  "pr_number": ...,
+  "head_ref": ...,
+  "head_sha": ...,
+  "head_tree_sha": ...,
+  "base_sha": ...,
+
+  "verify": {
+    "workflow_id": 347191396,
+    "workflow_path": ".github/workflows/verify.yml",
+    "workflow_name": "Verify public release",
+    "event": "pull_request",
+    "head_sha": ...,
+    "authoritative_run_number": ...,
+    "run_id": <lookup identity only>,
+    "current_run_attempt": ...,
+    "status": ...,
+    "conclusion": ...
+  }
+}
+```
+
+This record may be used PRE-MERGE for:
+
+- deterministic PR/ref reuse and duplicate suppression;
+- candidate discovery;
+- exact candidate commit/tree inspection;
+- exact-head Verify gating;
+- the trusted merge call;
+- debugging/audit.
+
+It MUST NOT be an input to `canonical_acquire_id`, and none of its PR/ref/head/commit metadata is required POST-MERGE to distinguish semantically identical source commits.
+
+Transport-level idempotency may still prefer/reuse the deterministic expected ref and exact known head. That is transport policy only. It does not make transport commit SHA canonical acquisition identity.
+
+### 21.9 Pre-merge transport candidate eligibility
+
+For a candidate transport head `H` to be eligible, fresh evidence MUST prove every condition below for **that exact H**:
+
+```text
+parents(H) == [B]
+tree(H) == T
+```
+
+where `B = CanonicalAcquireIdentityV3.expected_base_sha` and `T = CanonicalAcquireIdentityV3.expected_canonical_tree_sha`.
+
+Additionally:
+
+1. compare `B -> H` changes exactly the `exact_lock_objects.path` set and no unrelated path;
+2. every expected path at H is exactly mode `100644`, exact blob OID, and exact byte SHA-256;
+3. every lock blob parses successfully and all lock copies have identical V3 semantic payload, including exact `next_binding`;
+4. parsed `task_id`, `worker_id`, `actor.id`, `base_main_sha`, timestamps, work-ref, collision bundle, lock ID, and `next_binding` fields equal `CanonicalAcquireIdentityV3` exactly;
+5. the complete workflow-run observation for this exact `H` passes the accepted V2 `run_number` / current-`run_attempt` policy;
+6. this exact `H` has its own authoritative current completed-success Verify lineage;
+7. current main, candidate head and candidate base are fresh-revalidated immediately before trusted merge handoff/call;
+8. the fresh Ruleset gate in Section 21.13 passes.
+
+No successful Verify on a different head SHA is transferable to H, even when the two heads have the same tree. A same-tree alternate H2 must independently pass Verify if H2 is the candidate handed to trusted merge.
+
+### 21.10 H/H2 canonical-content equivalence and non-equivalence
+
+#### Same canonical acquisition content
+
+Let H and H2 satisfy:
+
+```text
+H != H2
+parents(H) = parents(H2) = [B]
+tree(H) = tree(H2) = T
+```
+
+and let both materialize exactly the same authority-bearing V3 semantic identity and exact lock objects, including identical persisted `next_binding`.
+
+Then:
+
+```text
+H and H2 are different transport commits
+but
+H and H2 represent the SAME canonical acquisition content
+```
+
+A difference only in commit message, author, committer, commit timestamp, PR locator, or other transport metadata is non-semantic for post-canonical acquisition identity.
+
+This does **not** let H2 borrow H's pre-merge CI. If H2 is selected for trusted merge, H2 itself must pass every Section 21.9 gate, including its own authoritative successful Verify lineage.
+
+#### Non-equivalence
+
+Different transport commit SHA alone is not a V3 non-equivalence condition. A candidate is non-equivalent/ineligible when any authority-bearing V3 field differs, including:
+
+```text
+expected_base_sha
+expected_canonical_tree_sha
+source_epoch_id
+continuation_context_id
+selection_id
+acquire_intent_id
+selected_task_id
+worker_id
+principal_id
+work_ref
+sorted_collision_keys
+lock_id
+acquired_at
+expires_at
+exact lock path set
+blob OIDs
+byte hashes
+```
+
+Examples:
+
+```text
+same-looking lock bytes but different B
+=> NON-EQUIVALENT / ineligible
+
+same B but different T
+=> NON-EQUIVALENT / ineligible
+
+same B/tree claim but different source_epoch_id
+=> impossible if exact canonical bytes genuinely match
+=> CANONICAL_ACQUIRE_SEMANTIC_BINDING_INCONSISTENT
+
+same B/tree claim but different acquire_intent_id
+=> impossible if exact canonical bytes genuinely match
+=> CANONICAL_ACQUIRE_SEMANTIC_BINDING_INCONSISTENT
+
+same human-readable Task/worker but different persisted next_binding
+=> different lock bytes / OIDs / T
+=> NON-EQUIVALENT
+```
+
+### 21.11 Exact canonical-main transition proof V3
+
+Let:
+
+```text
+B = CanonicalAcquireIdentityV3.expected_base_sha
+T = CanonicalAcquireIdentityV3.expected_canonical_tree_sha
+C = fresh refs/heads/main SHA
+```
+
+`ACTIVE_NEXT` may be returned only after fresh GitHub commit/tree/history evidence proves every condition below.
+
+#### A. V3 expected-content derivation
+
+1. B equals the frozen `SelectionV1.selection_main_sha` and the exact expected lock `base_main_sha`.
+2. Every primitive semantic binding field is already serialized in the exact expected lock bytes, including valid `next_binding`.
+3. `exact_lock_objects` is complete, path-unique, lexicographically sorted, regular `100644`, and exact on OID/bytes hash.
+4. T was deterministically frozen from the exact tree at B plus exactly those lock additions, with no unrelated path.
+5. `CanonicalAcquireIdentityV3` and `canonical_acquire_id` are computed only after those primitives are frozen.
+
+#### B. Fresh canonical first-parent history
+
+6. fresh current main C descends from B.
+7. Starting at C, fresh-read Git commit objects and follow parent index 0 toward B; incomplete/partial/cached history is not authority.
+8. Identify M as the unique child of B on that observed first-parent path.
+9. Require exactly:
+
+```text
+parents(M) == [B]
+```
+
+A multi-parent merge commit, unrelated intervening first-parent commit, multi-step rebase sequence, missing history, or ambiguous parent data fails closed.
+
+#### C. Exact canonical content transition
+
+10. `tree(M).sha == T`.
+11. compare `B -> M` changes exactly `exact_lock_objects.path` and no unrelated path.
+12. every expected path at M is mode `100644` with exactly the expected blob OID and exact bytes SHA-256.
+13. fresh parsing of those exact M lock bytes yields the exact V3 semantic payload including `next_binding`.
+14. no unrelated path/mode/object differs from the precomputed expected full tree.
+
+This proves:
+
+> **THIS exact canonical acquisition content became canonical in one permitted canonical transition.**
+
+It deliberately does **not** attempt to prove which source commit or PR created M.
+
+#### D. Current-main persistence and semantic reconstruction
+
+15. M remains on the fresh first-parent ancestry of current main C.
+16. fresh current-main tree still contains exactly the V3 `exact_lock_objects` bundle.
+17. fetch and hash the current exact lock bytes; parse all lock payloads afresh.
+18. reconstruct `source_epoch_id`, `continuation_context_id`, `selection_id`, and `acquire_intent_id` from current canonical `next_binding`, not process memory.
+19. reconstruct/verify all other V3 semantic fields from current lock payload/canonical repository data according to Section 21.5.
+20. require the reconstructed V3 semantic identity to equal the expected V3 identity exactly.
+21. require the current canonical bundle to be active and unexpired now.
+22. any renewal, replacement, release/reacquire, changed current lock bytes, changed timestamps, changed binding, changed collision bundle, or changed object identity makes the old acquisition fail the current `ACTIVE_NEXT` proof.
+
+#### E. Effective Ruleset proof
+
+23. the fresh effective Ruleset proof in Section 21.13 passes now.
+
+The positive result remains:
+
+```text
+CANONICAL_ACQUIRE_IDENTITY_CONFIRMED
+```
+
+### 21.12 Squash semantics and H-02 closure
+
+The intended trusted lifecycle remains squash-compatible.
+
+A selected transport candidate H and canonical transition M may satisfy:
+
+```text
+H != M
+parents(H) == [B]
+parents(M) == [B]
+tree(H) == tree(M) == T
+```
+
+This is expected. H's commit-object metadata and exact commit SHA are intentionally discarded from post-canonical security identity.
+
+There is no V3 contradiction because `CanonicalAcquireIdentityV3` does not claim that H's commit SHA is canonical acquisition authority. It claims only the exact semantic/tree/object content that survives and can be independently reconstructed from canonical Git state.
+
+Thus H-02 is remediated in the design candidate by removing the unobservable source-head claim rather than by weakening the canonical transition proof.
+
+### 21.13 Verify separation and mandatory Ruleset gate
+
+V3 separates two security questions.
+
+#### PRE-MERGE transport Verify authority
+
+For whichever `TransportCandidateV3` is selected, its exact `head_sha` MUST have its own authoritative current successful Verify lineage under the accepted V2 rules:
+
+```text
+authoritative_run_number = max(run_number among complete exact-workflow/exact-head matching set)
+```
+
+`run_id` is lookup identity only; it is never ordered numerically. Rerun semantics, current `run_attempt`, pagination completeness, result-cap fail-closed handling, and workflow identity ambiguity rules remain exactly as V2 froze them.
+
+A same-tree H2 cannot borrow H's CI.
+
+#### POST-MERGE canonical acquisition authority
+
+After canonicalisation, `ACTIVE_NEXT` is determined by:
+
+```text
+CanonicalAcquireIdentityV3 semantic identity
+AND exact B -> M canonical content transition
+AND fresh canonical semantic reconstruction from exact lock bytes
+AND fresh active/unexpired current lock
+AND fresh effective Ruleset proof
+```
+
+It is no longer required to recover the selected transport head SHA from M.
+
+#### Ruleset proof
+
+Fresh effective/default-branch rule observation MUST positively prove all of:
+
+```text
+enforcement = active
+target applies to default branch
+required status context includes "verify"
+strict_required_status_checks_policy = true
+bypass_actors = []
+current_user_can_bypass = "never"
+```
+
+Unavailable, malformed, contradictory or weakened rule evidence fails closed. Any bypass actor or `current_user_can_bypass != never` fails closed. This design changes no repository setting.
+
+### 21.14 Alternate-head threat controls
+
+#### Case A — same content, different commit metadata
+
+```text
+H != H2
+same B
+same exact T
+same exact V3 semantic identity
+same exact lock objects
+different commit message/author/committer metadata only
+```
+
+Expected result:
+
+```text
+SAME canonical acquisition content
+```
+
+If H2 is the transport selected for merge, H2 still independently requires its own successful Verify and all fresh pre-merge gates.
+
+#### Case B — same-looking tree/content but different base
+
+```text
+H != H2
+base(H) = B
+base(H2) != B
+```
+
+Expected result:
+
+```text
+NON-EQUIVALENT / NOT ELIGIBLE
+```
+
+Even if a coincidental tree SHA or human-readable lock payload appears similar, the frozen base is authority-bearing and the exact B->candidate derivation must hold.
+
+#### Case C — same base, different tree/object content
+
+```text
+same B
+but tree(H2) != T
+OR any expected object/path/mode/OID/byte hash differs
+```
+
+Expected result:
+
+```text
+NON-EQUIVALENT / NOT ELIGIBLE
+```
+
+#### Case D — same B/tree claim but different semantic IDs
+
+If an observation claims the same B, same T and same exact lock bytes while also claiming a different `source_epoch_id`, `continuation_context_id`, `selection_id`, or `acquire_intent_id`, the observation contradicts the required persisted `next_binding` invariant.
+
+Expected result:
+
+```text
+CANONICAL_ACQUIRE_SEMANTIC_BINDING_INCONSISTENT
+NOT ACTIVE_NEXT
+```
+
+No side of the contradiction is silently preferred.
+
+### 21.15 Machine-readable V3 boundary
+
+Representative V3 fail-closed codes include:
+
+```text
+CANONICAL_ACQUIRE_IDENTITY_MISMATCH
+CANONICAL_ACQUIRE_BASE_MISMATCH
+CANONICAL_ACQUIRE_TREE_MISMATCH
+CANONICAL_ACQUIRE_DELTA_MISMATCH
+CANONICAL_ACQUIRE_TRANSITION_MISMATCH
+CANONICAL_ACQUIRE_HISTORY_UNPROVEN
+NONCANONICAL_ACQUIRE_MERGE_SHAPE
+CANONICAL_ACQUIRE_DUPLICATE_LOCK_PATH
+CANONICAL_ACQUIRE_NEXT_BINDING_MISSING
+CANONICAL_ACQUIRE_NEXT_BINDING_MALFORMED
+CANONICAL_ACQUIRE_SEMANTIC_BINDING_INCONSISTENT
+CANONICAL_LOCK_READBACK_MISMATCH
+CANONICAL_LOCK_NOT_ACTIVE
+VERIFY_WORKFLOW_IDENTITY_AMBIGUOUS
+VERIFY_RUNSET_PAGINATION_FAILED
+VERIFY_RUNSET_TRUNCATED
+VERIFY_RUNSET_RESULT_CAP_UNPROVEN
+VERIFY_RUNSET_MALFORMED
+VERIFY_RUN_NUMBER_DUPLICATE_INCONSISTENT
+VERIFY_AUTHORITATIVE_LINEAGE_UNREADABLE
+VERIFY_AUTHORITATIVE_ATTEMPT_NOT_SUCCESS
+LATEST_VERIFY_NOT_SUCCESS
+RULESET_PROOF_UNAVAILABLE
+RULESET_BYPASS_PRESENT
+```
+
+There is intentionally no post-canonical `CANONICAL_ACQUIRE_HEAD_MISMATCH` requirement merely because a transport commit SHA differs. Head mismatch remains a **pre-merge transport** condition when evaluating one selected candidate.
+
+### 21.16 V3 preregistered acceptance/adversarial tests — exact total 73
+
+The historical tests remain audit-visible. V3 does **not** preserve the number 62 artificially. It keeps valid inherited coverage, revises rows whose authority wording changed, and adds only the distinct regressions required by H-02/L-01/canonical observability.
+
+The exact V3 implementation matrix is **73 mandatory rows**.
+
+#### Revised inherited rows
+
+Rows not named below retain their V2 meaning subject to the Section 21 supersession rule.
+
+- **Row 19 revised — canonical V3 confirmation, not PR merge metadata:** an exact V3 acquisition content transition B->M plus fresh semantic reconstruction/active lock/Ruleset proof yields `ACTIVE_NEXT`; PR `merged` metadata is not a grant predicate.
+- **Row 20 revised — canonical content present but wrong V3 semantic identity:** matching human-readable lock content without the exact persisted V3 binding does not yield `ACTIVE_NEXT`.
+- **Row 21 strengthened — original M exact, current lock later changed:** even when the historical B->M transition exactly matched T, a later renewal/replacement/reacquisition/current lock byte change means the original V3 acquisition is not current `ACTIVE_NEXT`.
+- **Row 51 replaced — same-content alternate head:** H != H2, same B, same T, same exact lock objects and exact V3 semantic identity, differing only in commit metadata => H/H2 are the SAME canonical acquisition content; do not emit PR/head creator attribution.
+- **Row 55 remains the V2 replacement:** highest complete matching documented `run_number` lineage controls the exact selected head; numeric `run_id` magnitude is never chronology.
+- **Row 57 clarified:** a different PR/ref pointing to the same exact transport head may confirm the same acquisition only through the V3 canonical-content transition; PR locator is not authority.
+
+All previously accepted indirect-merge, `run_number`, rerun, workflow completeness, Ruleset, multiple RELEASE, multiple ACQUIRE, RELEASE-before-ACQUIRE, one-mutation-per-run, old-epoch replay, wrong work-ref/collision, and fresh-main barrier tests remain mandatory.
+
+#### New rows 63–73
+
+63. **same-tree alternate head cannot borrow Verify:** H has authoritative success; H2 != H has the same B/T/V3 content but lacks its own current authoritative success. H2 is not pre-merge eligible and cannot borrow H's CI.
+64. **same-tree alternate head with stale/different base:** H2 materializes similar final content/tree presentation but `parents(H2) != [B]` or its frozen base differs. It is non-equivalent/ineligible and cannot reach trusted merge from this acquisition.
+65. **same base but different canonical tree/object:** `parents(H2) == [B]` but `tree(H2) != T` or any lock path/mode/OID/hash differs. Fail candidate eligibility.
+66. **same B/T/objects but claimed different source epoch:** canonical bytes parse one `next_binding.source_epoch_id` while process/observation claims another. Return `CANONICAL_ACQUIRE_SEMANTIC_BINDING_INCONSISTENT`, never `ACTIVE_NEXT`.
+67. **same B/T/objects but claimed different acquire intent:** canonical bytes parse one `next_binding.acquire_intent_id` while process/observation claims another. Return semantic-binding inconsistency, never `ACTIVE_NEXT`.
+68. **squash positive control:** transport H != canonical M, both have parent B and exact tree T; exact B->M lock-only transition, V3 semantic reconstruction, current active lock and Ruleset proof all pass. Confirm the same canonical acquisition content without recovering H from M.
+69. **duplicate exact lock path:** duplicate path entries in `exact_lock_objects` fail before canonical hashing with `CANONICAL_ACQUIRE_DUPLICATE_LOCK_PATH`; no sorting/deduplication repair is allowed.
+70. **persisted next-binding primitive mutation changes canonical objects/tree:** parameterize mutation of `source_epoch_id`, `continuation_context_id`, or `selection_id` in persisted `next_binding`; each mutation must change exact lock bytes, byte SHA-256, Git blob OID and expected canonical tree SHA.
+71. **persisted acquire-intent mutation changes canonical objects/tree:** changing `next_binding.acquire_intent_id` must change exact lock bytes, byte SHA-256, Git blob OID and expected canonical tree SHA.
+72. **post-squash semantic reconstruction is canonical:** after H->M squash canonicalisation, delete/alter process-memory `ExpectedAcquire` copies and re-read canonical main; only the semantic binding reconstructed from fresh exact lock bytes may satisfy the post-canonical identity comparison. Process memory alone is insufficient.
+73. **missing required `/next` binding:** a lock being evaluated as a v1.3 `/next` acquisition lacks `next_binding` or one required child field. Fail closed and do not return `ACTIVE_NEXT`; legacy/manual lock validity outside `/next` is not globally changed.
+
+No padding rows are added.
+
+### 21.17 Phase A compatibility and inherited security boundary
+
+V3 changes the Phase B acquisition identity only. Accepted Phase A remains exactly:
+
+```text
+ends at ACQUIRE_PENDING
+no ACTIVE_NEXT authority
+no GitHub mutation
+no Truth/review authority
+no I2/I3
+no RENEW
+no TAKEOVER
+PENDING != ownership
+```
+
+V3 does not introduce or require:
+
+- a new PAT or secret;
+- Ruleset weakening or bypass;
+- broader trusted token authority;
+- `pull_request_target`;
+- PR-head code in a trusted write context;
+- Task/Campaign creation authority;
+- Truth promotion;
+- automatic review;
+- direct main mutation outside the inherited trusted lifecycle;
+- any Phase A authority expansion.
+
+### 21.18 Writer-side H-02/L-01 remediation assessment
+
+The V3 design candidate closes the writer-side contradiction identified by the fixed independent review:
+
+```text
+H-01_INDIRECT_MERGE                  = CLOSED / preserved
+M-02_RUN_ORDERING                    = CLOSED / preserved
+H-02_HEAD_SHA_OBSERVABILITY          = REMEDIATED_IN_V3_DESIGN_CANDIDATE
+L-01_DUPLICATE_LOCK_PATH             = REMEDIATED_IN_V3_DESIGN_CANDIDATE
+CANONICAL_ACQUIRE_IDENTITY_V3        = FROZEN DESIGN CANDIDATE
+HEAD_SHA_POST_CANONICAL_AUTHORITY    = REMOVED
+TRANSPORT_HEAD_VERIFY                = REQUIRED PRE-MERGE PER EXACT SELECTED HEAD
+CANONICAL_MAIN_SINGLE_TRANSITION     = REQUIRED
+CANONICAL_SEMANTIC_READBACK          = REQUIRED FROM FRESH EXACT LOCK BYTES
+PR_NUMBER_AUTHORITY                  = REMOVED
+RUN_NUMBER_POLICY                    = PRESERVED
+SQUASH_COMPATIBILITY                 = PRESERVED
+PREREGISTERED_TEST_TOTAL             = 73
+CRITICAL_KNOWN                       = 0
+HIGH_KNOWN                           = 0
+MEDIUM_KNOWN                         = 0
+INDEPENDENT_FOCUSED_REREVIEW         = REQUIRED
+PHASE_B_IMPLEMENTATION_ALLOWED_NOW   = NO
+READY_FOR_FOCUSED_REREVIEW           = YES
+```
+
+This is a writer-side design assessment only. It does not self-promote H-02 or L-01 to independently accepted closure. A new independent fixed-commit review MUST verify the V3 semantic observability, H/H2 equivalence, exact-tree transition, Verify separation, duplicate-path rejection, Ruleset gate, and 73-row matrix before Phase B production implementation may begin.
+
+### 21.19 V3 stop conditions
+
+Stop and return to design/security review if implementation discovers any of the following:
+
+- tree/semantic identity cannot safely replace source-head SHA as post-canonical authority;
+- a same-tree attacker can alter an authority-bearing V3 semantic field without changing exact canonical lock bytes/objects;
+- safe confirmation would require PR-number/PR-merge causality again;
+- safe confirmation would require preserving the transport H as canonical M;
+- settings/secrets or trusted-token authority must change;
+- trusted lifecycle authority must broaden;
+- Phase A authority must expand;
+- production semantics outside this frozen V3 contract are required;
+- a protected schema/policy change becomes necessary but has not received its own required review.
+
+Until the next independent fixed-commit review returns PASS with no CRITICAL/HIGH/MEDIUM blocker:
+
+```text
+PHASE_B_IMPLEMENTATION_ALLOWED_NOW = NO
+```
