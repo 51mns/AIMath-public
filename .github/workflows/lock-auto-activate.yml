@@ -7,10 +7,16 @@ on:
     workflows: ["Verify public release"]
     types: [completed]
 
-# This workflow is deliberately write-capable, but it runs trusted default-branch
-# code only. PR-head files are fetched as bounded lock JSON data and never executed.
+# Trusted-main lifecycle mutation. A PR-head Verify success is a trigger only;
+# scripts/lock_auto_activate.py rederives RELEASE/ACQUIRE eligibility from current main.
 permissions:
+  actions: read
   contents: write
+  pull-requests: read
+
+concurrency:
+  group: village-lock-lifecycle
+  cancel-in-progress: false
 
 jobs:
   activate:
@@ -30,7 +36,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Revalidate and activate lock-only ACQUIRE
+      - name: Revalidate trusted Village lock lifecycle
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
