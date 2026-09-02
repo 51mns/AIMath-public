@@ -28,7 +28,7 @@ Use this mode while only one human maintainer can honestly approve protected-pat
 
 - required approving reviews: **0**;
 - keep pull requests mandatory;
-- keep required status check `verify` mandatory;
+- keep required status check `Verify public release` mandatory;
 - keep strict up-to-date-before-merge enabled;
 - keep force pushes and branch deletion blocked;
 - keep `CODEOWNERS` committed for ownership/documentation and future multi-maintainer use;
@@ -54,4 +54,18 @@ Switching modes is a governance/settings change and should reflect the real peop
 
 ## Lease/merge boundary
 
-`main` must require branches to be up to date before merge. Renewal CI evaluates the current canonical lock: if the lease has expired by re-evaluation time, renewal is invalid and takeover is the permitted path. This requirement is part of the v1 lock correctness model, not an optional performance setting.
+`main` must require branches to be up to date before merge. Renewal and trusted lifecycle CI evaluate current canonical state. The merge endpoint's expected head SHA does not pin the base SHA, so strict server-side status checking is part of lock correctness, not a performance option.
+
+## Village v1.2.1 Phase A trusted RELEASE gate
+
+The Phase A write workflow uses `GITHUB_TOKEN` only for GitHub Actions/PR reads and the narrowly revalidated contents merge path. It does not change branch protection.
+
+Before any automatic RELEASE or existing automatic ACQUIRE merge, trusted-main code calls:
+
+```text
+GET /repos/51mns/AIMath-public/branches/main/protection/required_status_checks
+```
+
+and requires the returned `strict` field to be exactly `true`. OFF, malformed or unreadable responses fail closed with `AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION`.
+
+Reading this branch-protection endpoint requires repository **Administration: read** permission under GitHub's fine-grained permission model. Normal workflow `GITHUB_TOKEN` permissions do not expose an `administration` scope. If the runtime token cannot read the endpoint, do not weaken protection and do not add a PAT/App/secret automatically. A human must explicitly approve a minimal read-only Administration credential or another audited GitHub-supported way to attest the same effective strict setting before live auto-merge can be enabled. Existing `GITHUB_TOKEN` remains the merge credential; the setting-reader credential should not receive write Administration permission.
