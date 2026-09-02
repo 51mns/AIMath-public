@@ -45,7 +45,7 @@
     "permission for destructive history rewrites, secret access, private-data extraction, or unrelated repository changes"
   ],
   "write_boundary": {
-    "authenticated_write_available": "Use only existing permissions and normal Village policy. /join and worker_id never escalate privilege.",
+    "authenticated_write_available": "Use only existing permissions and normal Village policy. /join is not a privilege escalation, and worker_id never escalates privilege.",
     "write_unavailable": "Filter out lock-required EXCLUSIVE acquisition as a normal first choice; prefer eligible PARALLEL_SAFE, reproduction, literature/frontier, open-discovery or other bounded read-only work. Do not claim exclusive ownership."
   },
   "selection_rule": "capability assessment -> READY eligibility -> valid live pending-reservation filtering -> adaptive ranking -> selection",
