@@ -122,7 +122,7 @@ class PhaseA(unittest.TestCase):
             ok,why=_strict_up_to_date_gate("t","51mns/AIMath-public"); self.assertFalse(ok); self.assertIn("403",why)
     def test_25_deleted_absent(self):
         _,f=_release_pr(); self.assertTrue(release_head_absence_errors(f,[{"path":f[0]["filename"]}]))
-    def _wf(self,permissions="contents: read",trigger="pull_request",extra=""): return f"name: t\non: {trigger}\npermissions: {permissions}\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ok\n{extra}"
+    def _wf(self,permissions="{contents: read}",trigger="pull_request",extra=""): return f"name: t\non: {trigger}\npermissions: {permissions}\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ok\n{extra}"
     def test_26_secret_whitespace(self): self.assertTrue(workflow_text_errors(self._wf(extra="      - run: 'echo ${{ secrets   .   TOKEN }}'\n")))
     def test_27_secrets_inherit(self): self.assertTrue(workflow_text_errors("name: t\non: pull_request\npermissions: {contents: read}\njobs:\n  t:\n    uses: owner/repo/.github/workflows/x.yml@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n    secrets: inherit\n"))
     def test_28_flow_permissions_and_omission(self): self.assertEqual(workflow_text_errors(self._wf(permissions="{contents: read}")),[]); self.assertTrue(workflow_text_errors("name: t\non: pull_request\njobs: {t: {runs-on: ubuntu-latest, steps: [{run: echo ok}]}}\n"))
