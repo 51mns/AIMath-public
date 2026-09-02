@@ -1,6 +1,6 @@
 # AIMath Village Architecture v1.2.1 — Trusted Lock Lifecycle
 
-**Status:** PHASE-A SECURITY-REVIEWED / PHASE-B IMPLEMENTATION CANDIDATE / SECURITY REVIEW REQUIRED  
+**Status:** PHASE-A SECURITY-REVIEWED / PHASE-B REMEDIATED IMPLEMENTATION CANDIDATE / FOCUSED SECURITY REREVIEW REQUIRED  
 **Extends:** Village v1.0, v1.1 and v1.2 without weakening their Truth/Portfolio/security boundaries.  
 **Phase A scope:** automatic `RELEASE` only.  
 **Phase B scope:** broaden trusted automatic `ACQUIRE` activation only; Task selection and lock-PR creation remain worker `/join`/future `/next` responsibilities. `RENEW` and `TAKEOVER` remain nonautomatic.
@@ -29,7 +29,26 @@ Phase A code is accepted as the reviewed baseline for Phase B diff review. This 
 
 Live automatic mutation remains **SETTING_CONFIRMATION_REQUIRED** until trusted runtime can confirm `required_status_checks.strict=true`. Unreadable/OFF/malformed state must continue to fail closed; this repository change does not alter GitHub security settings or add credentials.
 
-Phase B review range starts at the Phase A frozen writer head above and ends at a separately fixed Phase B head. Phase B must not reopen Phase A properties unless its diff changes a load-bearing Phase A file or creates a regression.
+## Phase B review/remediation provenance
+
+The first fixed Phase B target was:
+
+```text
+ac28382c9779883ba9e92170478a325b1ce970fb
+```
+
+Independent security review at:
+
+```text
+reviews/village-v1-2-1-phase-b-security/SECURITY_REVIEW.md
+review commit 5d64a4c5b22b7dfa21af2810b65ea5787eabe50c
+```
+
+returned `PASS_WITH_REQUIRED_CHANGES` / `REQUIRES_FIX`: no CRITICAL/HIGH issue, but one MEDIUM availability/fairness defect (`M-01`) because an observation failure while scanning a RELEASE-shaped candidate could abort the lifecycle run before later valid RELEASE/ACQUIRE candidates were considered. A LOW defensive malformed-observation case was also noted.
+
+The remediation keeps the Phase A implementation blob frozen and changes only the Phase B wrapper and Phase B regression tests relative to that reviewed Phase B target. RELEASE and ACQUIRE candidate scans now isolate fail-closed candidate observation/shape failures so one invalid candidate cannot become blocking authority over later valid work. Regression controls cover the bounded RELEASE pagination failure, nested malformed candidate observations, and malformed open-PR rows.
+
+The remediated Phase B target must be frozen only after its final provenance commit and exact-head CI. A separate focused rereview must inspect the old rejected target -> remediated fixed target delta and confirm M-01 closure before integration.
 
 ## 1. Authority boundary
 
@@ -101,6 +120,8 @@ Thus Phase A guarantees `eligible RELEASE > triggering eligible ACQUIRE`. Draft,
 
 Phase B may broaden only the ACQUIRE side: after RELEASE candidates are exhausted, trusted-main code may discover open ACQUIRE-shaped PRs, independently revalidate each against current main and exact green CI, and deterministically activate at most one currently eligible candidate. Candidate discovery is not ownership and may not trust repository caches or self-reported PENDING_CLAIM data as authority. Task selection and lock-PR creation remain outside this write workflow.
 
+RELEASE and ACQUIRE discovery both isolate candidate-local GitHub observation/shape failures: the affected candidate is treated as ineligible and later candidates continue to be examined. Such isolation is fail-closed and cannot itself authorize a candidate. Repository-wide prerequisite observations, trusted-main validation, and the final selected candidate's strict server/race gates remain global fail-closed boundaries.
+
 The Phase B tie-break is ascending PR number **only after** each candidate independently passes all current-main eligibility, object, CI, readiness, collision, worker, Campaign and global-capacity checks. An invalid lower-number PR is never reservation or blocking authority.
 
 `RENEW` and `TAKEOVER` remain nonautomatic.
@@ -135,9 +156,9 @@ The primary security boundary remains GitHub permissions + protected governance/
 
 Phase A is frozen and independently reviewed at `bb8701f551dbf3c155a4352931aa9f17f4588339`.
 
-Phase B begins only after that PASS. It may broaden automatic `ACQUIRE` candidate discovery/activation, but it may not create Tasks, choose research on behalf of `/join` workers, create worker lock PRs, automate `RENEW`/`TAKEOVER`, change Truth Layer semantics, or weaken Phase A RELEASE security.
+Phase B may broaden automatic `ACQUIRE` candidate discovery/activation, but it may not create Tasks, choose research on behalf of `/join` workers, create worker lock PRs, automate `RENEW`/`TAKEOVER`, change Truth Layer semantics, or weaken Phase A RELEASE security.
 
-The final Phase B fixed commit must receive independent security review over the Phase A frozen-head-to-Phase-B-final diff before PR #28 may merge.
+The final remediated Phase B fixed commit must receive focused independent security rereview of the remediation delta before PR #28 may merge.
 
 ## 10. Frozen v1.3 carry-forward prerequisites
 
