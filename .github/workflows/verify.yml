@@ -27,17 +27,25 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install pinned policy dependencies
+        run: python3 -m pip install --disable-pip-version-check 'PyYAML==6.0.3'
+
+      - name: Structural workflow security
+        run: python3 scripts/workflow_security.py .
+
       - name: PR policy and change class
         id: pr_policy
         if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
           PR_ACTOR: ${{ github.actor }}
         run: |
           python3 scripts/check_village_pr.py \
             --base "$BASE_SHA" \
             --head "$HEAD_SHA" \
+            --head-ref "$HEAD_REF" \
             --actor "$PR_ACTOR" \
             --github-output "$GITHUB_OUTPUT"
 
@@ -66,8 +74,14 @@ jobs:
       - name: Village synthetic acceptance tests
         run: python3 scripts/village.py test
 
+      - name: Village v1.1 direct acceptance tests
+        run: python3 scripts/test_village_v1_1.py
+
       - name: Village v1.2 direct acceptance tests
         run: python3 scripts/test_village_v1_2.py
+
+      - name: Village v1.2.1 Phase A acceptance tests
+        run: python3 scripts/test_village_v1_2_1.py
 
       - name: Install pinned REUSE tool
         run: python3 -m pip install --disable-pip-version-check 'reuse==6.2.0'
