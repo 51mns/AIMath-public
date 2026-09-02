@@ -101,6 +101,8 @@ Thus Phase A guarantees `eligible RELEASE > triggering eligible ACQUIRE`. Draft,
 
 Phase B may broaden only the ACQUIRE side: after RELEASE candidates are exhausted, trusted-main code may discover open ACQUIRE-shaped PRs, independently revalidate each against current main and exact green CI, and deterministically activate at most one currently eligible candidate. Candidate discovery is not ownership and may not trust repository caches or self-reported PENDING_CLAIM data as authority. Task selection and lock-PR creation remain outside this write workflow.
 
+The Phase B tie-break is ascending PR number **only after** each candidate independently passes all current-main eligibility, object, CI, readiness, collision, worker, Campaign and global-capacity checks. An invalid lower-number PR is never reservation or blocking authority.
+
 `RENEW` and `TAKEOVER` remain nonautomatic.
 
 ## 6. Race and object gates
@@ -108,3 +110,42 @@ Phase B may broaden only the ACQUIRE side: after RELEASE candidates are exhauste
 Automatic RELEASE requires: same repository; OPEN; non-draft; base `main`; base SHA equal to current main; exact successful Verify head as a trigger condition; strict release ref; deletions only; exact regular `100644` base lock blobs; deleted paths absent from exact PR-head tree; exact principal/worker/Task/collision/bundle identity; current-main terminalisation; and expected PR head SHA at merge.
 
 Automatic ACQUIRE remains subject to the v1.2 authority/object/readiness/capacity gates and the same final current-main/head/base refetch plus expected-head merge. Phase B candidate discovery must not weaken those gates merely because the source Verify run belongs to another PR.
+
+Current main, PR head and PR base are re-fetched immediately before merge. Movement aborts the attempt. A successful merge may stale another pending transport attempt; that is accepted and recoverable by a fresh Verify run.
+
+## 7. Strict server gate
+
+The write workflow remains fail-closed unless GitHub confirms:
+
+```text
+Require branches to be up to date before merging = ON
+```
+
+The merge API's expected SHA protects the PR head, not the base. Server-side strict status checks therefore remain mandatory. If the setting endpoint is OFF or unreadable, the bot prints `AUTO_ACTIVATION_BLOCKED_SETTING_CONFIRMATION` and performs no merge. v1.2.1 does not alter repository settings, Actions default permissions, secrets, PATs or GitHub Apps.
+
+## 8. Workflow governance hardening
+
+`scripts/workflow_security.py` structurally parses YAML rather than treating substrings/regex as the primary boundary. It scans `.github/workflows/**`, `.github/actions/**` and local `uses: ./...` composite actions; requires explicit workflow permissions; rejects missing/unknown write permissions, `write-all`, `pull_request_target`, secret expressions including whitespace variants, `secrets: inherit`, unsafe checkout credentials/refs, unpinned external actions, PR-head checkout in the trusted writer and local composite token acquisition.
+
+For the trusted lock lifecycle workflow, the reviewed M-01 fix additionally constrains the exact job/step structure and `${{ github.token }}` placement and forbids local composite and Docker actions in that writer. Phase B must preserve that exact structural boundary unless a new independent security review explicitly accepts a change.
+
+The primary security boundary remains GitHub permissions + protected governance/workflow paths + human governance review + trusted-main execution. The parser is defence in depth.
+
+## 9. Phase boundary
+
+Phase A is frozen and independently reviewed at `bb8701f551dbf3c155a4352931aa9f17f4588339`.
+
+Phase B begins only after that PASS. It may broaden automatic `ACQUIRE` candidate discovery/activation, but it may not create Tasks, choose research on behalf of `/join` workers, create worker lock PRs, automate `RENEW`/`TAKEOVER`, change Truth Layer semantics, or weaken Phase A RELEASE security.
+
+The final Phase B fixed commit must receive independent security review over the Phase A frozen-head-to-Phase-B-final diff before PR #28 may merge.
+
+## 10. Frozen v1.3 carry-forward prerequisites
+
+These previously frozen constraints are recorded here so later work cannot silently lose them. v1.2.1 does not implement their full design:
+
+1. `reviews/**/REVIEW.yml` must become protected/governance-controlled before autonomous review launch.
+2. Autonomous review files claiming `I2` or `I3` must fail CI.
+3. Preregistration liveness `EFFECTIVE` may be established only by objective outcomes: review completion count increased inside the effectiveness window **or** oldest backlog age decreased. Mere heartbeat/activity is `ACTIVE_SUPPLY`, never `EFFECTIVE`.
+4. `review-preregistration/**` must receive correct REUSE coverage before that path is introduced.
+5. `candidate_id` must have a strict bounded lowercase-hex format before any path/ref interpolation.
+6. Review reservation must use the preregistration PR as its observable substrate.
