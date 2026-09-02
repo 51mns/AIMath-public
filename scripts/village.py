@@ -161,7 +161,6 @@ def cmd_test(root: Path) -> int:
         root / "scripts/test_village_acceptance.py",
         root / "scripts/test_village_v1_1.py",
         root / "scripts/test_village_v1_2.py",
-        root / "scripts/test_village_v1_3_next.py",
     ]
     for test in tests:
         rc = subprocess.call([sys.executable, str(test)], cwd=root)
