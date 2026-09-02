@@ -22,6 +22,7 @@ from village_v1_2 import (
     worker_lock_errors,
 )
 
+LOCK_PREFIX = "coordination/locks/"
 BOOTSTRAP_MAINTAINERS = {"51mns"}
 BOOTSTRAP_PROTECTED = [
     "README.md", "README.ja.md", "AGENTS.md", "CONTRIBUTING.md", "LICENSING.md",
@@ -55,18 +56,65 @@ def show_json(ref: str, path: str):
 
 
 def changed_paths(base: str, head: str) -> list[str]:
-    out = git("diff", "--name-only", f"{base}..{head}")
+    # Disable rename collapsing so deletion/movement of a lock path cannot hide
+    # inside a rename to an ordinary research path.
+    out = git("diff", "--no-renames", "--name-only", f"{base}..{head}")
     return [x for x in out.splitlines() if x]
 
 
 def changed_status(base: str, head: str) -> list[tuple[str, str]]:
-    out = git("diff", "--name-status", f"{base}..{head}")
+    out = git("diff", "--no-renames", "--name-status", f"{base}..{head}")
     rows: list[tuple[str, str]] = []
     for line in out.splitlines():
         if line:
             parts = line.split("\t")
             rows.append((parts[0], parts[-1]))
     return rows
+
+
+def is_lock_path(path: str) -> bool:
+    return path.startswith(LOCK_PREFIX)
+
+
+def lock_change_class_errors(paths: list[str]) -> list[str]:
+    """Any lock path change must live in a dedicated exact lock-only PR."""
+    has_lock_change = any(is_lock_path(path) for path in paths)
+    if has_lock_change and not is_lock_only_paths(paths):
+        return [
+            "lock lifecycle paths may not be mixed with research/governance/other files; "
+            "any coordination/locks/** change requires a dedicated lock-only PR"
+        ]
+    return []
+
+
+def git_entry(ref: str, path: str) -> tuple[str, str] | None:
+    out = git("ls-tree", ref, "--", path)
+    if not out:
+        return None
+    first = out.splitlines()[0]
+    meta, _, returned_path = first.partition("\t")
+    parts = meta.split()
+    if len(parts) < 3 or returned_path != path:
+        return ("INVALID", "INVALID")
+    return parts[0], parts[1]
+
+
+def lock_object_mode_errors(base: str, head: str, paths: list[str]) -> list[str]:
+    """Canonical lock files must be ordinary Git blobs, never symlinks/submodules."""
+    errors: list[str] = []
+    for path in paths:
+        if not is_lock_path(path):
+            continue
+        for label, ref in (("base", base), ("head", head)):
+            entry = git_entry(ref, path)
+            if entry is None:
+                continue
+            mode, object_type = entry
+            if mode != "100644" or object_type != "blob":
+                errors.append(
+                    f"{label} lock path must be regular Git blob mode 100644, got {mode}/{object_type}: {path}"
+                )
+    return errors
 
 
 def materialize_ref(ref: str) -> tempfile.TemporaryDirectory:
@@ -270,6 +318,9 @@ def main() -> int:
 
     bootstrap = show_json(args.base, "coordination/portfolio/PORTFOLIO.yml") is None
     errors: list[str] = []
+    errors.extend(lock_change_class_errors(paths))
+    errors.extend(lock_object_mode_errors(args.base, args.head, paths))
+
     protected_changed = [p for p in paths if path_matches(p, protected)]
     if protected_changed and args.actor not in maintainers:
         errors.append("non-maintainer changed protected governance path(s): " + ", ".join(protected_changed))
