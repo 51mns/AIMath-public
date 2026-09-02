@@ -186,10 +186,12 @@ class Acceptance(unittest.TestCase):
     def test_V_expired_lock_takeover_transition(self):
         base=base_state(); add_lock(base,"LOCK-OLD","TASK-X-1","x/shared",expires=NOW-timedelta(hours=1))
         head=copy.deepcopy(base); head.lock_bundles={}
+        worker="w-bbbbbbbbbbbbbbbb"
         payload={
             "lock_id":"LOCK-NEW","task_id":"TASK-X-1","actor":{"id":"gh:b","type":"HUMAN_PRINCIPAL"},
+            "worker_id":worker,
             "base_main_sha":"0"*40,"acquired_at":NOW.isoformat(),"expires_at":(NOW+timedelta(hours=168)).isoformat(),
-            "work_ref":"work/b","collision_keys":["x/shared"],"renewal_count":0
+            "work_ref":f"research/TASK-X-1/{worker}","collision_keys":["x/shared"],"renewal_count":0
         }
         head.lock_bundles["LOCK-NEW"]=LockBundle("LOCK-NEW",payload,{"x/shared"},[])
         op,errors=validate_lock_transition(base,head,actor="b",base_sha="0"*40,maintainers={"maint"})

@@ -19,7 +19,10 @@
   },
   "governance": {
     "strategy_authority": "HUMAN_MAINTAINER",
-    "default_actor_exclusive_lock_cap": 1,
+    "default_actor_exclusive_lock_cap": 12,
+    "exclusive_worker_lock_cap_default": 1,
+    "worker_id_required_for_new_lock": true,
+    "pending_claim_ttl_minutes": 60,
     "default_campaign_proposal_cap_per_actor": 1,
     "default_task_proposal_cap_per_actor": 3,
     "default_lease_ttl_hours": 168,
@@ -46,6 +49,6 @@
       "PLATFORM": 20
     },
     "evaluation_bonus_cap": 12,
-    "rule": "Evaluation scores may reorder already-READY work only; they never override strategic state, hard capacity, locks, dependencies, evidence usability, or Truth Layer promotion. Participant count is not fixed and no work is created merely to fill capacity."
+    "rule": "Evaluation scores may reorder already-READY work only; v1.2 capability filtering and valid live PENDING_CLAIM observations are applied before final selection. Worker identity never changes authorization or Truth Layer status. Campaign/global capacity and collision rules remain hard gates."
   }
 }

@@ -57,8 +57,17 @@ jobs:
       - name: Validate Village state
         run: python3 scripts/village.py validate
 
+      - name: Derive live Village status
+        run: python3 scripts/village.py status
+
+      - name: Derive generic Village rank
+        run: python3 scripts/village.py rank
+
       - name: Village synthetic acceptance tests
         run: python3 scripts/village.py test
+
+      - name: Village v1.2 direct acceptance tests
+        run: python3 scripts/test_village_v1_2.py
 
       - name: Install pinned REUSE tool
         run: python3 -m pip install --disable-pip-version-check 'reuse==6.2.0'

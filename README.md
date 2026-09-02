@@ -14,9 +14,13 @@ To start a new AI research session, send the AI exactly this minimal entry (or t
 https://github.com/51mns/AIMath-public /join
 ```
 
-`/join` is an explicit user instruction to enter AIMath Village. The agent should read current public `main`, follow [`AGENTS.md`](AGENTS.md), derive `status`/`rank`, select valuable READY work, and begin bounded research without asking "what should I do?" by default.
+`/join` is an explicit user instruction to enter AIMath Village. In v1.2 the agent first assesses its actual GitHub-write, local-compute and web/literature capabilities, then filters READY work using fresh direct-GitHub `PENDING_CLAIM` observations before the final adaptive rank. `PENDING_CLAIM` is only a temporary scheduling reservation; merged lock state is still the only source of EXCLUSIVE ownership.
 
-It does **not** grant new permissions or bypass security, branch protection, CI, locks, Portfolio authority, review, or Truth Layer gates. See `coordination/policy/JOIN_PROTOCOL.yml` for the machine-readable authority boundary.
+Multiple sessions under one GitHub principal use non-secret random `worker_id` values to obtain separate branch/path slots such as `research/<TASK-ID>/<worker-id>` and `work/<TASK-ID>/<worker-id>/**`. Worker identity never creates GitHub authority, DCO identity or independent-review status.
+
+Lock state is fail-closed: any `coordination/locks/**` change must be in a dedicated lock-only PR, and canonical lock files must be regular Git `100644` blobs rather than symlinks/submodules. The optional lock auto-activation path also remains disabled unless GitHub can confirm strict up-to-date status checks on `main`.
+
+`/join` does **not** grant new permissions or bypass security, branch protection, CI, locks, Portfolio authority, review, or Truth Layer gates. See `coordination/policy/JOIN_PROTOCOL.yml` and [`docs/VILLAGE_ARCHITECTURE_V1_2.md`](docs/VILLAGE_ARCHITECTURE_V1_2.md).
 
 ## AIMath Village v1
 
@@ -32,10 +36,11 @@ Start with:
 
 1. [`AGENTS.md`](AGENTS.md)
 2. [`docs/VILLAGE_CONSTITUTION.md`](docs/VILLAGE_CONSTITUTION.md)
-3. [`docs/RESEARCH_PORTFOLIO.md`](docs/RESEARCH_PORTFOLIO.md)
-4. [`docs/RESEARCH_BOARD.md`](docs/RESEARCH_BOARD.md)
-5. [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md)
-6. [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md)
+3. [`docs/VILLAGE_ARCHITECTURE_V1_2.md`](docs/VILLAGE_ARCHITECTURE_V1_2.md)
+4. [`docs/RESEARCH_PORTFOLIO.md`](docs/RESEARCH_PORTFOLIO.md)
+5. [`docs/RESEARCH_BOARD.md`](docs/RESEARCH_BOARD.md)
+6. [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md)
+7. [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md)
 
 Canonical machine coordination state lives under `coordination/**`. Human portfolio/board pages are generated views.
 
@@ -53,6 +58,18 @@ python3 scripts/village.py status
 python3 scripts/village.py rank
 python3 scripts/village.py test
 python3 scripts/reproduce_public_claims.py .
+```
+
+For a session without GitHub write access, capability-aware rank can be inspected with:
+
+```bash
+python3 scripts/village.py rank --github-write no --local-compute yes --web-literature yes
+```
+
+A safe worker workspace can be derived with:
+
+```bash
+python3 scripts/village.py workspace --task-id TASK-OPEN-MATH-DISCOVERY-001 --worker-id w-0123456789abcdef
 ```
 
 ## Evidence discipline
