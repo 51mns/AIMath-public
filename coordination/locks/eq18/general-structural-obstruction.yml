@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "lock_id": "LOCK-EQUIANGULAR-R18-001-FAE1DFC5FAC514D0",
+  "task_id": "TASK-EQUIANGULAR-R18-001",
+  "worker_id": "w-fae1dfc5fac514d0",
+  "actor": {
+    "id": "gh:51mns",
+    "type": "HUMAN_PRINCIPAL"
+  },
+  "base_main_sha": "059d4a631973040e12c734fba729f6f3d62e35b6",
+  "acquired_at": "2026-09-02T09:54:19Z",
+  "expires_at": "2026-09-09T09:54:19Z",
+  "work_ref": "research/TASK-EQUIANGULAR-R18-001/w-fae1dfc5fac514d0",
+  "collision_keys": [
+    "eq18/general-structural-obstruction"
+  ],
+  "renewal_count": 0
+}
