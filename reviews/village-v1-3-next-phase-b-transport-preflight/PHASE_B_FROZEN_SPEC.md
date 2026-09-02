@@ -624,3 +624,311 @@ Frozen implementation readiness result:
 READY_FOR_PHASE_B_IMPLEMENTATION_AFTER_PHASE_A = YES
 CURRENTLY_ALLOWED_TO_START_PHASE_B_IMPLEMENTATION = NO, UNTIL ACCEPTED PHASE A PASS
 ```
+
+## 19. Phase B exact ACQUIRE transport-provenance remediation
+
+This section is the frozen remediation overlay for independent Phase B review finding `M-01` and its associated missing acceptance coverage. Where this section is stricter than Sections 1, 8, 10, 11, 12, 13, 15, 16, 17, or 18, **this section controls**. Nothing here weakens the inherited trusted lifecycle or adds authority to lock bytes, PR-head code, webhook payloads, caches, or caller prose.
+
+Remediation evidence anchors:
+
+```text
+historical design target       c3532324e9df421afc787aa6cee3d91f8dbaa91e
+historical design blob         5c877ec4d9807f285cb2e2c4c3f3ae3380117271
+independent spec review        3f5206c5b793cf8b5ecaac5bafcb0313b5e7de0f
+independent review blob        404bfd67d44233281e51a8eb7437d28b40c7f2de
+Phase A core merge             b46628103642b55512ee244f82b9edc6362881e3
+Phase A test-registration/main 84a046359b299950403b68bfcb190930ebbc4c3f
+```
+
+The historical Phase A implementation gate is now satisfied by canonical `main` at `84a046359b299950403b68bfcb190930ebbc4c3f`. This writer remediation does **not** self-accept the revised Phase B specification. Phase B implementation remains blocked until a focused independent re-review accepts the fixed remediation commit/blob.
+
+### 19.1 Finalized `ExpectedAcquireV1`
+
+For any path that could return `ACTIVE_NEXT`, the provisional Section 10 record is superseded by the following finalized record. It may be finalized only after the authoritative latest exact-head Verify run is successful.
+
+```text
+ExpectedAcquireV1 = {
+  "schema_version": 1,
+
+  "source_epoch_id": ...,
+  "continuation_context_id": ...,
+  "selection_id": ...,
+  "acquire_intent_id": ...,
+
+  "expected_repository": "51mns/AIMath-public",
+  "expected_pr_number": ...,
+  "expected_head_ref": ...,
+  "expected_head_sha": ...,
+  "expected_base_ref": "main",
+  "expected_base_sha": <exact selection_main_sha>,
+
+  "selected_task_id": ...,
+  "worker_id": ...,
+  "principal_id": ...,
+  "work_ref": ...,
+  "collision_keys": [...sorted...],
+  "lock_id": ...,
+  "acquired_at": ...,
+  "expires_at": ...,
+
+  "expected_lock_paths": [...sorted...],
+  "expected_lock_blob_bundle": [
+    {"path": ..., "blob_sha": ...},
+    ...
+  ],
+  "expected_lock_bytes": [
+    {
+      "path": ...,
+      "mode": "100644",
+      "blob_sha": ...,
+      "bytes_sha256": <SHA-256 of exact blob bytes>,
+      "bytes_base64": <base64 of exact blob bytes>
+    },
+    ...
+  ],
+
+  "verify": {
+    "workflow_name": "Verify public release",
+    "event": "pull_request",
+    "run_id": <authoritative latest matching numeric run id>,
+    "head_sha": <exact expected_head_sha>,
+    "status": "completed",
+    "conclusion": "success"
+  }
+}
+```
+
+All path-bearing lists are sorted lexicographically by `path`. `expected_lock_paths`, `expected_lock_blob_bundle`, and `expected_lock_bytes` MUST describe exactly the same path set. Git blob OID, regular mode, SHA-256 and decoded bytes MUST all agree. The exact lock bytes are data for equality/provenance checking only; they do not carry `/next` authority.
+
+`expected_base_sha` MUST equal the `selection_main_sha` bound by `SelectionV1` and the `base_main_sha` serialized in the expected lock payload. `expected_head_ref` MUST equal the deterministic `next-acquire/<acquire_intent_id>/<TASK-ID>/<worker-id>` ref. `acquire_intent_id` MUST be the digest of the exact `AcquireIntentV1` that contains the same source epoch, continuation context, selection, Task, worker, principal, work ref and collision bundle.
+
+The finalized identity is:
+
+```text
+expected_acquire_id = SHA256(canonical(ExpectedAcquireV1))
+```
+
+There is no nullable/older green Verify shortcut for `ACTIVE_NEXT`. Before the exact latest run is successful, the state remains pending/fail-closed and no finalized expected acquisition can certify ownership.
+
+### 19.2 Exact-head Verify freshness is part of provenance
+
+For the expected head, Phase B MUST fresh-list all workflow runs that match all of:
+
+```text
+workflow name = "Verify public release"
+event         = "pull_request"
+head_sha      = ExpectedAcquireV1.expected_head_sha
+```
+
+The matching run with the greatest numeric `run_id` is authoritative. The authoritative run MUST equal `ExpectedAcquireV1.verify.run_id` and MUST currently be `status=completed`, `conclusion=success`.
+
+An older successful run for the same exact head is non-authoritative if a greater matching run ID exists. Therefore any newer matching run that is `failed`, `cancelled`, `in_progress`, `queued`, or otherwise not completed-success removes ACQUIRE eligibility and prevents `ACTIVE_NEXT`, even though the head SHA did not move.
+
+Webhook/workflow delivery data is trigger-only. A delivery may cause re-evaluation, but none of its PR, head, base, run, conclusion, main, source-epoch or lock fields may be used as authority without fresh GitHub rederivation.
+
+### 19.3 `ExactAcquireTransportProvenanceV1` predicate
+
+Canonical lock bytes alone are **never sufficient**. Before `ACTIVE_NEXT`, Phase B MUST evaluate one fresh-GitHub predicate against the finalized expected record. The predicate succeeds only when **every** clause below succeeds for the exact expected PR number/head; no existential search for an equivalent PR is allowed.
+
+#### A. Exact expected PR identity
+
+Fresh-read `expected_repository` / pull request `expected_pr_number` and require:
+
+1. the PR exists in exactly `ExpectedAcquireV1.expected_repository`;
+2. `head.repo.full_name == expected_repository`;
+3. `head.ref == expected_head_ref`;
+4. `head.sha == expected_head_sha`;
+5. `base.repo.full_name == expected_repository`;
+6. `base.ref == expected_base_ref`;
+7. the authenticated/recorded transport principal and immutable expected transport metadata remain consistent with the finalized expected record.
+
+A different PR number is non-equivalent. A different head ref is non-equivalent. A different head SHA is non-equivalent. Matching lock bytes do not relax any of these equalities.
+
+#### B. Exact expected base / head derivation
+
+Fresh-read the expected base commit/tree, expected head commit/tree and their Git relation. Require all of:
+
+1. `expected_base_sha == SelectionV1.selection_main_sha`;
+2. `expected_base_sha` is an ancestor/base of `expected_head_sha` under the transport branch relation;
+3. comparing `expected_base_sha -> expected_head_sha` changes exactly `expected_lock_paths` and no other repository path;
+4. every expected head lock path is a regular `100644` blob with exactly the expected OID and bytes;
+5. the expected base does not already contain the newly acquired canonical lock bundle as an active equivalent acquisition.
+
+If the base relation is unavailable or cannot prove the exact selection base, the predicate fails closed. A later current `main` SHA is not substituted for `expected_base_sha`.
+
+#### C. Authoritative exact-head Verify
+
+Recompute Section 19.2 from fresh GitHub workflow-run state. The latest matching numeric run ID MUST equal the finalized expected run identity and MUST still be completed-success.
+
+#### D. Server-observed merge of that exact PR
+
+The fresh expected PR MUST be server-observed as merged:
+
+```text
+state            = "closed"
+merged           = true
+merged_at        = non-null
+merge_commit_sha = non-null
+```
+
+The merge record belongs to the exact expected PR number already checked in A. Phase B MUST NOT infer this clause from canonical bytes, from another PR, from a closed state alone, from a branch disappearance, or from a webhook payload.
+
+#### E. Positive canonical-main history relation
+
+Let `merge_result_sha` be the fresh server-observed `merge_commit_sha` for the exact expected PR. Fresh GitHub commit/tree/history evidence MUST prove all of:
+
+1. `merge_result_sha` exists;
+2. `merge_result_sha` is reachable/ancestral from the fresh current canonical `refs/heads/main`;
+3. comparing `expected_base_sha -> merge_result_sha` introduces exactly `expected_lock_paths` and no unrelated path change;
+4. the tree at `merge_result_sha` contains every expected lock path as regular `100644` with exactly the expected OID/bytes;
+5. the final tree effect of the server-observed expected-PR merge therefore equals the exact expected ACQUIRE transport tree effect.
+
+This rule is merge-strategy neutral: merge-commit, squash, or rebase may produce different commit identities, but GitHub's server-observed merge record for the exact PR plus the exact base-to-merge-result tree relation and current-main reachability must all hold. If the repository's merge strategy or GitHub response shape prevents this positive relation from being proved, Phase B fails closed; it does not downgrade to payload equivalence.
+
+#### F. Fresh canonical lock read-back
+
+Finally, fresh current `main` MUST contain exactly one active canonical lock bundle matching the finalized expected acquisition:
+
+- exact selected Task;
+- exact worker/principal;
+- exact work ref;
+- exact collision-key bundle;
+- exact lock ID;
+- exact `base_main_sha = expected_base_sha`;
+- exact acquired/expires timestamps;
+- exact lock path set;
+- exact regular `100644` OIDs and bytes;
+- unexpired/active lifecycle state.
+
+A later renewal, replacement, reacquisition, different lock bytes, or different acquisition identity does not satisfy this proof even if some human-readable fields remain equal.
+
+The complete predicate is therefore:
+
+```text
+ExactAcquireTransportProvenanceV1(ExpectedAcquireV1, FreshGitHubState) =
+    exact_expected_pr_identity
+AND exact_expected_base_head_derivation
+AND authoritative_latest_exact_head_verify_success
+AND server_observed_exact_expected_pr_merged
+AND exact_expected_merge_result_reachable_from_fresh_main
+AND exact_base_to_merge_result_lock_only_tree_effect
+AND exact_fresh_canonical_active_lock_readback
+```
+
+`ACTIVE_NEXT` is permitted only when the complete predicate is true.
+
+### 19.4 Non-equivalence and fail-closed outcomes
+
+A different ACQUIRE PR/head is **non-equivalent** even if it introduces byte-identical lock contents.
+
+Concrete substitution rule:
+
+```text
+expected PR A/head A -> payload P
+other    PR B/head B -> byte-identical payload P
+B merges first
+```
+
+The canonical lock bytes may equal `P`, but A's exact merge predicate is false unless the exact expected PR A/head A itself is server-observed merged and its merge result has the required canonical-main history relation. Therefore the request MUST NOT return `ACTIVE_NEXT` for A.
+
+Observed non-equality in any exact PR/head/base/Verify/merge/history relation returns:
+
+```text
+status = ACQUIRE_TRANSPORT_PROVENANCE_MISMATCH
+```
+
+with a deterministic machine-readable `reason_code`, including at least:
+
+```text
+EXPECTED_PR_NOT_FOUND
+EXPECTED_REPOSITORY_MISMATCH
+EXPECTED_HEAD_REF_MISMATCH
+EXPECTED_HEAD_SHA_MISMATCH
+EXPECTED_BASE_REF_MISMATCH
+EXPECTED_BASE_SHA_MISMATCH
+EXPECTED_BASE_HEAD_RELATION_MISMATCH
+LATEST_VERIFY_NOT_SUCCESS
+VERIFY_RUN_ID_MISMATCH
+EXPECTED_PR_NOT_MERGED
+MERGE_RESULT_NOT_ON_CANONICAL_MAIN
+MERGE_RESULT_DELTA_MISMATCH
+MERGE_RESULT_LOCK_BUNDLE_MISMATCH
+CANONICAL_LOCK_READBACK_MISMATCH
+CANONICAL_LOCK_NOT_ACTIVE
+```
+
+If required fresh GitHub evidence is unavailable, malformed, incomplete, or truncated so the predicate cannot be evaluated, return a retryable fail-closed observation/provenance-unavailable result and do no transport/canonical mutation from cached data. Unavailability is never converted into equality.
+
+### 19.5 Frozen unbroken evidence chain
+
+The `ACTIVE_NEXT` evidence chain is exactly:
+
+```text
+SourceAcquisitionV1 / source_epoch_id
+-> exact RELEASE transport/history for that source epoch
+-> fresh post-RELEASE canonical main
+-> ContinuationContextV1 / continuation_context_id
+-> SelectionV1 / selection_id
+-> AcquireIntentV1 / acquire_intent_id
+-> finalized ExpectedAcquireV1
+-> exact expected PR number/repository/head/base
+-> authoritative latest exact-head successful Verify run
+-> server-observed merge of THAT exact PR
+-> exact expected base -> merge_result_sha lock-only tree effect
+-> merge_result_sha reachable from fresh canonical main
+-> exact active canonical lock OIDs/bytes
+-> ACTIVE_NEXT
+```
+
+No arrow in this chain may be replaced by chat memory, webhook payload, cached PR data, worker/principal similarity, Task similarity, ref-name similarity, or canonical lock bytes alone.
+
+### 19.6 Inherited same-class ordering pinned for Phase B tests
+
+The inherited trusted lifecycle ordering relied on by this design is frozen explicitly for Phase B regression coverage:
+
+1. after repository-wide prerequisites succeed, malformed candidate-local observations are dropped only for that candidate;
+2. among fully eligible `RELEASE` candidates, ascending PR number is the deterministic same-class order and the first eligible candidate is the only canonical mutation attempted in that trusted run;
+3. only when no eligible `RELEASE` exists are fully eligible `ACQUIRE` candidates considered;
+4. among fully eligible `ACQUIRE` candidates, ascending PR number is the deterministic same-class order and the first eligible candidate is the only canonical mutation attempted in that trusted run;
+5. a malformed lower-number candidate does not block a later valid candidate after candidate-local rejection;
+6. at-most-one trusted canonical lifecycle mutation per run remains unchanged.
+
+This pins inherited behaviour; it does not create a new ordering authority in Phase B orchestration.
+
+### 19.7 Additional mandatory acceptance/adversarial tests
+
+The Section 15 matrix is extended from 50 to **55** mandatory rows:
+
+51. **byte-identical alternate-PR substitution:** expected PR A/head A is finalized; different PR B/head B carries byte-identical expected lock payload and B is merged; A MUST NOT yield `ACTIVE_NEXT`; result is `ACQUIRE_TRANSPORT_PROVENANCE_MISMATCH` unless A itself independently satisfies the complete exact provenance predicate.
+52. **stale webhook/workflow delivery is trigger-only:** replay an old delivery containing previously valid PR/head/base/run/source fields; implementation MUST discard those fields as authority, fresh-rederive GitHub/main state, and stop/recompute if fresh state differs or the source epoch is stale.
+53. **multiple eligible RELEASE regression:** with two or more fully eligible RELEASE candidates, the lowest PR number is selected and at most one mutation occurs; parameterized companion fixture with a malformed lower-number RELEASE candidate proves candidate-local rejection allows the next valid RELEASE candidate to be examined/selected.
+54. **multiple eligible ACQUIRE regression:** when no RELEASE is eligible and two or more ACQUIRE candidates are fully eligible, the lowest PR number is selected and at most one mutation occurs; parameterized companion fixture with a malformed lower-number ACQUIRE candidate proves later valid ACQUIRE remains examinable.
+55. **latest Verify on the same exact head controls eligibility:** for one unchanged head SHA, an older successful Verify followed by a greater numeric run ID whose state is failed, cancelled, in-progress/queued, or otherwise non-success MUST make the transport ineligible and MUST prevent `ACTIVE_NEXT`; only when the greatest matching run ID is completed-success may the finalized expected record/provenance pass.
+
+These five rows are required in addition to all original 50 rows; they do not replace or merge away any earlier test obligation.
+
+### 19.8 Remediation severity and readiness
+
+Independent review `3f5206c5b793cf8b5ecaac5bafcb0313b5e7de0f` found zero CRITICAL, zero HIGH, one blocking MEDIUM `M-01`, and missing explicit acceptance coverage. This writer change freezes the requested exact PR/head/base -> server merge -> canonical-main history predicate and adds all five missing regressions.
+
+Writer-side remediation status only:
+
+```text
+M-01_SPEC_GAP = REMEDIATED_IN_DESIGN_CANDIDATE
+MISSING_ACCEPTANCE_COVERAGE = REMEDIATED_IN_DESIGN_CANDIDATE
+INDEPENDENT_REVIEW_STATUS = REQUIRED / NOT SELF-ASSERTED
+```
+
+The old Section 18 `CURRENTLY_ALLOWED... UNTIL ACCEPTED PHASE A PASS` line is superseded because Phase A is now accepted/merged/test-registered on canonical main. The current gate is the focused independent Phase B spec re-review of this remediation commit/blob.
+
+Frozen current readiness:
+
+```text
+PHASE_A_ACCEPTED = YES
+PHASE_B_M01_REMEDIATION_FROZEN = YES
+READY_FOR_FOCUSED_PHASE_B_SPEC_REREVIEW = YES
+READY_FOR_PHASE_B_IMPLEMENTATION_AFTER_PHASE_A = YES, CONDITIONED_ON ACCEPTED FOCUSED PHASE B SPEC REREVIEW
+CURRENTLY_ALLOWED_TO_START_PHASE_B_IMPLEMENTATION = NO, UNTIL ACCEPTED FOCUSED PHASE B SPEC REREVIEW
+```
+
+If focused review finds that exact expected transport provenance cannot be established from fresh GitHub PR/commit/tree/history evidence without weakening exactness, implementation MUST stop and return to design review. It MUST NOT fall back to canonical blob equality as a substitute.
