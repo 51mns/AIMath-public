@@ -1,6 +1,6 @@
 # AIMath Village Architecture v1.2.1 — Trusted Lock Lifecycle
 
-**Status:** PHASE-A SECURITY-REVIEWED / PHASE-B IMPLEMENTATION IN PROGRESS  
+**Status:** PHASE-A SECURITY-REVIEWED / PHASE-B IMPLEMENTATION CANDIDATE / SECURITY REVIEW REQUIRED  
 **Extends:** Village v1.0, v1.1 and v1.2 without weakening their Truth/Portfolio/security boundaries.  
 **Phase A scope:** automatic `RELEASE` only.  
 **Phase B scope:** broaden trusted automatic `ACQUIRE` activation only; Task selection and lock-PR creation remain worker `/join`/future `/next` responsibilities. `RENEW` and `TAKEOVER` remain nonautomatic.
