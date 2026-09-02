@@ -123,6 +123,41 @@ class PhaseA(unittest.TestCase):
     def test_25_deleted_absent(self):
         _,f=_release_pr(); self.assertTrue(release_head_absence_errors(f,[{"path":f[0]["filename"]}]))
     def _wf(self,permissions="{contents: read}",trigger="pull_request",extra=""): return f"name: t\non: {trigger}\npermissions: {permissions}\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ok\n{extra}"
+    def _trusted_wf(self):
+        return """name: Activate validated Village lock
+on:
+  workflow_run:
+    workflows: [Verify public release]
+    types: [completed]
+permissions:
+  actions: read
+  contents: write
+  pull-requests: read
+concurrency:
+  group: village-lock-lifecycle
+  cancel-in-progress: false
+jobs:
+  activate:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out trusted main
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Revalidate trusted Village lock lifecycle
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: python3 scripts/lock_auto_activate.py
+"""
     def test_26_secret_whitespace(self): self.assertTrue(workflow_text_errors(self._wf(extra="      - run: 'echo ${{ secrets   .   TOKEN }}'\n")))
     def test_27_secrets_inherit(self): self.assertTrue(workflow_text_errors("name: t\non: pull_request\npermissions: {contents: read}\njobs:\n  t:\n    uses: owner/repo/.github/workflows/x.yml@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n    secrets: inherit\n"))
     def test_28_flow_permissions_and_omission(self): self.assertEqual(workflow_text_errors(self._wf(permissions="{contents: read}")),[]); self.assertTrue(workflow_text_errors("name: t\non: pull_request\njobs: {t: {runs-on: ubuntu-latest, steps: [{run: echo ok}]}}\n"))
@@ -133,6 +168,39 @@ class PhaseA(unittest.TestCase):
     def test_32_local_action_token(self):
         with tempfile.TemporaryDirectory() as td:
             r=Path(td); (r/".github/workflows").mkdir(parents=True); (r/".github/actions/x").mkdir(parents=True); (r/".github/workflows/t.yml").write_text("name: t\non: pull_request\npermissions: {contents: read}\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/x\n"); (r/".github/actions/x/action.yml").write_text("name: x\nruns:\n  using: composite\n  steps:\n    - shell: bash\n      run: 'echo ${{ github.token }}'\n"); self.assertTrue(repository_workflow_security_errors(r))
+    def test_33_m01_valid_trusted_token_location(self):
+        self.assertEqual(workflow_text_errors(self._trusted_wf(),trusted_write=True),[])
+    def test_34_m01_extra_run_with_github_token_rejected(self):
+        injected="""      - name: Unexpected token run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo unexpected
+"""
+        text=self._trusted_wf().replace("      - name: Revalidate trusted Village lock lifecycle\n",injected+"      - name: Revalidate trusted Village lock lifecycle\n")
+        errors=workflow_text_errors(text,trusted_write=True); self.assertTrue(errors); self.assertTrue(any("three audited steps" in e or "github.token" in e for e in errors))
+    def test_35_m01_job_token_to_local_composite_rejected(self):
+        text=self._trusted_wf().replace("    timeout-minutes: 5\n","    timeout-minutes: 5\n    env:\n      GH_TOKEN: ${{ github.token }}\n")
+        old="""      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+"""
+        new="""      - name: Local composite
+        uses: ./.github/actions/x
+"""
+        errors=workflow_text_errors(text.replace(old,new),trusted_write=True); self.assertTrue(errors); self.assertTrue(any("local composite" in e or "github.token" in e for e in errors))
+    def test_36_m01_mutable_docker_action_rejected(self):
+        old="""      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+"""
+        new="""      - name: Mutable Docker action
+        uses: docker://alpine:latest
+"""
+        errors=workflow_text_errors(self._trusted_wf().replace(old,new),trusted_write=True); self.assertTrue(errors); self.assertTrue(any("docker://" in e for e in errors))
+    def test_37_m01_unrelated_readonly_workflow_still_passes(self):
+        self.assertEqual(workflow_text_errors(self._wf()),[])
 
 
 if __name__ == "__main__": unittest.main(verbosity=2)
