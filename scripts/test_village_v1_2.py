@@ -308,9 +308,18 @@ class VillageV12Acceptance(unittest.TestCase):
                 load_pending_claims(p)
 
     def test_27_strict_up_to_date_setting_is_required_for_auto_merge(self):
-        with patch("lock_auto_activate._request_json", return_value={"strict": True}):
+        strict_rule = [{
+            "type": "required_status_checks",
+            "parameters": {
+                "strict_required_status_checks_policy": True,
+                "required_status_checks": [{"context": "verify"}],
+            },
+        }]
+        with patch("lock_auto_activate._request_json", return_value=strict_rule):
             self.assertTrue(_strict_up_to_date_gate("t", "51mns/AIMath-public")[0])
-        with patch("lock_auto_activate._request_json", return_value={"strict": False}):
+        non_strict_rule = copy.deepcopy(strict_rule)
+        non_strict_rule[0]["parameters"]["strict_required_status_checks_policy"] = False
+        with patch("lock_auto_activate._request_json", return_value=non_strict_rule):
             self.assertFalse(_strict_up_to_date_gate("t", "51mns/AIMath-public")[0])
         with patch("lock_auto_activate._request_json", side_effect=AutoActivationError("403")):
             self.assertFalse(_strict_up_to_date_gate("t", "51mns/AIMath-public")[0])
