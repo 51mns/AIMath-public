@@ -6,6 +6,7 @@ from pathlib import Path
 import base64
 import json
 import os
+import re
 import shutil
 import tempfile
 import urllib.error
@@ -18,6 +19,7 @@ from village_v1_2 import load_actor_policy, new_worker_lock_errors, worker_lock_
 
 API_ROOT = "https://api.github.com"
 VERIFY_WORKFLOW_NAME = "Verify public release"
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 class AutoActivationError(RuntimeError):
@@ -64,7 +66,7 @@ def auto_activation_preflight(
             errors.append(f"auto activation permits ACQUIRE additions only: {name}")
         if not (name.startswith("coordination/locks/") and name.endswith(".yml")):
             errors.append(f"non-lock path in auto activation candidate: {name}")
-        if not isinstance(item.get("sha"), str) or len(item.get("sha", "")) != 40:
+        if not isinstance(item.get("sha"), str) or not SHA_RE.fullmatch(item.get("sha", "")):
             errors.append(f"PR file is missing exact Git blob SHA: {name}")
     return not errors, errors
 
@@ -85,6 +87,24 @@ def lock_git_object_errors(files: list[dict], tree_entries: list[dict]) -> list[
             )
         if entry.get("sha") != item.get("sha"):
             errors.append(f"PR file SHA does not match exact head Git tree blob: {path}")
+    return errors
+
+
+def final_revalidation_errors(
+    *,
+    original_main_sha: str,
+    original_head_sha: str,
+    final_main_sha: str,
+    final_pr: dict,
+) -> list[str]:
+    """Fail closed if main, PR head, or PR base moved after lock revalidation."""
+    errors: list[str] = []
+    if final_main_sha != original_main_sha:
+        errors.append("main moved after revalidation; require a fresh Verify run")
+    if final_pr.get("head", {}).get("sha") != original_head_sha:
+        errors.append("PR head moved after revalidation")
+    if final_pr.get("base", {}).get("sha") != original_main_sha:
+        errors.append("PR base moved after revalidation")
     return errors
 
 
@@ -133,7 +153,7 @@ def _fetch_exact_head_tree(token: str, repository: str, head_sha: str) -> list[d
     owner, repo = repository.split("/", 1)
     commit = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/git/commits/{head_sha}")
     tree_sha = commit.get("tree", {}).get("sha")
-    if not isinstance(tree_sha, str):
+    if not isinstance(tree_sha, str) or not SHA_RE.fullmatch(tree_sha):
         raise AutoActivationError("exact head commit did not expose a Git tree SHA")
     tree = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/git/trees/{tree_sha}?recursive=1")
     if tree.get("truncated"):
@@ -163,9 +183,7 @@ def _fetch_file_at_sha(
     if obj.get("type") != "file" or obj.get("encoding") != "base64":
         raise AutoActivationError(f"lock path is not an ordinary base64 file response: {path}")
     if obj.get("sha") != expected_blob_sha:
-        raise AutoActivationError(
-            f"Contents API object SHA does not equal verified regular Git blob SHA: {path}"
-        )
+        raise AutoActivationError(f"Contents API object SHA does not equal verified regular Git blob SHA: {path}")
     try:
         return base64.b64decode(obj["content"], validate=False)
     except Exception as exc:
@@ -299,15 +317,17 @@ def main() -> int:
 
     # Defense in depth before the server-side strict-base merge gate.
     final_ref = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/git/ref/heads/main")
-    if final_ref.get("object", {}).get("sha") != current_main_sha:
-        print("SKIP: main moved after revalidation; require a fresh Verify run")
-        return 0
     final_pr = _request_json(token, repository, "GET", f"/repos/{owner}/{repo}/pulls/{pr_number}")
-    if final_pr.get("head", {}).get("sha") != pr["head"]["sha"]:
-        print("SKIP: PR head moved after revalidation")
-        return 0
-    if final_pr.get("base", {}).get("sha") != current_main_sha:
-        print("SKIP: PR base moved after revalidation")
+    race_errors = final_revalidation_errors(
+        original_main_sha=current_main_sha,
+        original_head_sha=pr["head"]["sha"],
+        final_main_sha=final_ref.get("object", {}).get("sha", ""),
+        final_pr=final_pr,
+    )
+    if race_errors:
+        print("SKIP: activation state moved after revalidation")
+        for error in race_errors:
+            print(" -", error)
         return 0
 
     result = _request_json(
