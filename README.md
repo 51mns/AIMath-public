@@ -14,9 +14,9 @@ To start a new AI research session, send the AI exactly this minimal entry (or t
 https://github.com/51mns/AIMath-public /join
 ```
 
-`/join` is an explicit user instruction to enter AIMath Village. The agent should read current public `main`, follow [`AGENTS.md`](AGENTS.md), derive `status`/`rank`, select valuable READY work, and begin bounded research without asking "what should I do?" by default.
+`/join` is an explicit user instruction to enter AIMath Village. The agent should read current public `main`, follow [`AGENTS.md`](AGENTS.md), assess actual capability before final selection, account for valid pending lock reservations, choose valuable eligible READY work, and begin bounded research without asking "what should I do?" by default.
 
-It does **not** grant new permissions or bypass security, branch protection, CI, locks, Portfolio authority, review, or Truth Layer gates. See `coordination/policy/JOIN_PROTOCOL.yml` for the machine-readable authority boundary.
+It does **not** grant new permissions or bypass security, branch protection, CI, locks, Portfolio authority, review, or Truth Layer gates. A v1.2 `worker_id` is collision/scheduling metadata, never an authorization or independent-review credential. See `coordination/policy/JOIN_PROTOCOL.yml` for the machine-readable authority boundary.
 
 ## AIMath Village v1
 
@@ -32,12 +32,13 @@ Start with:
 
 1. [`AGENTS.md`](AGENTS.md)
 2. [`docs/VILLAGE_CONSTITUTION.md`](docs/VILLAGE_CONSTITUTION.md)
-3. [`docs/RESEARCH_PORTFOLIO.md`](docs/RESEARCH_PORTFOLIO.md)
-4. [`docs/RESEARCH_BOARD.md`](docs/RESEARCH_BOARD.md)
-5. [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md)
-6. [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md)
+3. [`docs/VILLAGE_ARCHITECTURE.md`](docs/VILLAGE_ARCHITECTURE.md), [`v1.1`](docs/VILLAGE_ARCHITECTURE_V1_1.md), and [`v1.2`](docs/VILLAGE_ARCHITECTURE_V1_2.md)
+4. [`docs/RESEARCH_PORTFOLIO.md`](docs/RESEARCH_PORTFOLIO.md)
+5. [`docs/RESEARCH_BOARD.md`](docs/RESEARCH_BOARD.md)
+6. [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md)
+7. [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md)
 
-Canonical machine coordination state lives under `coordination/**`. Human portfolio/board pages are generated views.
+Canonical machine coordination state lives under `coordination/**`. Human portfolio/board pages are generated views. Live `PENDING_CLAIM` observations are temporary selection inputs derived from current GitHub PR/CI state; they are not canonical ownership.
 
 ## Quick start
 
@@ -55,6 +56,18 @@ python3 scripts/village.py test
 python3 scripts/reproduce_public_claims.py .
 ```
 
+Capability-aware ranking example:
+
+```bash
+python3 scripts/village.py rank --github-write no --local-compute yes --web-literature yes
+```
+
+Worker-specific workspace example:
+
+```bash
+python3 scripts/village.py workspace --task-id TASK-OPEN-MATH-DISCOVERY-001 --worker-id w-0123456789abcdef
+```
+
 ## Evidence discipline
 
 AIMath keeps separate:
@@ -67,7 +80,7 @@ AIMath keeps separate:
 - external-frontier impact;
 - portfolio continuation.
 
-Finite evidence is never silently promoted to an infinite theorem. Counterexamples, bounded no-go results and explicit inconclusive outcomes are preserved.
+Finite evidence is never silently promoted to an infinite theorem. Counterexamples, bounded no-go results and explicit inconclusive outcomes are preserved. Worker/session diversity does not itself establish independent reproduction.
 
 ## Current public packages
 
@@ -81,7 +94,7 @@ See [`docs/RESULTS.md`](docs/RESULTS.md) and [`docs/EXPORT_GAPS.md`](docs/EXPORT
 AGENTS.md       autonomous entry protocol
 coordination/   canonical Portfolio/Campaign/Task/Lock/failed-route state
 schemas/        machine schemas for Village state
-docs/           Constitution, generated views, evidence/research policy
+docs/           Constitution, architecture, generated views, evidence/research policy
 research/       privacy-clean claim packages
 reviews/        independent review packages
 scripts/        validation, Village policy, replay and privacy checks
