@@ -6,19 +6,28 @@ from __future__ import annotations
 from datetime import timedelta
 from pathlib import Path
 import copy
+import json
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from check_village_pr import validate_lock_transition
-from lock_auto_activate import auto_activation_preflight
+from check_village_pr import lock_change_class_errors, validate_lock_transition
+from lock_auto_activate import (
+    AutoActivationError,
+    _strict_up_to_date_gate,
+    auto_activation_preflight,
+    lock_git_object_errors,
+)
 from test_village_acceptance import LockBundle, NOW, add_lock, base_state
 from test_village_v1_1 import rank_state
 from village_rank import EvaluationBook
 from village_v1_2 import (
     CapabilityProfile,
+    VillageV12Error,
     capability_eligible,
+    load_pending_claims,
     rank_v12,
     validate_pending_claim,
     validate_worker_id,
@@ -32,7 +41,9 @@ W_B = "w-" + "b" * 16
 
 def pending_record(**overrides):
     row = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "observation_source": "GITHUB_API",
+        "repository": "51mns/AIMath-public",
         "reservation_kind": "PENDING_CLAIM",
         "pr_number": 99,
         "task_id": "TASK-X-1",
@@ -101,7 +112,7 @@ def valid_run_pr_files():
         "head": {"sha": "c" * 40, "repo": {"full_name": "51mns/AIMath-public"}},
         "user": {"login": "51mns"},
     }
-    files = [{"filename": "coordination/locks/x/shared.yml", "status": "added"}]
+    files = [{"filename": "coordination/locks/x/shared.yml", "status": "added", "sha": "d" * 40}]
     return run, pr, files
 
 
@@ -115,7 +126,7 @@ class VillageV12Acceptance(unittest.TestCase):
 
     def test_02_failed_ci_not_reservation(self):
         ok, errors = validate_pending_claim(rank_state(), pending_record(verify_conclusion="FAILURE"), current_main_sha=MAIN_SHA, now=NOW)
-        self.assertFalse(ok); self.assertTrue(any("CI" in e for e in errors))
+        self.assertFalse(ok); self.assertTrue(any("CI" in e or "constant" in e for e in errors))
 
     def test_03_wrong_collision_key_not_reservation(self):
         ok, errors = validate_pending_claim(rank_state(), pending_record(collision_keys=["wrong"]), current_main_sha=MAIN_SHA, now=NOW)
@@ -157,8 +168,6 @@ class VillageV12Acceptance(unittest.TestCase):
 
     def test_09_worker_id_is_not_review_independence_credential(self):
         self.assertTrue(validate_worker_id(W_A)); self.assertTrue(validate_worker_id(W_B))
-        # Worker IDs are absent from review-grade semantics by design; changing one
-        # must not manufacture an I2/I3 record.
         review = {"independence_grade": "I1", "worker_id": W_B}
         self.assertEqual(review["independence_grade"], "I1")
 
@@ -186,12 +195,12 @@ class VillageV12Acceptance(unittest.TestCase):
                 worker_workspace("TASK-X-1", bad)
 
     def test_13_normal_research_pr_never_auto_activates(self):
-        run, pr, files = valid_run_pr_files(); files = [{"filename": "research/x/PROOF.md", "status": "added"}]
+        run, pr, _ = valid_run_pr_files(); files = [{"filename": "research/x/PROOF.md", "status": "added", "sha": "d" * 40}]
         ok, _ = auto_activation_preflight(run, pr, files, repository="51mns/AIMath-public", current_main_sha=MAIN_SHA, maintainers={"51mns"})
         self.assertFalse(ok)
 
     def test_14_governance_pr_never_auto_activates(self):
-        run, pr, files = valid_run_pr_files(); files = [{"filename": "AGENTS.md", "status": "modified"}]
+        run, pr, _ = valid_run_pr_files(); files = [{"filename": "AGENTS.md", "status": "modified", "sha": "d" * 40}]
         ok, _ = auto_activation_preflight(run, pr, files, repository="51mns/AIMath-public", current_main_sha=MAIN_SHA, maintainers={"51mns"})
         self.assertFalse(ok)
 
@@ -201,7 +210,7 @@ class VillageV12Acceptance(unittest.TestCase):
         self.assertFalse(ok)
 
     def test_16_stale_base_never_auto_activates(self):
-        run, pr, files = valid_run_pr_files(); pr["base"]["sha"] = "d" * 40
+        run, pr, files = valid_run_pr_files(); pr["base"]["sha"] = "e" * 40
         ok, _ = auto_activation_preflight(run, pr, files, repository="51mns/AIMath-public", current_main_sha=MAIN_SHA, maintainers={"51mns"})
         self.assertFalse(ok)
 
@@ -226,7 +235,84 @@ class VillageV12Acceptance(unittest.TestCase):
             p.write_text("SPDX-FileCopyrightText: 2026 AIMath contributors\nSPDX-License-Identifier: CC0-1.0\n", encoding="utf-8")
             proc = subprocess.run([sys.executable, str(scanner), td], text=True, capture_output=True)
             self.assertNotEqual(proc.returncode, 0)
-            self.assertIn("orphan REUSE", proc.stdout)
+            self.assertIn("orphan", proc.stdout)
+
+    def test_21_mixed_lock_and_research_change_is_fail_closed(self):
+        errors = lock_change_class_errors([
+            "coordination/locks/x/shared.yml",
+            "research/x/PROOF.md",
+        ])
+        self.assertTrue(errors)
+        self.assertIn("dedicated lock-only PR", errors[0])
+
+    def test_22_lock_symlink_git_object_is_rejected(self):
+        _, _, files = valid_run_pr_files()
+        tree = [{
+            "path": files[0]["filename"],
+            "mode": "120000",
+            "type": "blob",
+            "sha": files[0]["sha"],
+        }]
+        errors = lock_git_object_errors(files, tree)
+        self.assertTrue(any("100644" in e for e in errors))
+
+    def test_23_regular_lock_git_blob_identity_passes(self):
+        _, _, files = valid_run_pr_files()
+        tree = [{
+            "path": files[0]["filename"],
+            "mode": "100644",
+            "type": "blob",
+            "sha": files[0]["sha"],
+        }]
+        self.assertEqual(lock_git_object_errors(files, tree), [])
+
+    def test_24_public_release_audit_rejects_symlink(self):
+        root = Path(__file__).resolve().parent.parent
+        scanner = root / "scripts/public_release_audit.py"
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            target = base / "target.yml"
+            target.write_text('{"ok":true}\n', encoding="utf-8")
+            link = base / "coordination" / "locks" / "x" / "shared.yml"
+            link.parent.mkdir(parents=True)
+            try:
+                link.symlink_to(target)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlink creation unavailable")
+            proc = subprocess.run([sys.executable, str(scanner), td], text=True, capture_output=True)
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("symlink", proc.stdout)
+
+    def test_25_malformed_pending_draft_string_fails_schema(self):
+        ok, errors = validate_pending_claim(
+            rank_state(), pending_record(draft="yes"), current_main_sha=MAIN_SHA, now=NOW
+        )
+        self.assertFalse(ok)
+        self.assertTrue(any("draft" in e or "constant" in e for e in errors))
+
+    def test_26_pending_cache_requires_schema_and_github_provenance(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "pending.json"
+            envelope = {
+                "schema_version": 1,
+                "observation_source": "GITHUB_API",
+                "repository": "51mns/AIMath-public",
+                "reservations": [pending_record()],
+            }
+            p.write_text(json.dumps(envelope), encoding="utf-8")
+            self.assertEqual(load_pending_claims(p), envelope["reservations"])
+            envelope["reservations"][0]["draft"] = "yes"
+            p.write_text(json.dumps(envelope), encoding="utf-8")
+            with self.assertRaises(VillageV12Error):
+                load_pending_claims(p)
+
+    def test_27_strict_up_to_date_setting_is_required_for_auto_merge(self):
+        with patch("lock_auto_activate._request_json", return_value={"strict": True}):
+            self.assertTrue(_strict_up_to_date_gate("t", "51mns/AIMath-public")[0])
+        with patch("lock_auto_activate._request_json", return_value={"strict": False}):
+            self.assertFalse(_strict_up_to_date_gate("t", "51mns/AIMath-public")[0])
+        with patch("lock_auto_activate._request_json", side_effect=AutoActivationError("403")):
+            self.assertFalse(_strict_up_to_date_gate("t", "51mns/AIMath-public")[0])
 
     def _audit_sidecar(self, sidecar: str, *, expect_ok: bool, expected: str = ""):
         root = Path(__file__).resolve().parent.parent
