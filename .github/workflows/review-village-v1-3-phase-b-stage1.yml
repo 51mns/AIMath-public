@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: 2026 AIMath contributors
+# SPDX-License-Identifier: Apache-2.0
+name: Review Village v1.3 Phase B Stage-1 execution
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  review_validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out validation merge ref
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned test dependency
+        run: python3 -m pip install --disable-pip-version-check 'PyYAML==6.0.3'
+
+      - name: Assert exact reviewed Stage-1 blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:docs/VILLAGE_ARCHITECTURE_V1_3_PHASE_B.md)" = "6b97ba453c3df60e4916c1c8e027ba262fafe716"
+          test "$(git rev-parse HEAD:scripts/test_village_v1_3_next_phase_b.py)" = "508b25287a8c21f4dc76b3f59663818ec3f82c55"
+          test "$(git rev-parse HEAD:scripts/village_next_phase_b.py)" = "25aed74d7e85e8543fc93230968f7b70931b4aee"
+          echo "PASS: exact reviewed Stage-1 blobs"
+
+      - name: Compile reviewed Phase-B implementation and oracle
+        run: python3 -m py_compile scripts/village_next_phase_b.py scripts/test_village_v1_3_next_phase_b.py
+
+      - name: Village v1.3 Phase B 73-row direct suite
+        run: python3 scripts/test_village_v1_3_next_phase_b.py
+
+      - name: Village v1.3 Phase A direct suite
+        run: python3 scripts/test_village_v1_3_next.py
+
+      - name: Village v1.2.1 direct suite
+        run: python3 scripts/test_village_v1_2_1.py
+
+      - name: Village v1.2.1 Phase B direct suite
+        run: python3 scripts/test_village_v1_2_1_phase_b.py
+
+      - name: Public release audit
+        run: python3 scripts/public_release_audit.py .
