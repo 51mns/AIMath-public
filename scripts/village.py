@@ -162,6 +162,7 @@ def cmd_test(root: Path) -> int:
         root / "scripts/test_village_v1_1.py",
         root / "scripts/test_village_v1_2.py",
         root / "scripts/test_village_v1_3_next.py",
+        root / "scripts/test_village_v1_3_next_phase_b.py",
     ]
     for test in tests:
         rc = subprocess.call([sys.executable, str(test)], cwd=root)
@@ -170,11 +171,19 @@ def cmd_test(root: Path) -> int:
     return 0
 
 
+def cmd_next(root: Path, args) -> int:
+    # Import only for the operator surface; validate/status/rank remain independent
+    # of network credentials and Phase B transport state.
+    from village_next_phase_b import cli_next
+
+    return cli_next(root, args)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "command",
-        choices=["validate", "status", "rank", "workspace", "render", "check-views", "test"],
+        choices=["validate", "status", "rank", "workspace", "render", "check-views", "test", "next"],
     )
     ap.add_argument("--root", default=".")
     ap.add_argument("--github-write", choices=["yes", "no", "unknown"], default="unknown")
@@ -184,6 +193,10 @@ def main() -> int:
     ap.add_argument("--current-main-sha")
     ap.add_argument("--task-id")
     ap.add_argument("--worker-id")
+    ap.add_argument("--principal-id")
+    ap.add_argument("--continuation-decision-id")
+    ap.add_argument("--github-token-env", default="GITHUB_TOKEN")
+    ap.add_argument("--phase-b-state-file", default=".git/village-next-phase-b.json")
     args = ap.parse_args()
     root = Path(args.root).resolve()
     if args.command == "validate":
@@ -197,6 +210,11 @@ def main() -> int:
             print("FAIL: workspace requires --task-id and --worker-id")
             return 2
         return cmd_workspace(args)
+    if args.command == "next":
+        if not args.task_id or not args.worker_id or not args.principal_id:
+            print("FAIL: next requires --task-id, --worker-id and --principal-id")
+            return 2
+        return cmd_next(root, args)
     if args.command == "render":
         return cmd_render(root, False)
     if args.command == "check-views":
