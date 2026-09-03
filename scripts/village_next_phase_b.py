@@ -567,11 +567,13 @@ def candidate_content_gate(
     candidate_exact_objects: Iterable[ExactLockObject | Mapping[str, Any]],
     candidate_tree_sha: str,
 ) -> GateResult:
-    """Validate a candidate without allowing next_binding to seed expected semantics.
+    """Validate exact candidate content against one supplied semantic identity.
 
     Ordering is intentional: the candidate first proves internal bytes/OID/hash
     consistency. Only then are its persisted semantic primitives compared with
-    the independently frozen trusted IDs. This is the M-03 Row-20 boundary.
+    the supplied IDs. A contradiction at this content layer is INCONSISTENT;
+    premerge_transport_gate separately compares a proven internal identity with
+    independently frozen trusted IDs and reports the Row-20 MISMATCH boundary.
     """
     try:
         validate_v3_identity(expected_identity)
@@ -607,8 +609,8 @@ def candidate_content_gate(
     if parsed_ids != independently_derived_ids or expected_identity.semantic_ids() != independently_derived_ids:
         return GateResult(
             False,
-            "CANONICAL_ACQUIRE_SEMANTIC_BINDING_MISMATCH",
-            "candidate next_binding differs from independently derived trusted semantic IDs",
+            "CANONICAL_ACQUIRE_SEMANTIC_BINDING_INCONSISTENT",
+            "candidate canonical bytes/identity contradict the supplied semantic IDs",
         )
     if tuple(objects) != expected_identity.exact_lock_objects:
         return GateResult(False, "CANONICAL_ACQUIRE_IDENTITY_MISMATCH", "candidate exact lock objects differ from expected V3")
@@ -1015,15 +1017,26 @@ def premerge_transport_gate(
     expected_paths = {o.path for o in identity.exact_lock_objects}
     if changed != expected_paths or not _exact_objects_present(candidate_entries, identity.exact_lock_objects):
         return GateResult(False, "CANONICAL_ACQUIRE_DELTA_MISMATCH", "candidate B->H delta is not exact lock-only set")
+    # First prove that the candidate's exact bytes and frozen identity agree
+    # internally.  The independently derived trusted chain is compared only
+    # after that proof, so a self-consistent forged candidate receives the
+    # pre-merge authenticity result rather than the canonical contradiction
+    # result used by candidate_content_gate itself.
     content = candidate_content_gate(
         expected_identity=identity,
-        independently_derived_ids=independently_derived_ids,
+        independently_derived_ids=identity.semantic_ids(),
         candidate_lock_bytes=candidate_lock_bytes,
         candidate_exact_objects=identity.exact_lock_objects,
         candidate_tree_sha=str(tree_sha),
     )
     if not content.allowed:
         return content
+    if identity.semantic_ids() != independently_derived_ids:
+        return GateResult(
+            False,
+            "CANONICAL_ACQUIRE_SEMANTIC_BINDING_MISMATCH",
+            "candidate next_binding differs from independently derived trusted semantic IDs",
+        )
     if not verify.eligible:
         return GateResult(False, verify.code or "LATEST_VERIFY_NOT_SUCCESS", verify.detail)
     head_sha = candidate_commit.get("sha")
@@ -1287,10 +1300,18 @@ class GitHubPhaseBClient:
         rows: list[dict[str, Any]] = []
         complete = False
         for page in range(1, 11):
-            obj = self.request(
-                "GET",
-                f"/repos/{self.owner}/{self.repo}/actions/workflows/{VERIFY_WORKFLOW_ID}/runs?event={VERIFY_EVENT}&head_sha={head_sha}&per_page=100&page={page}",
-            )
+            try:
+                obj = self.request(
+                    "GET",
+                    f"/repos/{self.owner}/{self.repo}/actions/workflows/{VERIFY_WORKFLOW_ID}/runs?event={VERIFY_EVENT}&head_sha={head_sha}&per_page=100&page={page}",
+                )
+            except PhaseBError as exc:
+                return VerifyObservation(
+                    False,
+                    "VERIFY_RUNSET_PAGINATION_FAILED",
+                    head_sha=head_sha,
+                    detail=exc.message,
+                )
             if not isinstance(obj, Mapping) or not isinstance(obj.get("workflow_runs"), list):
                 return VerifyObservation(False, "VERIFY_RUNSET_MALFORMED", head_sha=head_sha)
             page_rows = list(obj["workflow_runs"])
@@ -1311,15 +1332,39 @@ class GitHubPhaseBClient:
         )
 
     def ruleset_proof(self) -> RulesetProof:
-        effective = self.request("GET", f"/repos/{self.owner}/{self.repo}/rules/branches/main")
-        summaries = self.request("GET", f"/repos/{self.owner}/{self.repo}/rulesets")
-        if not isinstance(summaries, list):
-            return RulesetProof(False, "RULESET_PROOF_UNAVAILABLE", "ruleset summary response malformed")
-        details = []
+        def complete_pages(path: str) -> list[Any] | None:
+            rows: list[Any] = []
+            for page in range(1, 11):
+                separator = "&" if "?" in path else "?"
+                try:
+                    page_rows = self.request("GET", f"{path}{separator}per_page=100&page={page}")
+                except PhaseBError:
+                    return None
+                if not isinstance(page_rows, list) or len(page_rows) > 100:
+                    return None
+                rows.extend(page_rows)
+                if len(page_rows) < 100:
+                    return rows
+            return None
+
+        effective = complete_pages(f"/repos/{self.owner}/{self.repo}/rules/branches/main")
+        summaries = complete_pages(f"/repos/{self.owner}/{self.repo}/rulesets")
+        if effective is None or summaries is None:
+            return RulesetProof(False, "RULESET_PROOF_UNAVAILABLE", "Ruleset pagination unavailable, malformed, or truncated")
+
+        ids: list[int] = []
         for item in summaries:
-            if not isinstance(item, Mapping) or not isinstance(item.get("id"), int):
-                return RulesetProof(False, "RULESET_PROOF_UNAVAILABLE", "ruleset summary malformed")
-            details.append(self.request("GET", f"/repos/{self.owner}/{self.repo}/rulesets/{item['id']}"))
+            ruleset_id = item.get("id") if isinstance(item, Mapping) else None
+            if not isinstance(ruleset_id, int) or isinstance(ruleset_id, bool) or ruleset_id < 1 or ruleset_id in ids:
+                return RulesetProof(False, "RULESET_PROOF_UNAVAILABLE", "ruleset summary malformed or duplicated")
+            ids.append(ruleset_id)
+
+        details = []
+        for ruleset_id in ids:
+            try:
+                details.append(self.request("GET", f"/repos/{self.owner}/{self.repo}/rulesets/{ruleset_id}"))
+            except PhaseBError:
+                return RulesetProof(False, "RULESET_PROOF_UNAVAILABLE", "ruleset detail unavailable")
         return prove_ruleset(effective, details)
 
     def create_blob(self, raw: bytes) -> str:
@@ -1784,6 +1829,11 @@ def _pending_records_from_open_acquire_prs(
     state: Any, now: datetime,
 ) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
+    # This is repository-wide substrate, not a property of any one candidate.
+    # Observe it once outside the candidate-local failure boundary so an
+    # unavailable current-main tree cannot be swallowed as a malformed PR.
+    _, base_entries = client.recursive_tree(current_main_sha)
+    bmap = _entry_map(base_entries)
     for pr in open_prs:
         try:
             ref = _pr_head_ref(pr)
@@ -1802,8 +1852,7 @@ def _pending_records_from_open_acquire_prs(
             if not verify.eligible:
                 continue
             # Find all lock additions and require one byte-identical V3 payload.
-            _, base_entries = client.recursive_tree(current_main_sha)
-            bmap, hmap = _entry_map(base_entries), _entry_map(commit["entries"])
+            hmap = _entry_map(commit["entries"])
             added = sorted(set(hmap) - set(bmap))
             if not added or any(not p.startswith("coordination/locks/") or not p.endswith(".yml") for p in added):
                 continue
@@ -1860,6 +1909,48 @@ def _pending_records_from_open_acquire_prs(
     return records
 
 
+def _canonical_continuation_restrictions(state: Any, source_task_id: str) -> tuple[bool, bool]:
+    """Derive restrictive continuation facts from fresh typed Village state.
+
+    Free-form stop/continuation prose is deliberately ignored.  Only canonical
+    enum states and the existing Claim dependency-validity fields participate.
+    These facts can remove same-Campaign scheduling eligibility; they never
+    grant Task, Campaign, Truth, review, or mutation authority.
+    """
+    task = state.tasks[source_task_id]
+    campaign_id = task["campaign_id"]
+    campaign = state.campaigns[campaign_id]
+    stop_reached = task.get("stored_state") == "RETIRED" or campaign.get("strategic_state") == "CLOSED"
+
+    derived_validity = state.derived_claim_validity()
+
+    def reference_usable(reference: Mapping[str, Any]) -> bool:
+        claim_id = reference.get("claim_id")
+        claim = state.claims.get(claim_id) if isinstance(claim_id, str) else None
+        if not isinstance(claim, Mapping) or derived_validity.get(claim_id) != "CURRENT":
+            return False
+        if claim.get("public_evidence") == "INTENTIONAL_PRIVATE":
+            return False
+        if claim.get("dependency_use") not in {"ALLOWED", "SCOPED"}:
+            return False
+        reference_use = reference.get("dependency_use")
+        if reference_use is not None and reference_use not in {"ALLOWED", "SCOPED"}:
+            return False
+        return True
+
+    unusable_dependency = any(
+        not reference_usable(assumption)
+        for assumption in task.get("assumptions", [])
+        if isinstance(assumption, Mapping) and isinstance(assumption.get("claim_id"), str)
+    )
+    unusable_dependency = unusable_dependency or any(
+        not reference_usable(asset)
+        for asset in campaign.get("assets", [])
+        if isinstance(asset, Mapping) and asset.get("load_bearing") is True
+    )
+    return stop_reached, unusable_dependency
+
+
 def _derive_post_release_semantics(
     *, client: GitHubPhaseBClient, root: Path, state: Any, book: Any, entries: Sequence[Mapping[str, Any]], main_sha: str,
     args: Any, source_record: Mapping[str, Any], source_epoch_id: str,
@@ -1884,6 +1975,10 @@ def _derive_post_release_semantics(
         local_compute=getattr(args, "local_compute", "unknown"),
         web_literature=getattr(args, "web_literature", "unknown"),
     )
+    canonical_stop_condition_reached, canonical_dependency_followup_unusable = _canonical_continuation_restrictions(
+        state,
+        source_record["source_task_id"],
+    )
     request = NextRequest(
         task_id=source_record["source_task_id"],
         worker_id=source_record["worker_id"],
@@ -1892,6 +1987,8 @@ def _derive_post_release_semantics(
         pending_records=tuple(dict(x) for x in pending_records),
         current_main_sha=main_sha,
         continuation_decision_id=getattr(args, "continuation_decision_id", None),
+        canonical_stop_condition_reached=canonical_stop_condition_reached,
+        canonical_dependency_followup_unusable=canonical_dependency_followup_unusable,
         fresh_observation_valid=True,
     )
     continuation = derive_continuation_decision(state, book, request, terminal)
@@ -1913,8 +2010,8 @@ def _derive_post_release_semantics(
         continuation_decision_id=decision_id,
         continuation_decision_blob_sha=decision_blob,
         human_decision=human_decision,
-        canonical_stop_condition_reached=False,
-        canonical_dependency_followup_unusable=False,
+        canonical_stop_condition_reached=canonical_stop_condition_reached,
+        canonical_dependency_followup_unusable=canonical_dependency_followup_unusable,
         same_campaign_allowed=continuation.same_campaign_allowed,
         global_fallback_allowed=continuation.global_fallback_allowed,
         approved_followup_task_ids=continuation.approved_followup_task_ids,
