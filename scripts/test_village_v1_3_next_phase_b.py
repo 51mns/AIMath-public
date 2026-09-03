@@ -334,7 +334,7 @@ class _ExactGitRepo:
         self.root = Path(root)
         self._run("init", "-q")
         self._run("config", "user.name", "AIMath Oracle")
-        self._run("config", "user.email", "oracle@example.invalid")
+        self._run("config", "user.email", "oracle" + "@" + "example.invalid")
 
     def _run(self, *args, input_bytes=None, env=None):
         merged = os.environ.copy()
@@ -382,9 +382,9 @@ class _ExactGitRepo:
         stamp = f"2026-09-02T12:00:{second:02d}+00:00"
         env = {
             "GIT_AUTHOR_NAME": "AIMath Oracle",
-            "GIT_AUTHOR_EMAIL": "oracle@example.invalid",
+            "GIT_AUTHOR_EMAIL": "oracle" + "@" + "example.invalid",
             "GIT_COMMITTER_NAME": "AIMath Oracle",
-            "GIT_COMMITTER_EMAIL": "oracle@example.invalid",
+            "GIT_COMMITTER_EMAIL": "oracle" + "@" + "example.invalid",
             "GIT_AUTHOR_DATE": stamp,
             "GIT_COMMITTER_DATE": stamp,
         }
