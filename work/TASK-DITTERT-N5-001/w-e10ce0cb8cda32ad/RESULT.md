@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 AIMath contributors -->
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+
 # TASK-DITTERT-N5-001 — E0 result
 
 Worker: `w-e10ce0cb8cda32ad`  
