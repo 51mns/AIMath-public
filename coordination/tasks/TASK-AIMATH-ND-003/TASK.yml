@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-AIMATH-ND-003",
+  "campaign_id": "CAM-AIMATH-ND",
+  "title": "AIMath Factor Representation Discovery (AFRD) novelty and experimental-contract freeze",
+  "task_kind": "RESEARCH",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "research_mode": "AI_NATIVE_REPRESENTATION",
+  "objective": "Define and freeze a rigorous first AFRD experiment around the question: can an AI discover previously unknown mathematical representations of composite integers that expose information about hidden factors? The discovery lane must not mandate a human-selected primitive vocabulary. Before any large search, perform a current novelty audit, freeze leakage-resistant data and hidden-test protocols, and define how an invented representation X(N) will be judged for factor-relevant utility, mathematical novelty, and reduction to known constructions.",
+  "assumptions": [
+    "training data may contain labelled tuples (N,p,q), but any candidate representation or feature used on a held-out target must be computable from N and public experiment constants alone at evaluation time",
+    "knowledge of p or q may be used only for labels, scoring, falsification, and post-hoc analysis, never as an input to the deployed representation on the held-out target",
+    "an LLM may already know existing number theory, so primitive-free prompting is not evidence of novelty; novelty requires an explicit post-hoc reduction and literature audit",
+    "known factorisation methods may be used as frozen baselines after discovery, but must not define the representation language supplied to the discovery lane"
+  ],
+  "route_id": "ROUTE-AIMATH-ND-AFRD-001",
+  "collision_keys": [
+    "discovery/aimath-nd/afrd-factor-representation"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "INDEPENDENT_ATTACK",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": true,
+  "held_out_required": true,
+  "toy_problem_gate": true,
+  "transfer_test_required": true,
+  "post_outcome_evaluation": "REQUIRED",
+  "success_conditions": [
+    "current primary-source novelty map separates prior factorisation-pipeline search from representation/invariant discovery and records the closest known work without claiming novelty prematurely",
+    "frozen experimental contract specifies raw-data generation, train/development/hidden partitions, bit-length transfer, distribution-shift tests, and a post-freeze hidden generation set",
+    "leakage firewall rejects any factor-relevant candidate whose evaluation-time computation requires p, q, factor-derived labels, accepted proofs, or hidden answers",
+    "candidate representation interface defines X(N), its computability cost, factor-relevant utility metrics, falsification tests, and post-hoc reduction-to-known-mathematics audit",
+    "baseline contract is frozen before the discovery run and remains external to the primitive-free representation search",
+    "a concrete follow-up gate is produced for representation discovery, invariant extraction, algorithm synthesis, adversarial falsification, and mathematical extraction if the contract is viable"
+  ],
+  "failure_conditions": [
+    "the proposed experiment cannot distinguish representation discovery from memorisation, label leakage, or simple restatement of known factorisation operations",
+    "factor-relevant signal depends on p or q at evaluation time rather than on N alone",
+    "novelty audit shows the proposed contribution is already covered by existing work with no material experimental distinction",
+    "hidden evaluation is too weak to separate in-distribution fitting from transferable mathematical structure"
+  ],
+  "stop_conditions": [
+    "only a larger dataset or larger model remains without a stronger leakage or falsification mechanism",
+    "the experiment reduces to recombining a fixed human-supplied library of known factorisation primitives",
+    "candidate success can be explained entirely by train/test contamination or factor-derived evaluation inputs",
+    "no defensible novelty or mathematical-utility criterion can be frozen before search begins"
+  ],
+  "owned_paths": [
+    "work/TASK-AIMATH-ND-003/**"
+  ],
+  "expected_artifacts": [
+    "AFRD novelty audit with closest prior work and explicit non-claims",
+    "frozen semiprime/composite data-generation and split protocol",
+    "leakage firewall and N-only evaluation contract",
+    "representation X(N) interface and factor-relevant utility metrics",
+    "frozen external baseline and reduction-to-known-mathematics audit plan",
+    "follow-up AFRD representation-discovery gate specification",
+    "outcome record with go/no-go recommendation"
+  ],
+  "created_at": "2026-09-04"
+}
