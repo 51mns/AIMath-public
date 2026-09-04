@@ -142,7 +142,9 @@ def main() -> int:
         "freeze_commit": "a721b416a30c49820bdc4c4ac789782992c25691",
         "heldout_rule": "SHA256('AIMath-transfer-heldout-v1:' + decimal(case_id)), cases 0..63",
         "integer_arithmetic_only": True,
-        "cases": rows,
+        "case_transcript_sha256": sha256(
+            json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest(),
         "summary": {
             "cases": len(rows),
             "checks_per_case": 6,
