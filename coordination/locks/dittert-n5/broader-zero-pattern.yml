@@ -1,0 +1,25 @@
+{
+  "acquired_at": "2026-09-04T05:01:56+00:00",
+  "actor": {
+    "id": "gh:51mns",
+    "type": "HUMAN_PRINCIPAL"
+  },
+  "base_main_sha": "7037fb8794a043267701e46e2aaae7ea99bd808c",
+  "collision_keys": [
+    "dittert-n5/broader-zero-pattern"
+  ],
+  "expires_at": "2026-09-11T05:01:56+00:00",
+  "lock_id": "LOCK-NEXT-88465ECE8293E15A0CBB91974A5FCBAB",
+  "next_binding": {
+    "acquire_intent_id": "88465ece8293e15a0cbb91974a5fcbab23e202379e2fb0b748714dffe52d38cb",
+    "continuation_context_id": "4b9955c8be4962a1adcd395527259dfd1a5c700dce2864dde7dbc11ba0837177",
+    "schema_version": 1,
+    "selection_id": "87f1b3f3431d8541d189a2bc93ccced3e3024b085137ca99f91c005203107f10",
+    "source_epoch_id": "730fe029ad2479bcb83f2d5ce9744f6f18578c783c2c8fa84f0d491e4d691065"
+  },
+  "renewal_count": 0,
+  "schema_version": 1,
+  "task_id": "TASK-DITTERT-N5-001",
+  "work_ref": "research/TASK-DITTERT-N5-001/w-0bebfd2fd11cb67f",
+  "worker_id": "w-0bebfd2fd11cb67f"
+}
