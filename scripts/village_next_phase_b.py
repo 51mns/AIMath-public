@@ -1525,6 +1525,145 @@ def _first_parent_history(client: GitHubPhaseBClient, current_sha: str, stop_sha
     raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", f"first-parent history did not reach {stop_sha} within bound")
 
 
+
+def _source_epoch_consumption_gate(
+    client: GitHubPhaseBClient,
+    *,
+    current_main_sha: str,
+    release_base_sha: str,
+    source_epoch_id: str,
+) -> GateResult:
+    """Prove from canonical first-parent history that a source epoch is unused."""
+    if not SHA1_RE.fullmatch(current_main_sha or "") or not SHA1_RE.fullmatch(release_base_sha or ""):
+        raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", "source-epoch history boundary malformed")
+    if not SHA256_RE.fullmatch(source_epoch_id or ""):
+        raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", "source-epoch identity malformed")
+
+    history = _first_parent_history(client, current_main_sha, release_base_sha)
+    for child, parent in zip(history, history[1:]):
+        child_entries = child.get("entries")
+        parent_entries = parent.get("entries")
+        if not isinstance(child_entries, list) or not isinstance(parent_entries, list):
+            raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", "first-parent tree entries unavailable")
+
+        cmap, pmap = _entry_map(child_entries), _entry_map(parent_entries)
+        changed = {
+            path
+            for path in set(cmap) | set(pmap)
+            if (
+                None if pmap.get(path) is None else (
+                    pmap[path].get("mode"), pmap[path].get("type"), pmap[path].get("sha")
+                )
+            ) != (
+                None if cmap.get(path) is None else (
+                    cmap[path].get("mode"), cmap[path].get("type"), cmap[path].get("sha")
+                )
+            )
+        }
+        added_locks = sorted(
+            path
+            for path in changed
+            if path not in pmap
+            and path in cmap
+            and path.startswith("coordination/locks/")
+            and path.endswith(".yml")
+        )
+
+        for path in added_locks:
+            row = cmap[path]
+            if row.get("mode") != "100644" or row.get("type") != "blob":
+                raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", f"historical lock object malformed: {path}")
+            sha = row.get("sha")
+            if not isinstance(sha, str) or not SHA1_RE.fullmatch(sha):
+                raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", f"historical lock OID unavailable: {path}")
+            try:
+                payload = json.loads(client.blob_bytes(sha).decode("utf-8"))
+            except Exception as exc:
+                raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", f"historical lock bytes unreadable: {path}: {exc}") from exc
+            if not isinstance(payload, Mapping) or "next_binding" not in payload:
+                continue
+            try:
+                ids = parse_next_binding(payload)
+            except PhaseBError as exc:
+                raise PhaseBError(
+                    "CANONICAL_ACQUIRE_HISTORY_UNPROVEN",
+                    f"historical v1.3 next_binding malformed at {path}: {exc.code}",
+                ) from exc
+            if ids.source_epoch_id != source_epoch_id:
+                continue
+
+            try:
+                parents = child.get("parents")
+                if (
+                    not isinstance(parents, list)
+                    or len(parents) != 1
+                    or not isinstance(parents[0], Mapping)
+                    or parents[0].get("sha") != parent.get("sha")
+                ):
+                    raise PhaseBError("NONCANONICAL_ACQUIRE_MERGE_SHAPE", "consuming ACQUIRE is not one first-parent transition")
+                parent_sha = parent.get("sha")
+                parent_tree = parent.get("tree", {}).get("sha") if isinstance(parent.get("tree"), Mapping) else None
+                child_tree = child.get("tree", {}).get("sha") if isinstance(child.get("tree"), Mapping) else None
+                if not isinstance(parent_sha, str) or not SHA1_RE.fullmatch(parent_sha):
+                    raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", "historical parent SHA unavailable")
+                if not isinstance(parent_tree, str) or not SHA1_RE.fullmatch(parent_tree):
+                    raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", "historical parent tree unavailable")
+                if not isinstance(child_tree, str) or not SHA1_RE.fullmatch(child_tree):
+                    raise PhaseBError("CANONICAL_ACQUIRE_HISTORY_UNPROVEN", "historical child tree unavailable")
+
+                acquired = _parse_time(payload.get("acquired_at"))
+                expires = _parse_time(payload.get("expires_at"))
+                ttl_seconds = int((expires - acquired).total_seconds())
+                if ttl_seconds <= 0 or ttl_seconds % 3600:
+                    raise PhaseBError("CANONICAL_ACQUIRE_IDENTITY_MISMATCH", "historical lease duration is not whole positive hours")
+                actor = payload.get("actor")
+                if not isinstance(actor, Mapping):
+                    raise PhaseBError("CANONICAL_ACQUIRE_IDENTITY_MISMATCH", "historical actor missing")
+                material = freeze_acquire_material(
+                    semantic_ids=ids,
+                    base_sha=parent_sha,
+                    base_tree_sha=parent_tree,
+                    base_tree_entries=parent_entries,
+                    selected_task_id=payload.get("task_id"),
+                    worker_id=payload.get("worker_id"),
+                    principal_id=actor.get("id"),
+                    work_ref=payload.get("work_ref"),
+                    collision_keys=payload.get("collision_keys", ()),
+                    acquired_at=acquired,
+                    lease_ttl_hours=ttl_seconds // 3600,
+                )
+                if material.lock_payload != payload:
+                    raise PhaseBError("CANONICAL_ACQUIRE_IDENTITY_MISMATCH", "historical lock payload is not exact deterministic V3 material")
+                expected_paths = {obj.path for obj in material.identity.exact_lock_objects}
+                if changed != expected_paths or child_tree != material.identity.expected_canonical_tree_sha:
+                    raise PhaseBError("CANONICAL_ACQUIRE_DELTA_MISMATCH", "historical source-epoch ACQUIRE is not exact lock-only transition")
+                for obj in material.identity.exact_lock_objects:
+                    current = cmap.get(obj.path)
+                    if (
+                        obj.path in pmap
+                        or current is None
+                        or current.get("mode") != obj.mode
+                        or current.get("type") != "blob"
+                        or current.get("sha") != obj.blob_sha
+                        or client.blob_bytes(obj.blob_sha) != material.lock_bytes[obj.path]
+                    ):
+                        raise PhaseBError("CANONICAL_ACQUIRE_TREE_MISMATCH", f"historical lock object mismatch: {obj.path}")
+            except (PhaseBError, TypeError, ValueError) as exc:
+                code = exc.code if isinstance(exc, PhaseBError) else "CANONICAL_ACQUIRE_IDENTITY_MISMATCH"
+                detail = exc.message if isinstance(exc, PhaseBError) else str(exc)
+                raise PhaseBError(
+                    "CANONICAL_ACQUIRE_HISTORY_UNPROVEN",
+                    f"matching source-epoch acquisition is not fully provable: {code}: {detail}",
+                ) from exc
+
+            return GateResult(
+                False,
+                "OLD_ACQUISITION_REPLAY",
+                f"source epoch already consumed by canonical v1.3 ACQUIRE {child.get('sha')}",
+            )
+
+    return GateResult(True, "SOURCE_EPOCH_UNCONSUMED", "no canonical v1.3 ACQUIRE consumed this source epoch")
+
 def _find_tree_blob(entries: Sequence[Mapping[str, Any]], path: str) -> str:
     row = _tree_blob_map(entries).get(path)
     sha = row.get("sha") if row else None
@@ -2371,6 +2510,34 @@ def cli_next(root: Path, args: Any) -> int:
                 print(f"TASK={retained['acquire_intent_v1']['selected_task_id']}")
                 print(f"MAIN={main_sha}")
                 return 0
+
+            # A retained ACQUIRE transport is retry authority only while its
+            # source epoch is still canonically unconsumed. Prove the exact
+            # RELEASE and consumption history before any handoff write.
+            release = _prove_retained_release(
+                client,
+                retained=retained,
+                current_main_sha=main_sha,
+                current_entries=main_entries,
+            )
+            if not release.allowed:
+                raise PhaseBError(release.code, release.detail)
+            source_id = retained.get("source_epoch_id")
+            release_transport = retained.get("release_transport")
+            release_base_sha = release_transport.get("base_sha") if isinstance(release_transport, Mapping) else None
+            if not isinstance(source_id, str) or not SHA256_RE.fullmatch(source_id):
+                raise PhaseBError("SOURCE_EPOCH_RELEASE_PROVENANCE_UNAVAILABLE", "retained source epoch unavailable")
+            if not isinstance(release_base_sha, str) or not SHA1_RE.fullmatch(release_base_sha):
+                raise PhaseBError("SOURCE_EPOCH_RELEASE_PROVENANCE_UNAVAILABLE", "retained RELEASE base unavailable")
+            consumption = _source_epoch_consumption_gate(
+                client,
+                current_main_sha=main_sha,
+                release_base_sha=release_base_sha,
+                source_epoch_id=source_id,
+            )
+            if not consumption.allowed:
+                raise PhaseBError(consumption.code, consumption.detail)
+
             # A still-open exact transport may simply be awaiting trusted merge.
             trans = retained.get("acquire_transport")
             if isinstance(trans, Mapping):
@@ -2409,11 +2576,24 @@ def cli_next(root: Path, args: Any) -> int:
         if not release.allowed:
             raise PhaseBError(release.code, release.detail)
 
+        source_record = retained["source_acquisition_v1"]
+        source_id = retained["source_epoch_id"]
+        release_transport = retained.get("release_transport")
+        release_base_sha = release_transport.get("base_sha") if isinstance(release_transport, Mapping) else None
+        if not isinstance(release_base_sha, str) or not SHA1_RE.fullmatch(release_base_sha):
+            raise PhaseBError("SOURCE_EPOCH_RELEASE_PROVENANCE_UNAVAILABLE", "retained RELEASE base unavailable")
+        consumption = _source_epoch_consumption_gate(
+            client,
+            current_main_sha=main_sha,
+            release_base_sha=release_base_sha,
+            source_epoch_id=source_id,
+        )
+        if not consumption.allowed:
+            raise PhaseBError(consumption.code, consumption.detail)
+
         pending = _pending_records_from_open_acquire_prs(
             client, open_prs=open_prs, current_main_sha=main_sha, state=state, now=now,
         )
-        source_record = retained["source_acquisition_v1"]
-        source_id = retained["source_epoch_id"]
         derived = _derive_post_release_semantics(
             client=client, root=root, state=state, book=book, entries=main_entries, main_sha=main_sha,
             args=args, source_record=source_record, source_epoch_id=source_id,
