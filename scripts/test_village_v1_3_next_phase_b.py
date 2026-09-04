@@ -607,6 +607,154 @@ class _PendingClient:
         raise pb.PhaseBError("GITHUB_OBSERVATION_UNAVAILABLE", "fixture blob unavailable")
 
 
+class _CLIReadOnlyClient:
+    def __init__(self, source_blobs=None, authenticated_principal=PRINCIPAL):
+        self.source_blobs = source_blobs or {}
+        self.authenticated_principal = authenticated_principal
+
+    def current_main_sha(self):
+        return BASE_SHA
+
+    def authenticated_principal_id(self):
+        return self.authenticated_principal
+
+    def recursive_tree(self, commit_sha):
+        if commit_sha != BASE_SHA:
+            raise AssertionError("cli_next requested an unexpected main")
+        entries = _base_entries() + [
+            {"path": path, "mode": "100644", "type": "blob", "sha": pb.git_blob_oid(raw)}
+            for path, raw in sorted(self.source_blobs.items())
+        ]
+        return pb.deterministic_tree_sha(entries), entries
+
+    def blob_bytes(self, oid):
+        for raw in self.source_blobs.values():
+            if pb.git_blob_oid(raw) == oid:
+                return raw
+        raise pb.PhaseBError("GITHUB_OBSERVATION_UNAVAILABLE", "fixture blob unavailable")
+
+    def open_prs(self):
+        return []
+
+    def ruleset_proof(self):
+        return _good_ruleset()
+
+
+def _cli_source_state(root, *, expires_at=None):
+    state = base_state()
+    state.root = Path(root).resolve()
+    state.now = NOW
+    state.decisions = []
+    add_lock(
+        state,
+        "LOCK-SOURCE",
+        "TASK-X-1",
+        "x/shared",
+        actor=PRINCIPAL,
+        expires=expires_at or NOW + timedelta(hours=10),
+    )
+    bundle = state.lock_bundles["LOCK-SOURCE"]
+    bundle.payload["worker_id"] = WORKER
+    bundle.payload["work_ref"] = f"research/TASK-X-1/{WORKER}"
+    bundle.paths = [state.root / "coordination/locks/x/shared.yml"]
+    return state
+
+
+def _write_abandoned_terminal(root, *, truth_layer_effect="NONE"):
+    schema_dir = Path(root) / "schemas"
+    schema_dir.mkdir(parents=True, exist_ok=True)
+    repo = Path(__file__).resolve().parent.parent
+    (schema_dir / "abandoned-terminal.schema.json").write_bytes(
+        (repo / "schemas/abandoned-terminal.schema.json").read_bytes()
+    )
+    path = Path(root) / f"work/TASK-X-1/{WORKER}/ABANDONED_TERMINAL.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "task_id": "TASK-X-1",
+                "worker_id": WORKER,
+                "reason": "SCOPE_STOP",
+                "abandoned_at": NOW.isoformat(),
+                "abandonment_count": 1,
+                "last_work_head": None,
+                "truth_layer_effect": truth_layer_effect,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _run_cli_source_case(
+    root,
+    state,
+    *,
+    worker=WORKER,
+    principal=PRINCIPAL,
+    canonical_source=True,
+    terminal_release=False,
+):
+    source_blobs = {}
+    for bundle in state.lock_bundles.values():
+        raw = (json.dumps(bundle.payload, sort_keys=True, indent=2) + "\n").encode("utf-8")
+        for path in bundle.paths:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+            if canonical_source:
+                source_blobs[path.relative_to(state.root).as_posix()] = raw
+    state_path = Path(root) / ".git" / "phase-b-state.json"
+    args = SimpleNamespace(
+        github_write="yes",
+        local_compute="yes",
+        web_literature="yes",
+        github_token_env="GITHUB_TOKEN",
+        phase_b_state_file=str(state_path),
+        current_main_sha=BASE_SHA,
+        task_id="TASK-X-1",
+        worker_id=worker,
+        principal_id=principal,
+        continuation_decision_id=None,
+    )
+    client = _CLIReadOnlyClient(source_blobs)
+    book = SimpleNamespace(errors=[])
+    output = io.StringIO()
+    source_record_value = (
+        {"source_task_id": "TASK-X-1", "worker_id": WORKER},
+        "1" * 64,
+        SimpleNamespace(terminal_class="ABANDONED_TERMINAL"),
+    )
+    with (
+        patch.object(pb, "GitHubPhaseBClient", return_value=client),
+        patch.object(pb, "_local_head_sha", return_value=BASE_SHA),
+        patch("village_core.VillageState.load", return_value=state),
+        patch("village_rank.EvaluationBook.load", return_value=book),
+        patch("village_v1_2.load_actor_policy", return_value={}),
+        patch("village_v1_2.worker_lock_errors", return_value=[]),
+        patch.object(pb, "derive_source_acquisition_v1") as source_epoch,
+        patch.object(pb, "_source_record_from_fresh_main", return_value=source_record_value) as source_record,
+        patch.object(
+            pb,
+            "_prepare_release_transport",
+            return_value=pb.GateResult(True, "RELEASE_PENDING") if terminal_release else None,
+        ) as release,
+        patch.object(pb, "_prepare_acquire_transport") as acquire,
+        patch.dict(os.environ, {"GITHUB_TOKEN": "fixture-token"}),
+        redirect_stdout(output),
+    ):
+        rc = pb.cli_next(Path(root), args)
+    return SimpleNamespace(
+        rc=rc,
+        output=output.getvalue(),
+        state_path=state_path,
+        source_epoch_calls=source_epoch.call_count,
+        source_record_calls=source_record.call_count,
+        release_calls=release.call_count,
+        acquire_calls=acquire.call_count,
+    )
+
+
 def _adapter_keyword(call_name, keyword):
     tree = ast.parse(textwrap.dedent(inspect.getsource(pb._derive_post_release_semantics)))
     for node in ast.walk(tree):
@@ -623,6 +771,54 @@ def _adapter_keyword(call_name, keyword):
 
 class VillageV13PhaseB73(unittest.TestCase):
     def test_row_01_happy_path_release_select_acquire_and_active_next(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state = _cli_source_state(root)
+            active = _run_cli_source_case(root, state)
+            self.assertEqual(active.rc, 0)
+            self.assertEqual(active.output, "ACTIVE_WORK\n")
+            self.assertFalse(active.state_path.exists())
+            self.assertEqual(active.source_epoch_calls, 0)
+            self.assertEqual(active.release_calls, 0)
+            self.assertEqual(active.acquire_calls, 0)
+
+        fail_closed_cases = (
+            ("malformed_terminal", WORKER, PRINCIPAL),
+            ("wrong_worker", WORKER_B, PRINCIPAL),
+            ("wrong_principal", WORKER, "gh:other"),
+            ("noncanonical_source_lock", WORKER, PRINCIPAL),
+        )
+        for label, worker, principal in fail_closed_cases:
+            with self.subTest(source_boundary=label), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                state = _cli_source_state(root)
+                if label == "malformed_terminal":
+                    _write_abandoned_terminal(root, truth_layer_effect="INVALID")
+                rejected = _run_cli_source_case(
+                    root,
+                    state,
+                    worker=worker,
+                    principal=principal,
+                    canonical_source=label != "noncanonical_source_lock",
+                )
+                self.assertNotEqual(rejected.rc, 0)
+                self.assertNotEqual(rejected.output, "ACTIVE_WORK\n")
+                self.assertFalse(rejected.state_path.exists())
+                self.assertEqual(rejected.source_epoch_calls, 0)
+                self.assertEqual(rejected.release_calls, 0)
+                self.assertEqual(rejected.acquire_calls, 0)
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state = _cli_source_state(root)
+            _write_abandoned_terminal(root)
+            release = _run_cli_source_case(root, state, terminal_release=True)
+            self.assertEqual(release.rc, 0)
+            self.assertEqual(release.output, "RELEASE_PENDING\n")
+            self.assertEqual(release.source_record_calls, 1)
+            self.assertEqual(release.release_calls, 1)
+            self.assertEqual(release.acquire_calls, 0)
+
         with _exact_acquire_git() as fx:
             candidate = fx.git.view(fx.head)
             premerge = pb.premerge_transport_gate(
@@ -1196,6 +1392,16 @@ class VillageV13PhaseB73(unittest.TestCase):
 
     def test_row_50_expired_canonical_lock_never_active_next(self):
         material = _material(acquired_at=NOW - timedelta(days=10)); self.assertEqual(_canonical_gate(material, now=NOW).code, "CANONICAL_LOCK_NOT_ACTIVE")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state = _cli_source_state(root, expires_at=NOW - timedelta(seconds=1))
+            expired = _run_cli_source_case(root, state)
+            self.assertNotEqual(expired.rc, 0)
+            self.assertIn("expired/stale", expired.output)
+            self.assertFalse(expired.state_path.exists())
+            self.assertEqual(expired.source_epoch_calls, 0)
+            self.assertEqual(expired.release_calls, 0)
+            self.assertEqual(expired.acquire_calls, 0)
 
     def test_row_51_same_content_alternate_head_is_same_canonical_acquisition_content(self):
         with _exact_acquire_git() as fx:
