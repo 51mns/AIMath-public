@@ -426,7 +426,7 @@ class _ExactGitRepo:
 
 
 @contextmanager
-def _exact_acquire_git(*, collision_keys=("x/next",)):
+def _exact_acquire_git(*, collision_keys=("x/next",), ids=None):
     with tempfile.TemporaryDirectory() as td:
         git = _ExactGitRepo(td)
         base_blob = git.blob(b"base fixture\n")
@@ -434,6 +434,7 @@ def _exact_acquire_git(*, collision_keys=("x/next",)):
         base_tree = git.tree(additions=base_entries)
         base = git.commit(base_tree, message="base", second=1)
         material = _material(
+            ids,
             collision_keys=collision_keys,
             base_sha=base,
             base_tree_sha=base_tree,
@@ -532,6 +533,36 @@ class _ExactReadClient:
 
     def blob_bytes(self, oid):
         return self.git.raw_object(oid)
+
+
+class _ReplayGitHubClient(_ExactReadClient):
+    def __init__(self, git, *, current_main, release_head):
+        super().__init__(git)
+        self.current_main = current_main
+        self.release_head = release_head
+        self.write_calls = []
+
+    def current_main_sha(self):
+        return self.current_main
+
+    def authenticated_principal_id(self):
+        return PRINCIPAL
+
+    def open_prs(self):
+        return []
+
+    def ruleset_proof(self):
+        return _good_ruleset()
+
+    def workflow_runs_for_head(self, head):
+        if head != self.release_head:
+            raise AssertionError(f"unexpected Verify lookup for {head}")
+        return _verified(head)
+
+    def request(self, method, path, payload=None):
+        if method != "GET":
+            self.write_calls.append((method, path, copy.deepcopy(payload)))
+        raise AssertionError(f"unexpected raw GitHub request: {method} {path}")
 
 
 def _ruleset_detail(ruleset_id, *, bypass=None, active=True, strict=True, context="verify"):
@@ -973,6 +1004,155 @@ class VillageV13PhaseB73(unittest.TestCase):
         _, a = _source_record(acquired="2026-09-01T00:00:00+00:00")
         _, b = _source_record(acquired="2026-09-01T00:00:01+00:00")
         self.assertNotEqual(a, b)
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "workspace"
+            git_root = Path(td) / "git-fixture"
+            root.mkdir()
+            git_root.mkdir()
+            _write_abandoned_terminal(root)
+            terminal_path = f"work/TASK-X-1/{WORKER}/ABANDONED_TERMINAL.yml"
+            terminal_raw = (root / terminal_path).read_bytes()
+
+            git = _ExactGitRepo(git_root)
+            readme_blob = git.blob(b"base fixture\n")
+            source_payload = {
+                "schema_version": 1,
+                "lock_id": "LOCK-SOURCE",
+                "task_id": "TASK-X-1",
+                "worker_id": WORKER,
+                "actor": {"id": PRINCIPAL, "type": "HUMAN_PRINCIPAL"},
+                "base_main_sha": "0" * 40,
+                "acquired_at": "2026-09-01T00:00:00+00:00",
+                "expires_at": "2026-09-10T00:00:00+00:00",
+                "work_ref": f"research/TASK-X-1/{WORKER}",
+                "collision_keys": ["x/shared"],
+                "renewal_count": 0,
+            }
+            source_raw = (json.dumps(source_payload, sort_keys=True, indent=2) + "\n").encode("utf-8")
+            source_path = "coordination/locks/x/shared.yml"
+            source_blob = git.blob(source_raw)
+            terminal_blob = git.blob(terminal_raw)
+            release_base_entries = [
+                {"path": "README.md", "mode": "100644", "type": "blob", "sha": readme_blob},
+                {"path": source_path, "mode": "100644", "type": "blob", "sha": source_blob},
+                {"path": terminal_path, "mode": "100644", "type": "blob", "sha": terminal_blob},
+            ]
+            release_base_tree = git.tree(additions=release_base_entries)
+            release_base = git.commit(release_base_tree, message="release base", second=1)
+            source_record, source_id = pb.derive_source_acquisition_v1(
+                repository=pb.REPOSITORY,
+                source_task_id="TASK-X-1",
+                worker_id=WORKER,
+                principal_id=PRINCIPAL,
+                lock_payload=source_payload,
+                source_lock_blob_bundle=[{"path": source_path, "blob_sha": source_blob}],
+                terminal_class="ABANDONED_TERMINAL",
+                terminal_path=terminal_path,
+                terminal_blob_sha=terminal_blob,
+                terminal_outcome_type=None,
+            )
+
+            released_tree = git.tree(base_tree=release_base_tree, deletions=[source_path])
+            release_head = git.commit(released_tree, parent=release_base, message="release H", second=2)
+            m3 = git.commit(released_tree, parent=release_base, message="canonical release", second=3)
+            m3_entries = git.entries(m3)
+
+            ids = SemanticIds(source_id, "2" * 64, "3" * 64, "4" * 64)
+            material = _material(
+                ids,
+                base_sha=m3,
+                base_tree_sha=released_tree,
+                base_entries=m3_entries,
+            )
+            acquire_additions = []
+            for obj in material.identity.exact_lock_objects:
+                self.assertEqual(git.blob(material.lock_bytes[obj.path]), obj.blob_sha)
+                acquire_additions.append(
+                    {"path": obj.path, "mode": obj.mode, "type": "blob", "sha": obj.blob_sha}
+                )
+            acquire_tree = git.tree(base_tree=released_tree, additions=acquire_additions)
+            self.assertEqual(acquire_tree, material.identity.expected_canonical_tree_sha)
+            m4 = git.commit(acquire_tree, parent=m3, message="canonical acquire", second=4)
+            cleanup_tree = git.tree(
+                base_tree=acquire_tree,
+                deletions=[obj.path for obj in material.identity.exact_lock_objects],
+            )
+            m5 = git.commit(cleanup_tree, parent=m4, message="later cleanup", second=5)
+
+            unconsumed = pb._source_epoch_consumption_gate(
+                _ReplayGitHubClient(git, current_main=m3, release_head=release_head),
+                current_main_sha=m3,
+                release_base_sha=release_base,
+                source_epoch_id=source_id,
+            )
+            self.assertTrue(unconsumed.allowed)
+
+            retained = {
+                "schema_version": 1,
+                "repository": pb.REPOSITORY,
+                "source_acquisition_v1": source_record,
+                "source_epoch_id": source_id,
+                "release_transport": {
+                    "base_sha": release_base,
+                    "expected_tree_sha": released_tree,
+                    "head_ref": pb.deterministic_release_ref("TASK-X-1", WORKER),
+                    "head_sha": release_head,
+                    "pr_number": 50,
+                },
+            }
+
+            for label, current in (("active-next", m4), ("after-cleanup", m5)):
+                with self.subTest(replay_boundary=label):
+                    state_path = root / ".git" / f"replay-{label}.json"
+                    state_path.parent.mkdir(parents=True, exist_ok=True)
+                    state_path.write_text(json.dumps(retained, sort_keys=True, indent=2) + "\n")
+
+                    state = base_state()
+                    state.root = root.resolve()
+                    state.now = NOW
+                    state.decisions = []
+                    args = SimpleNamespace(
+                        github_write="yes",
+                        local_compute="yes",
+                        web_literature="yes",
+                        github_token_env="GITHUB_TOKEN",
+                        phase_b_state_file=str(state_path),
+                        current_main_sha=current,
+                        task_id="TASK-X-1",
+                        worker_id=WORKER,
+                        principal_id=PRINCIPAL,
+                        continuation_decision_id=None,
+                    )
+                    client = _ReplayGitHubClient(git, current_main=current, release_head=release_head)
+                    book = SimpleNamespace(errors=[])
+                    output = io.StringIO()
+
+                    with (
+                        patch.object(pb, "GitHubPhaseBClient", return_value=client),
+                        patch.object(pb, "_local_head_sha", return_value=current),
+                        patch("village_core.VillageState.load", return_value=state),
+                        patch("village_rank.EvaluationBook.load", return_value=book),
+                        patch("village_v1_2.load_actor_policy", return_value={}),
+                        patch("village_v1_2.worker_lock_errors", return_value=[]),
+                        patch(
+                            "village_next.derive_next_state",
+                            return_value=SimpleNamespace(phase="RESULT_RECORDED"),
+                        ),
+                        patch.object(pb, "_pending_records_from_open_acquire_prs") as pending,
+                        patch.object(pb, "_derive_post_release_semantics") as rerank,
+                        patch.object(pb, "_prepare_acquire_transport") as acquire,
+                        patch.dict(os.environ, {"GITHUB_TOKEN": "fixture-token"}),
+                        redirect_stdout(output),
+                    ):
+                        rc = pb.cli_next(root, args)
+
+                    self.assertEqual(rc, 2)
+                    self.assertIn("FAIL: OLD_ACQUISITION_REPLAY:", output.getvalue())
+                    pending.assert_not_called()
+                    rerank.assert_not_called()
+                    acquire.assert_not_called()
+                    self.assertEqual(client.write_calls, [])
 
     def test_row_14_equivalent_release_transport_uses_same_deterministic_ref(self):
         client = _DraftPRClient()
