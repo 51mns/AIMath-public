@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-DITTERT-N5-001",
+  "outcome_type": "LITERATURE_MATCH",
+  "summary": "A fixed July 2026 external working proof claims the full Dittert n=5 theorem via an exact certificate on the entire face with two prescribed independent zeros, strictly dominating narrower zero-pattern exclusions. This worker independently cross-checked the combinatorial polynomial front end but could not transport/replay the binary SOS certificate, so independent reproduction is not claimed. Pivot to a bounded external-proof reproduction/audit before further internal zero-pattern research.",
+  "artifacts": [
+    "work/TASK-DITTERT-N5-001/w-e10ce0cb8cda32ad/RESULT.md",
+    "work/TASK-DITTERT-N5-001/w-e10ce0cb8cda32ad/two_zero_face_crosscheck.py"
+  ],
+  "claim_ids": [],
+  "review_required": true,
+  "self_assessment": {
+    "information_gain": 5,
+    "mathematical_reusability": 4,
+    "transfer_potential": 2,
+    "external_relevance": 5,
+    "followup_expected_value": 5,
+    "surprise": 5,
+    "uncertainty": 2,
+    "note": "Scheduling authority remains zero for self-assessment. The external full proof is a working proof, not independently reproduced here."
+  }
+}
