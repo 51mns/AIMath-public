@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-AIMATH-ND-AFRD-001",
+  "campaign_id": "CAM-AIMATH-ND",
+  "title": "AFRD novelty and experimental-contract freeze",
+  "task_kind": "RESEARCH",
+  "stored_state": "APPROVED",
+  "research_stage": "E0",
+  "research_mode": "AI_NATIVE_REPRESENTATION",
+  "objective": "Freeze a bias-controlled pilot for AIMath Factor Representation Discovery (AFRD): test whether AI can invent mathematical representations X(N) of composite integers that expose information about hidden factors without mandating a human-selected primitive vocabulary. This E0 task freezes the data, leakage, hidden-evaluation, baseline, audit-sequencing, and promotion contracts. Candidate-specific novelty and reduction-to-known-mathematics analysis must occur only after X(N) is frozen and earns held-out signal, so prior-work hints do not steer the discovery search.",
+  "assumptions": [
+    "training data may contain labelled tuples (N,p,q), but every deployed candidate representation or feature on a held-out target must be computable from N and public experiment constants alone",
+    "p and q may be used only for labels, scoring, falsification, and post-hoc analysis; they are forbidden as evaluation-time inputs to X(N)",
+    "LLMs may already know gcd, Fermat, Pollard rho, modular arithmetic, lattices, and other number theory, so primitive-free prompting is not evidence of novelty",
+    "the discovery phase does not ban known ideas, but it must not receive candidate-specific novelty hints, hidden-test answers, another discovery lane's frozen representation, or instructions such as 'avoid Fermat' that would bias the search",
+    "known factorisation methods and closest prior work may be prepared as a sequestered evaluator-side baseline before discovery, but the candidate-specific novelty/reduction audit is unsealed only after representation freeze and held-out performance gating",
+    "a representation that is useful but reducible to known mathematics may still be an engineering result, but it is not a new-mathematics result"
+  ],
+  "route_id": "ROUTE-AIMATH-ND-AFRD-001",
+  "collision_keys": [
+    "discovery/aimath-nd/afrd-factor-representation"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "INDEPENDENT_ATTACK",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": true,
+  "held_out_required": true,
+  "toy_problem_gate": true,
+  "transfer_test_required": true,
+  "post_outcome_evaluation": "REQUIRED",
+  "success_conditions": [
+    "freeze an evaluator-side prior-work and baseline packet that is not exposed to the discovery lane before X(N) freeze",
+    "freeze a discovery/audit information firewall specifying exactly what the discovery lane, evaluator, falsifier, and later novelty auditor may inspect and when",
+    "freeze H0 interpolation: same bit range and same generation distribution as training but unseen N",
+    "freeze H1 scale extrapolation: larger bit lengths than the discovery-training range",
+    "freeze H2 balance shift: transfer between balanced semiprimes and deliberately unbalanced p,q regimes",
+    "freeze H3 arithmetic shift: held-out families varying p-1 or q-1 smoothness, safe-prime structure, and selected modular classes",
+    "freeze H4 generator shift: hidden instances produced by an independently implemented generator and independent randomness source",
+    "freeze H5 temporal holdout: hidden instances generated only after the experiment and representation interfaces are frozen",
+    "leakage firewall rejects any claimed factor-relevant signal whose evaluation-time computation requires p, q, factor-derived hidden labels, accepted proofs, hidden answers, or another lane's unpublished representation",
+    "candidate interface defines X(N), its evaluation-time computability and cost, factor-relevant utility metrics, falsification criteria, and the exact freeze point before hidden evaluation",
+    "only candidates passing a predeclared held-out utility gate proceed to candidate-specific literature search, independent-AI reduction, symbolic simplification, known-invariant comparison, and mathematical analysis",
+    "produce a concrete follow-up gate sequence for AFRD representation discovery, invariant extraction, algorithm synthesis, adversarial falsification, and mathematical extraction",
+    "define promotion to a standalone CAM-AFRD only if a reusable representation or sustained multi-task research programme emerges; otherwise AFRD remains an AIMath-ND experiment"
+  ],
+  "failure_conditions": [
+    "the experiment cannot distinguish representation discovery from memorisation, factor-label leakage, generator artefacts, or a trivial reversible re-encoding",
+    "factor-relevant signal depends on p or q at evaluation time rather than on N alone",
+    "hidden evaluation lacks at least the H0-H5 separation needed to test interpolation, scale, balance, arithmetic, generator, and temporal transfer",
+    "candidate-specific novelty knowledge is exposed before representation freeze in a way that materially steers the search",
+    "the only apparent success disappears under generator shift, temporal holdout, or independent falsification"
+  ],
+  "stop_conditions": [
+    "only a larger dataset or larger model remains without a stronger leakage, transfer, or falsification mechanism",
+    "the experiment collapses into searching combinations from a fixed human-supplied factorisation primitive library",
+    "candidate success can be explained entirely by train/test contamination, generator fingerprints, or factor-derived evaluation inputs",
+    "no defensible freeze point, held-out utility metric, or post-signal novelty-audit sequence can be specified before discovery begins"
+  ],
+  "owned_paths": [
+    "work/TASK-AIMATH-ND-AFRD-001/**"
+  ],
+  "expected_artifacts": [
+    "frozen AFRD discovery/audit information firewall",
+    "sequestered prior-work and external-baseline packet with explicit non-claims",
+    "frozen semiprime/composite data-generation protocol and H0-H5 hidden split contract",
+    "N-only leakage firewall and evaluation contract",
+    "representation X(N) interface, cost model, freeze point, and factor-relevant utility metrics",
+    "post-signal candidate novelty audit plan covering literature, independent-AI reduction, symbolic simplification, known invariants, and mathematical analysis",
+    "follow-up AFRD representation-discovery gate specification",
+    "CAM-AFRD promotion criteria and go/no-go outcome record"
+  ],
+  "created_at": "2026-09-04"
+}
