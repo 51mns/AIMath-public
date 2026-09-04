@@ -1,0 +1,25 @@
+{
+  "acquired_at": "2026-09-04T05:40:10+00:00",
+  "actor": {
+    "id": "gh:51mns",
+    "type": "HUMAN_PRINCIPAL"
+  },
+  "base_main_sha": "c861bf0aef4d98c52f0792e5761ece27d0524264",
+  "collision_keys": [
+    "fixed-433/literature-placement"
+  ],
+  "expires_at": "2026-09-11T05:40:10+00:00",
+  "lock_id": "LOCK-NEXT-E41095302836FBC77CCF0A6B2E08278D",
+  "next_binding": {
+    "acquire_intent_id": "e41095302836fbc77ccf0a6b2e08278d3fd54f5c9e579dbf3849d07bf815ec1c",
+    "continuation_context_id": "e4dc0186156942b5b4064cd2187099f172d3e5c74918f2e5f2853282017054dc",
+    "schema_version": 1,
+    "selection_id": "b35eccabbbe70cf5bdcd9f792a071470141c3cbc3c43f422c5cbd3913303a7d5",
+    "source_epoch_id": "730fe029ad2479bcb83f2d5ce9744f6f18578c783c2c8fa84f0d491e4d691065"
+  },
+  "renewal_count": 0,
+  "schema_version": 1,
+  "task_id": "TASK-FIXED-433-001",
+  "work_ref": "research/TASK-FIXED-433-001/w-0bebfd2fd11cb67f",
+  "worker_id": "w-0bebfd2fd11cb67f"
+}
