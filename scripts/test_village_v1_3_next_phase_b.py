@@ -536,10 +536,11 @@ class _ExactReadClient:
 
 
 class _ReplayGitHubClient(_ExactReadClient):
-    def __init__(self, git, *, current_main, release_head):
+    def __init__(self, git, *, current_main, release_head, open_prs=()):
         super().__init__(git)
         self.current_main = current_main
         self.release_head = release_head
+        self._open_prs = [copy.deepcopy(x) for x in open_prs]
         self.write_calls = []
 
     def current_main_sha(self):
@@ -549,7 +550,7 @@ class _ReplayGitHubClient(_ExactReadClient):
         return PRINCIPAL
 
     def open_prs(self):
-        return []
+        return copy.deepcopy(self._open_prs)
 
     def ruleset_proof(self):
         return _good_ruleset()
@@ -1153,6 +1154,198 @@ class VillageV13PhaseB73(unittest.TestCase):
                     rerank.assert_not_called()
                     acquire.assert_not_called()
                     self.assertEqual(client.write_calls, [])
+
+            def retained_pending_on(base_sha, base_tree_sha, base_entries, collision_key, head_sha):
+                context, context_id = pb.derive_continuation_context_v1(
+                    source_epoch_id=source_id,
+                    selection_main_sha=base_sha,
+                    terminal_class="ABANDONED_TERMINAL",
+                    terminal_blob_sha=source_record["terminal_blob_sha"],
+                    source_campaign_id="CAM-X",
+                    global_admission="OPEN",
+                    source_campaign_strategic_state="ACTIVE",
+                    continuation_gate_required=False,
+                    continuation_decision_id=None,
+                    continuation_decision_blob_sha=None,
+                    human_decision=None,
+                    canonical_stop_condition_reached=True,
+                    canonical_dependency_followup_unusable=True,
+                    same_campaign_allowed=False,
+                    global_fallback_allowed=True,
+                    approved_followup_task_ids=[TASK],
+                    evaluation_followup_task_ids=[],
+                    reasons=[
+                        "dependency reevaluation makes source-Campaign follow-up unusable",
+                        "explicit source Task/Campaign stop condition reached",
+                    ],
+                    capability_profile=CapabilityProfile.from_values(
+                        github_write="yes",
+                        local_compute="yes",
+                        web_literature="unknown",
+                    ),
+                )
+                selection, selection_id = pb.derive_selection_v1(
+                    source_epoch_id=source_id,
+                    selection_main_sha=base_sha,
+                    continuation_context_id=context_id,
+                    pending_records=[],
+                    hard_eligible_task_ids=[TASK],
+                    ranked_task_ids=[TASK],
+                    selected_task_id=TASK,
+                    selected_relation="GLOBAL_READY",
+                    worker_id=WORKER,
+                    principal_id=PRINCIPAL,
+                )
+                intent, intent_id = pb.derive_acquire_intent_v1(
+                    source_epoch_id=source_id,
+                    selection_id=selection_id,
+                    selection_main_sha=base_sha,
+                    continuation_context_id=context_id,
+                    selected_task_id=TASK,
+                    worker_id=WORKER,
+                    principal_id=PRINCIPAL,
+                    work_ref=f"research/{TASK}/{WORKER}",
+                    collision_keys=[collision_key],
+                )
+                ids = SemanticIds(source_id, context_id, selection_id, intent_id)
+                material = _material(
+                    ids,
+                    base_sha=base_sha,
+                    base_tree_sha=base_tree_sha,
+                    base_entries=base_entries,
+                    collision_keys=(collision_key,),
+                )
+                ref = pb.deterministic_acquire_ref(intent_id, TASK, WORKER)
+                retained_state = copy.deepcopy(retained)
+                retained_state.update({
+                    "continuation_context_v1": context,
+                    "continuation_context_id": context_id,
+                    "selection_v1": selection,
+                    "selection_id": selection_id,
+                    "acquire_intent_v1": intent,
+                    "acquire_intent_id": intent_id,
+                    "canonical_acquire_identity_v3": material.identity.to_dict(),
+                    "canonical_acquire_id": material.canonical_acquire_id,
+                    "acquire_transport": {
+                        "head_ref": ref,
+                        "head_sha": head_sha,
+                        "base_sha": base_sha,
+                        "pr_number": 52,
+                    },
+                })
+                self.assertTrue(pb.validate_retained_state_chain(retained_state))
+                pr = {
+                    "number": 52,
+                    "state": "open",
+                    "draft": True,
+                    "head": {"sha": head_sha, "ref": ref},
+                    "base": {"sha": base_sha, "ref": "main"},
+                    "user": {"login": "51mns"},
+                    "node_id": "PR_fixture_52",
+                }
+                return retained_state, pr
+
+            # Legitimate first pending ACQUIRE at M3 must still be retryable.
+            pending_retained, pending_pr = retained_pending_on(
+                m3, released_tree, git.entries(m3), "other/pending", "9" * 40,
+            )
+            pending_state_path = root / ".git" / "replay-legitimate-pending.json"
+            pending_state_path.write_text(json.dumps(pending_retained, sort_keys=True, indent=2) + "\n")
+            pending_state = base_state()
+            pending_state.root = root.resolve()
+            pending_state.now = NOW
+            pending_state.decisions = []
+            pending_args = SimpleNamespace(
+                github_write="yes",
+                local_compute="yes",
+                web_literature="yes",
+                github_token_env="GITHUB_TOKEN",
+                phase_b_state_file=str(pending_state_path),
+                current_main_sha=m3,
+                task_id="TASK-X-1",
+                worker_id=WORKER,
+                principal_id=PRINCIPAL,
+                continuation_decision_id=None,
+            )
+            pending_client = _ReplayGitHubClient(
+                git, current_main=m3, release_head=release_head, open_prs=[pending_pr],
+            )
+            pending_output = io.StringIO()
+            with (
+                patch.object(pb, "GitHubPhaseBClient", return_value=pending_client),
+                patch.object(pb, "_local_head_sha", return_value=m3),
+                patch("village_core.VillageState.load", return_value=pending_state),
+                patch("village_rank.EvaluationBook.load", return_value=SimpleNamespace(errors=[])),
+                patch("village_v1_2.load_actor_policy", return_value={}),
+                patch("village_v1_2.worker_lock_errors", return_value=[]),
+                patch("village_next.derive_next_state", return_value=SimpleNamespace(phase="RESULT_RECORDED")),
+                patch.object(
+                    pb,
+                    "_transport_handoff",
+                    return_value=pb.GateResult(False, "TRANSPORT_HANDOFF_RERUN_REQUESTED", "fixture"),
+                ) as pending_handoff,
+                patch.dict(os.environ, {"GITHUB_TOKEN": "fixture-token"}),
+                redirect_stdout(pending_output),
+            ):
+                pending_rc = pb.cli_next(root, pending_args)
+            self.assertEqual(pending_rc, 3)
+            self.assertIn("TRANSPORT_HANDOFF_RERUN_REQUESTED", pending_output.getvalue())
+            pending_handoff.assert_called_once()
+            self.assertEqual(pending_client.write_calls, [])
+
+            # Once M4 has consumed the epoch, a retained alternate transport loses
+            # handoff authority both while the lock is live and after cleanup.
+            stale_retained, stale_pr = retained_pending_on(
+                m4, acquire_tree, git.entries(m4), "other/stale", "a" * 40,
+            )
+            for label, current in (("stale-active-next", m4), ("stale-after-cleanup", m5)):
+                with self.subTest(retained_transport_boundary=label):
+                    stale_state_path = root / ".git" / f"replay-{label}.json"
+                    stale_state_path.write_text(json.dumps(stale_retained, sort_keys=True, indent=2) + "\n")
+                    stale_state = base_state()
+                    stale_state.root = root.resolve()
+                    stale_state.now = NOW
+                    stale_state.decisions = []
+                    stale_args = SimpleNamespace(
+                        github_write="yes",
+                        local_compute="yes",
+                        web_literature="yes",
+                        github_token_env="GITHUB_TOKEN",
+                        phase_b_state_file=str(stale_state_path),
+                        current_main_sha=current,
+                        task_id="TASK-X-1",
+                        worker_id=WORKER,
+                        principal_id=PRINCIPAL,
+                        continuation_decision_id=None,
+                    )
+                    stale_client = _ReplayGitHubClient(
+                        git, current_main=current, release_head=release_head, open_prs=[stale_pr],
+                    )
+                    stale_output = io.StringIO()
+                    with (
+                        patch.object(pb, "GitHubPhaseBClient", return_value=stale_client),
+                        patch.object(pb, "_local_head_sha", return_value=current),
+                        patch("village_core.VillageState.load", return_value=stale_state),
+                        patch("village_rank.EvaluationBook.load", return_value=SimpleNamespace(errors=[])),
+                        patch("village_v1_2.load_actor_policy", return_value={}),
+                        patch("village_v1_2.worker_lock_errors", return_value=[]),
+                        patch("village_next.derive_next_state", return_value=SimpleNamespace(phase="RESULT_RECORDED")),
+                        patch.object(pb, "_transport_handoff") as stale_handoff,
+                        patch.object(pb, "_pending_records_from_open_acquire_prs") as stale_pending,
+                        patch.object(pb, "_derive_post_release_semantics") as stale_rerank,
+                        patch.object(pb, "_prepare_acquire_transport") as stale_acquire,
+                        patch.dict(os.environ, {"GITHUB_TOKEN": "fixture-token"}),
+                        redirect_stdout(stale_output),
+                    ):
+                        stale_rc = pb.cli_next(root, stale_args)
+
+                    self.assertEqual(stale_rc, 2)
+                    self.assertIn("FAIL: OLD_ACQUISITION_REPLAY:", stale_output.getvalue())
+                    stale_handoff.assert_not_called()
+                    stale_pending.assert_not_called()
+                    stale_rerank.assert_not_called()
+                    stale_acquire.assert_not_called()
+                    self.assertEqual(stale_client.write_calls, [])
 
     def test_row_14_equivalent_release_transport_uses_same_deterministic_ref(self):
         client = _DraftPRClient()

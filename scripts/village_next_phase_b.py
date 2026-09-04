@@ -2510,6 +2510,34 @@ def cli_next(root: Path, args: Any) -> int:
                 print(f"TASK={retained['acquire_intent_v1']['selected_task_id']}")
                 print(f"MAIN={main_sha}")
                 return 0
+
+            # A retained ACQUIRE transport is retry authority only while its
+            # source epoch is still canonically unconsumed. Prove the exact
+            # RELEASE and consumption history before any handoff write.
+            release = _prove_retained_release(
+                client,
+                retained=retained,
+                current_main_sha=main_sha,
+                current_entries=main_entries,
+            )
+            if not release.allowed:
+                raise PhaseBError(release.code, release.detail)
+            source_id = retained.get("source_epoch_id")
+            release_transport = retained.get("release_transport")
+            release_base_sha = release_transport.get("base_sha") if isinstance(release_transport, Mapping) else None
+            if not isinstance(source_id, str) or not SHA256_RE.fullmatch(source_id):
+                raise PhaseBError("SOURCE_EPOCH_RELEASE_PROVENANCE_UNAVAILABLE", "retained source epoch unavailable")
+            if not isinstance(release_base_sha, str) or not SHA1_RE.fullmatch(release_base_sha):
+                raise PhaseBError("SOURCE_EPOCH_RELEASE_PROVENANCE_UNAVAILABLE", "retained RELEASE base unavailable")
+            consumption = _source_epoch_consumption_gate(
+                client,
+                current_main_sha=main_sha,
+                release_base_sha=release_base_sha,
+                source_epoch_id=source_id,
+            )
+            if not consumption.allowed:
+                raise PhaseBError(consumption.code, consumption.detail)
+
             # A still-open exact transport may simply be awaiting trusted merge.
             trans = retained.get("acquire_transport")
             if isinstance(trans, Mapping):
