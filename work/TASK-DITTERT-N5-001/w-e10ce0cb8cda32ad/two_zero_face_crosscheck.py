@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 AIMath contributors
+# SPDX-License-Identifier: Apache-2.0
 """Writer-side exact cross-check for the external Dittert n=5 two-zero-face reduction.
 
 This does NOT verify the external SOS/Gram certificate.  It independently
