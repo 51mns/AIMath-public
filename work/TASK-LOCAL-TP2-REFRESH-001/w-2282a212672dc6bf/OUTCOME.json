@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-REFRESH-001",
+  "outcome_type": "STRUCTURAL_REDUCTION",
+  "summary": "A materially new Local-TP2 route was isolated: use the Farey-recursive continued-fraction/continuant representation of deformed squared Markov polynomials, lift coefficients to a degree-layered path model, and reduce the frozen adjacent determinant to a 2x2 Lindstrom-Gessel-Viennot minor in one compatible planar network for S_v and D_v. The common-network construction is not yet proved, so C-LOCAL-TP2 and the campaign HOLD state are unchanged. A non-canonical bounded successor task payload is frozen for human/director routing.",
+  "artifacts": [
+    "work/TASK-LOCAL-TP2-REFRESH-001/w-2282a212672dc6bf/RESULT.md",
+    "work/TASK-LOCAL-TP2-REFRESH-001/w-2282a212672dc6bf/root_fixture.py",
+    "work/TASK-LOCAL-TP2-REFRESH-001/w-2282a212672dc6bf/NEXT_TASK_PROPOSAL.yml"
+  ],
+  "claim_ids": [
+    "C-LOCAL-TP2"
+  ],
+  "review_required": true,
+  "self_assessment": {
+    "information_gain": 4,
+    "mathematical_reusability": 4,
+    "transfer_potential": 4,
+    "external_relevance": 4,
+    "followup_expected_value": 4,
+    "surprise": 4,
+    "uncertainty": 3,
+    "note": "Self-assessment has zero allocation or Truth-Layer authority. The route is structurally distinct from recorded failed ansatz families, but the decisive simultaneous common-network construction remains open."
+  }
+}
