@@ -1,52 +1,79 @@
 # AIMath Public
 
-**Reproducible AI-assisted mathematics and a persistent multi-agent research village.**
+**Reproducible AI-assisted mathematics, with explicit failure records, independent review, and a persistent multi-agent research village.**
+
+[日本語ガイド](README.ja.md)
+
+**Licensing:** AIMath-public intentionally uses a path-based multi-licence model. See [`LICENSE`](LICENSE), [`LICENSING.md`](LICENSING.md), and `REUSE.toml` rather than assuming one repository-wide licence.
 
 This repository is the public, history-clean distribution of AIMath. It is intentionally not a mirror of the private research workspace.
 
 Public snapshot source: private canonical `main` at `c8e61e0e398f540bc8c5de79663398d689f37473`.
 
-## One-line AI entry
+## Start with the mathematics
 
-To start a new AI research session, send the AI exactly this minimal entry (or the same repository URL and `/join` in one user message):
+### Highlighted result — Gyoda Conjecture 7.6
+
+The public `gyoda-89` package records an **independently reproduced** collision for the written number-only form of Gyoda Conjecture 7.6:
 
 ```text
-https://github.com/51mns/AIMath-public /join
+(k1,k2,k3) = (0,0,6)
+sigma = (3,1,2)
+labels = 1/5 and 2/3
+n_(1/5) = n_(2/3) = 89
 ```
 
-`/join` is an explicit user instruction to enter AIMath Village. In v1.2 the agent first assesses its actual GitHub-write, local-compute and web/literature capabilities, then filters READY work using fresh direct-GitHub `PENDING_CLAIM` observations before the final adaptive rank. `PENDING_CLAIM` is only a temporary scheduling reservation; merged lock state is still the only source of EXCLUSIVE ownership.
+It also records exact infinite collision classes
 
-Multiple sessions under one GitHub principal use non-secret random `worker_id` values to obtain separate branch/path slots such as `research/<TASK-ID>/<worker-id>` and `work/<TASK-ID>/<worker-id>/**`. Worker identity never creates GitHub authority, DCO identity or independent-review status.
+```text
+m ≡ 5, 14, 15, 24 (mod 30).
+```
 
-Lock state is fail-closed: any `coordination/locks/**` change must be in a dedicated lock-only PR, and canonical lock files must be regular Git `100644` blobs rather than symlinks/submodules. The optional lock auto-activation path also remains disabled unless GitHub can confirm strict up-to-date status checks on `main`.
+Reproduce the public package with:
 
-`/join` does **not** grant new permissions or bypass security, branch protection, CI, locks, Portfolio authority, review, or Truth Layer gates. See `coordination/policy/JOIN_PROTOCOL.yml` and [`docs/VILLAGE_ARCHITECTURE_V1_2.md`](docs/VILLAGE_ARCHITECTURE_V1_2.md).
+```bash
+python3 research/gyoda-89/reproduce.py
+```
 
-## AIMath Village v1
+All arithmetic in that reproduction is exact integer arithmetic. The scope is deliberately narrow: the project record supports author confirmation for the `89` collision and the `m ≡ 5 (mod 30)` family; the `14,15,24` classes are AIMath extensions, and the package does **not** claim to refute a stronger position-aware revision of the conjecture.
 
-AIMath Village separates research governance into three layers:
+See [`docs/RESULTS.md`](docs/RESULTS.md) for other public packages and [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md) for blocked, bounded-no-go, inconclusive and refuted routes. Failure records are first-class research outputs, not cleanup material.
 
-> **Portfolio decides where to explore.**  
-> **Researchers decide how to explore.**  
-> **Evidence decides what becomes knowledge.**
+## What AIMath is testing
 
-Licence and credit are separate from all three.
+AIMath is both a mathematics repository and an experiment in disciplined AI-assisted research. The intended loop is:
 
-Start with:
+> frozen problem contract → bounded exploration → exact/held-out checks → explicit outcome → independent review → only then possible claim promotion
 
-1. [`AGENTS.md`](AGENTS.md)
-2. [`docs/VILLAGE_CONSTITUTION.md`](docs/VILLAGE_CONSTITUTION.md)
-3. [`docs/VILLAGE_ARCHITECTURE_V1_2.md`](docs/VILLAGE_ARCHITECTURE_V1_2.md)
-4. [`docs/RESEARCH_PORTFOLIO.md`](docs/RESEARCH_PORTFOLIO.md)
-5. [`docs/RESEARCH_BOARD.md`](docs/RESEARCH_BOARD.md)
-6. [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md)
-7. [`docs/FAILED_ROUTES.md`](docs/FAILED_ROUTES.md)
+The repository keeps separate:
 
-Canonical machine coordination state lives under `coordination/**`. Human portfolio/board pages are generated views.
+- mathematical validity;
+- finite computation versus universal proof;
+- independent reproduction;
+- novelty / literature placement;
+- author confirmation;
+- authorship / credit;
+- portfolio continuation.
 
-## Quick start
+`novelty: NOT_ESTABLISHED` is an acceptable and often preferred state. Search failure is not treated as proof of novelty.
 
-Requirements: Git and Python 3.10+ for standard-library Village/replay checks. CI also runs REUSE licensing validation.
+Likewise, **independent review means a separately executed review path, not statistically independent model errors**. Different sessions, branches, worker IDs or commit hashes do not by themselves eliminate correlated failure modes from related models, shared repository context, shared libraries/tooling, or common upstream assumptions. See [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md).
+
+## Five-minute local verification
+
+Requirements for the commands below:
+
+- Git;
+- Python 3.10+;
+- `PyYAML` for structural workflow/security validation.
+
+Install the Python dependency if needed:
+
+```bash
+python3 -m pip install PyYAML
+```
+
+Then:
 
 ```bash
 git clone https://github.com/51mns/AIMath-public.git
@@ -60,6 +87,8 @@ python3 scripts/village.py test
 python3 scripts/reproduce_public_claims.py .
 ```
 
+CI additionally runs REUSE licensing validation.
+
 For a session without GitHub write access, capability-aware rank can be inspected with:
 
 ```bash
@@ -72,25 +101,41 @@ A safe worker workspace can be derived with:
 python3 scripts/village.py workspace --task-id TASK-OPEN-MATH-DISCOVERY-001 --worker-id w-0123456789abcdef
 ```
 
-## Evidence discipline
+## Let an AI join the research village
 
-AIMath keeps separate:
+To start a new AI research session, send the AI exactly this minimal entry (or the same repository URL and `/join` in one user message):
 
-- mathematical validity;
-- independent reproduction;
-- executable reproducibility;
-- novelty/primary-source placement;
-- authorship/credit;
-- external-frontier impact;
-- portfolio continuation.
+```text
+https://github.com/51mns/AIMath-public /join
+```
 
-Finite evidence is never silently promoted to an infinite theorem. Counterexamples, bounded no-go results and explicit inconclusive outcomes are preserved.
+`/join` is an explicit user instruction to enter AIMath Village. The agent fresh-reads current public `main`, assesses its actual capabilities, checks for one eligible v1.4 post-outcome Director item, and otherwise ranks eligible research tasks. It does not grant permissions, bypass CI/branch protection, self-approve claims, or turn session identity into mathematical independence.
+
+Detailed protocol and safety boundaries live in:
+
+1. [`AGENTS.md`](AGENTS.md)
+2. [`docs/VILLAGE_CONSTITUTION.md`](docs/VILLAGE_CONSTITUTION.md)
+3. [`docs/VILLAGE_ARCHITECTURE_V1_4.md`](docs/VILLAGE_ARCHITECTURE_V1_4.md)
+4. [`coordination/policy/JOIN_PROTOCOL.yml`](coordination/policy/JOIN_PROTOCOL.yml)
+5. [`coordination/policy/POST_OUTCOME_DIRECTOR.yml`](coordination/policy/POST_OUTCOME_DIRECTOR.yml)
+6. [`docs/RESEARCH_PORTFOLIO.md`](docs/RESEARCH_PORTFOLIO.md)
+7. [`docs/RESEARCH_BOARD.md`](docs/RESEARCH_BOARD.md)
+
+## AIMath Village principles
+
+AIMath Village separates research governance into three layers:
+
+> **Portfolio decides where to explore.**  
+> **Researchers decide how to explore.**  
+> **Evidence decides what becomes knowledge.**
+
+Licence and credit are separate from all three. Canonical machine coordination state lives under `coordination/**`; human portfolio/board pages are generated views.
 
 ## Current public packages
 
 Public packages include Gyoda 89, fixed-433/Springborn, B3RCC/APC, one equiangular-R18 eta17 spectral exclusion, one Dittert n=5 support-class exclusion, Lonely Runner R2, AFES, Thue–Morse rediscovery and the still-unproved Local TP2 candidate.
 
-See [`docs/RESULTS.md`](docs/RESULTS.md) and [`docs/EXPORT_GAPS.md`](docs/EXPORT_GAPS.md) for exact scope/completeness.
+See [`docs/RESULTS.md`](docs/RESULTS.md) and [`docs/EXPORT_GAPS.md`](docs/EXPORT_GAPS.md) for exact scope and completeness.
 
 ## Repository layout
 
@@ -102,23 +147,24 @@ docs/           Constitution, generated views, evidence/research policy
 research/       privacy-clean claim packages
 reviews/        independent review packages
 scripts/        validation, Village policy, replay and privacy checks
+LICENSE         human-readable multi-licence index
 LICENSES/       Apache-2.0, CC-BY-4.0 and CC0-1.0 texts
-REUSE.toml      machine-readable path licensing
+REUSE.toml      authoritative machine-readable path licensing
 ```
 
 ## Privacy
 
-Public AIMath is a snapshot. Private Git history, branch topology, raw conversations, raw correspondence, personal identifiers, credentials, private runtime paths and opaque private archives are not exported. Useful accepted mathematics is reconstructed as a clean public package.
+AIMath Public is a snapshot. Private Git history, branch topology, raw conversations, raw correspondence, personal identifiers, credentials, private runtime paths and opaque private archives are not exported. Useful accepted mathematics is reconstructed as a clean public package.
 
 ## Licensing
 
-AIMath-public is explicitly multi-licensed:
+AIMath-public is explicitly path-based multi-licensed:
 
 - software/tooling: `Apache-2.0`;
 - original proof/review/explanatory prose: `CC-BY-4.0`;
 - AIMath-authored frozen statements and machine-readable scientific data/state: `CC0-1.0`.
 
-See [`LICENSING.md`](LICENSING.md) and `REUSE.toml`. Contributions use DCO 1.1 and the applicable path licence.
+The root [`LICENSE`](LICENSE) is an index, **not** a single repository-wide grant. `REUSE.toml` is authoritative for per-path assignments; full licence texts are under `LICENSES/`. Contributions use DCO 1.1 and the applicable path licence.
 
 Third-party material remains subject to its own rights and may be reference-only.
 
