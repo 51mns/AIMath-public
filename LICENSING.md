@@ -4,6 +4,12 @@ AIMath-public uses a **path-based multi-licence model** so software, mathematica
 
 This is an open-source/open-science project licence policy, not legal advice.
 
+## Root licence index
+
+The root [`LICENSE`](LICENSE) file is a human-readable **licensing index**, not a single repository-wide licence grant. The authoritative per-path assignment is `REUSE.toml`, and exact licence texts are stored in `LICENSES/`.
+
+Because the repository intentionally uses multiple licences, GitHub or other hosting UIs may fail to display a single detected licence. That must not be interpreted as an absence of licensing; use `REUSE.toml` and the applicable SPDX assignment for the path you are reusing.
+
 ## Default licences
 
 | Material | SPDX identifier | Intent |
@@ -21,7 +27,7 @@ The authoritative per-path assignment is `REUSE.toml`. Exact licence texts are i
 - Third-party material keeps its original terms. If redistribution rights are unclear, use a citation/reference rather than copying the artifact.
 - A statement transcribed or quoted from a third-party source is **not** made CC0 merely because it appears near an AIMath statement. Mark it as upstream/reference-only.
 - CC0 does not waive patent or trademark rights. Software-like validators and executable logic belong on the Apache-2.0 side.
-- There is no project `NOTICE` file in v1.0. Add one only if a future distribution actually requires retained attribution notices or the project deliberately adopts one.
+- There is no project `NOTICE` file. Add one only if a future distribution actually requires retained attribution notices or the project deliberately adopts one.
 
 ## Frozen statement boundary
 

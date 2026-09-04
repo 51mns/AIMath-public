@@ -1,0 +1,23 @@
+AIMath-public — licensing index
+
+AIMath-public intentionally does NOT use one repository-wide licence.
+
+Authoritative per-path licence assignments are defined in:
+
+  REUSE.toml
+
+The default mapping is:
+
+- software, validators, CI, schemas and executable tooling: Apache-2.0
+- original proof/review/explanatory prose and documentation: CC-BY-4.0
+- AIMath-authored frozen statements, certificates and machine-readable scientific/coordination state: CC0-1.0
+
+Full licence texts are stored in:
+
+  LICENSES/Apache-2.0.txt
+  LICENSES/CC-BY-4.0.txt
+  LICENSES/CC0-1.0.txt
+
+Important: this file is an index, not a grant that overrides REUSE.toml. Third-party material remains subject to its own rights and may be reference-only.
+
+For details and contribution terms, read LICENSING.md.

@@ -14,6 +14,7 @@ A public research package should record, where applicable:
 - runtime/dependency versions when executable evidence depends on them;
 - generated artifact hashes when those bytes are load-bearing;
 - whether writer and verifier implementations share code;
+- known model/harness/context overlap that could create correlated review errors;
 - whether evidence is finite/bounded or proves a universal statement;
 - mathematical validity, novelty, author confirmation and reproduction status separately.
 
@@ -34,12 +35,16 @@ A universal claim requires a mathematical argument that covers its full quantifi
 
 A writer does not promote its own result to `INDEPENDENTLY_REPRODUCED`.
 
+In AIMath, **independent review means a separately executed review path with its own derivation and evidence record. It does not mean that reviewer errors are statistically independent.** Different sessions, worker IDs, branches, commit hashes or nominally separate agents do not by themselves eliminate correlated failure modes. Related model families or harnesses, shared system/repository context, shared libraries/toolchains, common source material and common upstream assumptions can all cause false agreement.
+
+When known and safe to disclose, a review should record material overlap in model/harness lineage, repository context, implementation libraries and upstream evidence. If the relevant error-mode independence is unknown, it should be treated as **not established**, not silently assumed. Cross-model or human review can reduce some correlated-risk channels, but no review label guarantees correctness.
+
 A strong independent review should disclose:
 
 - what information the reviewer saw before its derivation was fixed;
 - whether it imported writer code or generated outputs;
 - whether every load-bearing implication was rederived;
-- any shared-library or implementation-independence limitation;
+- any shared-library, model/harness, repository-context or implementation-independence limitation;
 - negative controls or adversarial checks used to detect false agreement.
 
 ## Durable evidence identity

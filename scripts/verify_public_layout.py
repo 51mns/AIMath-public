@@ -6,7 +6,7 @@ import sys
 from workflow_security import repository_workflow_security_errors
 
 REQUIRED = [
-    "README.md", "README.ja.md", "AGENTS.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSING.md", "REUSE.toml",
+    "README.md", "README.ja.md", "AGENTS.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSING.md", "LICENSE", "REUSE.toml",
     "LICENSES/Apache-2.0.txt", "LICENSES/CC-BY-4.0.txt", "LICENSES/CC0-1.0.txt",
     "docs/VILLAGE_CONSTITUTION.md", "docs/VILLAGE_ARCHITECTURE.md", "docs/VILLAGE_ARCHITECTURE_V1_1.md", "docs/VILLAGE_ARCHITECTURE_V1_2.md", "docs/VILLAGE_ARCHITECTURE_V1_2_1.md", "docs/CONTINUATION_GATE.md", "docs/GITHUB_SETTINGS_REQUIRED.md",
     "docs/RESEARCH_PORTFOLIO.md", "docs/RESEARCH_BOARD.md", "docs/DEPENDENCY_GRAPH.md", "docs/CAMPAIGN_HISTORY.md", "docs/RESEARCH_EVALUATIONS.md",

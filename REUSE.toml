@@ -37,7 +37,7 @@ SPDX-FileCopyrightText = "2026 AIMath contributors"
 SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
-path = ["README.md", "README.ja.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSING.md", "AGENTS.md"]
+path = ["README.md", "README.ja.md", "CONTRIBUTING.md", "SECURITY.md", "LICENSING.md", "LICENSE", "AGENTS.md"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 AIMath contributors"
 SPDX-License-Identifier = "CC-BY-4.0"
