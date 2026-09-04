@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "lock_id": "LOCK-TASK-DITTERT-N5-001-5B0EEFEDCA755036",
+  "task_id": "TASK-DITTERT-N5-001",
+  "worker_id": "w-5b0eefedca755036",
+  "actor": {
+    "id": "gh:51mns",
+    "type": "HUMAN_PRINCIPAL",
+    "ai_assistance": {
+      "model": "GPT-5.6 Sol",
+      "role": "researcher"
+    }
+  },
+  "base_main_sha": "ba61d1d7acbda8712cc447d19e45969e72e5fcfa",
+  "acquired_at": "2026-09-04T09:02:25Z",
+  "expires_at": "2026-09-11T09:02:25Z",
+  "work_ref": "research/TASK-DITTERT-N5-001/w-5b0eefedca755036",
+  "collision_keys": [
+    "dittert-n5/broader-zero-pattern"
+  ],
+  "renewal_count": 0
+}
