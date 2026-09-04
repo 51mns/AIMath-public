@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-AIMATH-ND-AFRD-001",
+  "worker_id": "w-5aef23bcfc3ab622",
+  "base_main": "ba61d1d7acbda8712cc447d19e45969e72e5fcfa",
+  "hash_algorithm": "SHA-256",
+  "files": [
+    {
+      "path": "AFRD_EXPERIMENT_CONTRACT.json",
+      "bytes": 8038,
+      "sha256": "67a066eef4ed75822f1759727cf201e95459a641de6e480b9a823ca444961e0c",
+      "git_blob_sha1": "f73fd9461c9817679d92a82a1e6ac7fd89c96a38"
+    },
+    {
+      "path": "AFRD_EXPERIMENT_CONTRACT.json.license",
+      "bytes": 85,
+      "sha256": "838c050700e3e8eb9abea1004454fd66a64c64598c0e2a29ff4e2dc9e5edabee",
+      "git_blob_sha1": "dd6289aa4a5af2d8144314a118bef62e900f5ffb"
+    },
+    {
+      "path": "DATA_SPLITS.md",
+      "bytes": 3824,
+      "sha256": "403a75d87337b20e90272cf6bcab81af675e2df8702659035f557058f8099ca0",
+      "git_blob_sha1": "fa3eaf110898db25bea576355b62aaeffd0a5b50"
+    },
+    {
+      "path": "DISCOVERY_FIREWALL.md",
+      "bytes": 2734,
+      "sha256": "b37bb6fbf167db74ab8709239b7f481e74a8f942f125631b0118cc96a37955f1",
+      "git_blob_sha1": "79b98b5a8103c32c00063a6fb238580819fce157"
+    },
+    {
+      "path": "EVALUATOR_BASELINES.md",
+      "bytes": 2300,
+      "sha256": "306490be41dd76ab08b2b23f3d4861b2289eb0b839f9cbc7341e764ae210fe00",
+      "git_blob_sha1": "96f615a51ac6c8a804660018f40e731e3dd68bfd"
+    },
+    {
+      "path": "FOLLOWUP_GATES.md",
+      "bytes": 2367,
+      "sha256": "9e483e971ea57f6f07660b2c53db9932489bfb54900899a4cb5909edcd63552f",
+      "git_blob_sha1": "e47719045c2651e04d1f21bc544d42354842ea82"
+    },
+    {
+      "path": "GOAL_CONTEXT_CONSTRAINTS.md",
+      "bytes": 2218,
+      "sha256": "4edb04893fc6f3d70194dfec103eee5c1d014cb08a9b2a9dec02cedf7e0e3a19",
+      "git_blob_sha1": "f61f77caab587ecb88db461259b8ceaa8fefe593"
+    },
+    {
+      "path": "MANIFEST.json.license",
+      "bytes": 85,
+      "sha256": "838c050700e3e8eb9abea1004454fd66a64c64598c0e2a29ff4e2dc9e5edabee",
+      "git_blob_sha1": "dd6289aa4a5af2d8144314a118bef62e900f5ffb"
+    },
+    {
+      "path": "POST_SIGNAL_AUDIT.md",
+      "bytes": 1946,
+      "sha256": "7a364146409af2811fe6a872cbea43bfd5b759c9bb8c94f3101f9edf77b2b004",
+      "git_blob_sha1": "a68e5b437ebac308ca1a5df152967327bd5c0c56"
+    },
+    {
+      "path": "REPRESENTATION_INTERFACE.md",
+      "bytes": 3662,
+      "sha256": "a9ecde0b623d64fda5f2d901b787d3e70a4294a059d082cffcd03349dd08cd1a",
+      "git_blob_sha1": "4a7ccdbb6d9928220ea96885724691a7d5291553"
+    },
+    {
+      "path": "SELF_ASSESSMENT.json",
+      "bytes": 713,
+      "sha256": "ac827d05822eae09175ec8344f5a1f1bffb6b32a63684b9d525f8978ed6a9faa",
+      "git_blob_sha1": "bf7988ae07f93de592c5a0784e9ee606dc9fd8c0"
+    },
+    {
+      "path": "SELF_ASSESSMENT.json.license",
+      "bytes": 85,
+      "sha256": "838c050700e3e8eb9abea1004454fd66a64c64598c0e2a29ff4e2dc9e5edabee",
+      "git_blob_sha1": "dd6289aa4a5af2d8144314a118bef62e900f5ffb"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 913,
+      "sha256": "898c1fe687c706f9bcea62b082229cfe2c060aca63a07a05eb442ed5312c5543",
+      "git_blob_sha1": "5f0052069f295de5edd8be92635c33e830b6b196"
+    },
+    {
+      "path": "WORKER_OUTCOME.md",
+      "bytes": 1561,
+      "sha256": "9b5722843cb52f17c23f6fd2f6c2eea3893424338731dfd0b63a6a9ce1906488",
+      "git_blob_sha1": "f2ebad404d035eca5ba1cc22b5edcbf7d8e205ec"
+    },
+    {
+      "path": "afrd_metrics.py",
+      "bytes": 3109,
+      "sha256": "b09efa8e1d25bed8a7c438d82a6e94366dbed5aba2ef79d96b33f75a22c24c2d",
+      "git_blob_sha1": "3eee5d453ce4dd4bdf367c4023a2ff20e900e901"
+    },
+    {
+      "path": "gen_a_reference.py",
+      "bytes": 2866,
+      "sha256": "a9c5c672939b1ccc8ff609d25c9837d389e95ccb180247ef5573e48d14aa6cd6",
+      "git_blob_sha1": "91eefd2880b927ce9fc45c8f1353269ff7caf19b"
+    },
+    {
+      "path": "verify_afrd_contract.py",
+      "bytes": 3902,
+      "sha256": "3adf72dbb625cded79462881ff07b87d40914b8bfc09951dfb5c67dc3c93368a",
+      "git_blob_sha1": "02b0c7981a62a68cfce84b0280ff0852ca448a96"
+    }
+  ]
+}

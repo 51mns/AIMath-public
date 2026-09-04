@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-AIMATH-ND-AFRD-001",
+  "worker_id": "w-5aef23bcfc3ab622",
+  "evaluation_role": "SELF_ASSESSMENT",
+  "truth_layer_effect": "NONE",
+  "outcome": "STRUCTURAL_REDUCTION",
+  "scores": {
+    "information_gain": 3,
+    "mathematical_reusability": 3,
+    "transfer_potential": 3,
+    "external_relevance": 3,
+    "followup_expected_value": 4,
+    "surprise": 1,
+    "uncertainty": 3
+  },
+  "confidence": "MEDIUM",
+  "recommendation": "NO_OPINION",
+  "notes": "The contract is internally executable and bounded, but no AFRD representation has been tested. Independent contract review is still required before G1. Self-assessment has zero scheduling or Truth Layer authority."
+}
