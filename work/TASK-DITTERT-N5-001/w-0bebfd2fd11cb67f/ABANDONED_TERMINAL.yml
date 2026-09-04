@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-DITTERT-N5-001",
+  "worker_id": "w-0bebfd2fd11cb67f",
+  "reason": "SCOPE_STOP",
+  "abandoned_at": "2026-09-04T07:50:53Z",
+  "abandonment_count": 1,
+  "last_work_head": null,
+  "truth_layer_effect": "NONE"
+}
