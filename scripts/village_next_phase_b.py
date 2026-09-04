@@ -1376,7 +1376,7 @@ class GitHubPhaseBClient:
 
     def create_tree(self, base_tree_sha: str, entries: Iterable[ExactLockObject], *, deletions: Iterable[str] = ()) -> str:
         tree = [{"path": o.path, "mode": o.mode, "type": "blob", "sha": o.blob_sha} for o in entries]
-        tree.extend({"path": p, "sha": None} for p in deletions)
+        tree.extend({"path": p, "mode": "100644", "type": "blob", "sha": None} for p in deletions)
         obj = self.request("POST", f"/repos/{self.owner}/{self.repo}/git/trees", {"base_tree": base_tree_sha, "tree": tree})
         sha = obj.get("sha") if isinstance(obj, Mapping) else None
         if not isinstance(sha, str) or not SHA1_RE.fullmatch(sha):

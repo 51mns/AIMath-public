@@ -983,6 +983,34 @@ class VillageV13PhaseB73(unittest.TestCase):
         )
         self.assertEqual(got["number"], 3)
         self.assertEqual(client.created, 0)
+        captured = {}
+        api = pb.GitHubPhaseBClient("fixture-token")
+        def fake_request(method, path, payload=None):
+            captured["method"] = method
+            captured["path"] = path
+            captured["payload"] = payload
+            return {"sha": "a" * 40}
+        api.request = fake_request
+        tree_sha = api.create_tree(
+            "b" * 40,
+            (),
+            deletions=["coordination/locks/x/shared.yml"],
+        )
+        self.assertEqual(tree_sha, "a" * 40)
+        self.assertEqual(captured["method"], "POST")
+        self.assertEqual(
+            captured["path"],
+            "/repos/51mns/AIMath-public/git/trees",
+        )
+        self.assertEqual(
+            captured["payload"]["tree"],
+            [{
+                "path": "coordination/locks/x/shared.yml",
+                "mode": "100644",
+                "type": "blob",
+                "sha": None,
+            }],
+        )
 
     def test_row_15_unrelated_release_content_is_conflict_not_reuse(self):
         client = _DraftPRClient()
