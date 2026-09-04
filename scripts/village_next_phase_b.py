@@ -1546,6 +1546,31 @@ def _source_bundle_from_state(state: Any, task_id: str, worker_id: str, principa
     return exact[0] if exact else None
 
 
+def _require_source_bundle_on_fresh_main(
+    client: GitHubPhaseBClient,
+    *,
+    state: Any,
+    bundle: Any,
+    main_entries: Sequence[Mapping[str, Any]],
+) -> None:
+    """Bind Phase A's source lock view to exact current-main Git objects."""
+    by_path = _tree_blob_map(main_entries)
+    if not bundle.paths:
+        raise PhaseBError("SOURCE_EPOCH_UNPROVEN", "source lock bundle has no canonical paths")
+    for path_obj in bundle.paths:
+        try:
+            rel = path_obj.relative_to(state.root).as_posix()
+            local_raw = path_obj.read_bytes()
+        except (OSError, ValueError) as exc:
+            raise PhaseBError("SOURCE_EPOCH_UNPROVEN", "source lock local bytes unavailable") from exc
+        row = by_path.get(rel)
+        if row is None or row.get("mode") != "100644" or row.get("type") != "blob":
+            raise PhaseBError("SOURCE_EPOCH_UNPROVEN", f"source lock Git object unavailable: {rel}")
+        remote_raw = client.blob_bytes(str(row.get("sha", "")))
+        if local_raw != remote_raw:
+            raise PhaseBError("SOURCE_EPOCH_UNPROVEN", f"source lock differs from fresh current main: {rel}")
+
+
 def _terminal_from_phase_a(state: Any, task_id: str, worker_id: str, lock_payload: Mapping[str, Any] | None):
     from village_next import recognize_terminal_evidence
     terminal, errors = recognize_terminal_evidence(
@@ -2277,8 +2302,9 @@ def cli_next(root: Path, args: Any) -> int:
             raise PhaseBError(ruleset.code, ruleset.detail)
 
         from village_core import VillageState
+        from village_next import NextPhase, NextRequest, NextStatus, derive_next_state
         from village_rank import EvaluationBook
-        from village_v1_2 import load_actor_policy, worker_lock_errors
+        from village_v1_2 import CapabilityProfile, load_actor_policy, worker_lock_errors
 
         state = VillageState(root, now=now).load()
         errors = list(state.validate()) + worker_lock_errors(state, load_actor_policy(root))
@@ -2293,8 +2319,43 @@ def cli_next(root: Path, args: Any) -> int:
         if task_id not in state.tasks or not WORKER_RE.fullmatch(worker_id or "") or not PRINCIPAL_RE.fullmatch(principal_id or ""):
             raise PhaseBError("SOURCE_EPOCH_UNPROVEN", "invalid Task/worker/principal input")
 
-        retained = _read_state(state_path) or {}
         source_bundle = _source_bundle_from_state(state, task_id, worker_id, principal_id)
+        if source_bundle is not None:
+            _require_source_bundle_on_fresh_main(
+                client,
+                state=state,
+                bundle=source_bundle,
+                main_entries=main_entries,
+            )
+
+        capabilities = CapabilityProfile.from_values(
+            github_write=getattr(args, "github_write", "unknown"),
+            local_compute=getattr(args, "local_compute", "unknown"),
+            web_literature=getattr(args, "web_literature", "unknown"),
+        )
+        phase_a = derive_next_state(
+            state,
+            book,
+            NextRequest(
+                task_id=task_id,
+                worker_id=worker_id,
+                principal_id=principal_id,
+                capabilities=capabilities,
+                current_main_sha=main_sha,
+                continuation_decision_id=getattr(args, "continuation_decision_id", None),
+                fresh_observation_valid=True,
+            ),
+        )
+        if phase_a.phase == NextPhase.ACTIVE_WORK:
+            if phase_a.status == NextStatus.ACTIVE_WORK:
+                print("ACTIVE_WORK")
+                return 0
+            raise PhaseBError(
+                "SOURCE_EPOCH_UNPROVEN",
+                "; ".join(phase_a.errors) or "Phase A rejected current source ownership",
+            )
+
+        retained = _read_state(state_path) or {}
 
         # If a retained acquire exists, canonical current-main reconstruction is
         # checked before considering any transport retry. This can confirm
