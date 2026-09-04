@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "mode": "POST_OUTCOME_DIRECTOR",
+  "source_task_limit_per_join": 1,
+  "trigger": {
+    "requires_merged_research_on_main": true,
+    "requires_no_active_source_lock": true,
+    "requires_no_open_non_draft_source_research_pr": true,
+    "requires_missing_outcome_or_due_evaluation": true,
+    "skip_if_open_director_pr_exists": true,
+    "unproven_state_action": "STOP_DIRECTOR_FOR_SOURCE"
+  },
+  "source_authority": {
+    "canonical_main_only": true,
+    "open_pr_is_authority": false,
+    "worker_self_assessment_is_authority": false,
+    "chat_is_authority": false,
+    "external_web_is_authority": false,
+    "conflicting_merged_results": "INCONCLUSIVE"
+  },
+  "outcome": {
+    "schema": "schemas/outcome.schema.json",
+    "one_per_source_task": true,
+    "may_create_if_missing": true,
+    "truth_layer_effect": "NONE",
+    "claim_promotion_allowed": false,
+    "novelty_establishment_allowed": false
+  },
+  "evaluation": {
+    "schema": "schemas/evaluation.schema.json",
+    "allowed_role": "PORTFOLIO_EVALUATION",
+    "independent_role_allowed": false,
+    "truth_layer_effect": "NONE",
+    "recommendations": [
+      "CONTINUE",
+      "PIVOT",
+      "HOLD",
+      "CLOSE",
+      "REVIEW",
+      "NO_OPINION"
+    ]
+  },
+  "followup_tasks": {
+    "max_new_tasks_per_source": 2,
+    "required_stored_state": "PROPOSED",
+    "existing_campaign_only": true,
+    "new_campaign_allowed": false,
+    "auto_approve_allowed": false,
+    "priority_change_allowed": false,
+    "claim_promotion_allowed": false,
+    "lock_creation_allowed": false,
+    "human_governed_approval_required": true
+  },
+  "director_pr": {
+    "allowed_change_classes": [
+      "canonical_source_outcome",
+      "one_portfolio_evaluation",
+      "up_to_two_new_proposed_tasks",
+      "required_generated_views"
+    ],
+    "forbidden_paths": [
+      "coordination/locks/**",
+      "research/**/CLAIM.yml",
+      "reviews/**",
+      "coordination/campaigns/**",
+      "coordination/portfolio/**",
+      ".github/workflows/**",
+      "schemas/**",
+      "scripts/**"
+    ],
+    "self_merge_allowed": false
+  },
+  "duplicate_semantics": {
+    "open_director_pr": "SKIP_SOURCE_ONLY",
+    "ownership_effect": "NONE",
+    "truth_layer_effect": "NONE"
+  },
+  "selection_order": [
+    "capability_assessment",
+    "fresh_canonical_and_github_state",
+    "post_outcome_backlog_check",
+    "one_director_pass_if_eligible",
+    "otherwise_existing_ready_pending_aware_rank",
+    "ordinary_research_selection"
+  ],
+  "safety_invariant": "Director may propose the next question but cannot make it READY."
+}
