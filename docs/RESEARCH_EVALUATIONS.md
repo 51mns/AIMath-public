@@ -5,6 +5,6 @@
 
 | Evaluation | Source task | Role | Info | Reuse | Transfer | External | Follow-up EV | Surprise | Uncertainty | Confidence | Recommendation | Follow-up tasks |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|---|
-| — | — | — | — | — | — | — | — | — | — | — | No canonical evaluations yet | — |
+| `EVAL-LOCAL-TP2-REFRESH-001-PORTFOLIO-20260905` | `TASK-LOCAL-TP2-REFRESH-001` | PORTFOLIO_EVALUATION | 4 | 4 | 3 | 3 | 4 | 4 | 3 | MEDIUM | CONTINUE | `TASK-LOCAL-TP2-CONTINUANT-LGV-001` |
 
 Self-assessment has zero scheduling authority. Independent/Portfolio evaluations contribute only a bounded signal to explicitly named follow-up Tasks after the source Task has a canonical outcome; they never affect mathematical truth, novelty, review independence, or hard readiness gates.
