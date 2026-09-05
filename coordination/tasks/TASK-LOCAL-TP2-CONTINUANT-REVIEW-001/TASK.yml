@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-CONTINUANT-REVIEW-001",
+  "campaign_id": "CAM-LOCAL-TP2",
+  "title": "Cross-family independent review of continuant gap-cone reduction",
+  "task_kind": "INDEPENDENT_REVIEW",
+  "stored_state": "PROPOSED",
+  "research_stage": "E1",
+  "research_mode": "STANDARD",
+  "objective": "A first independent review of research head 0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a already exists and is merged (PR #90, registered as reviews/local-tp2/REVIEW.yml at independence_grade I2, decision PASS_WITH_QUALIFICATIONS). This Task does NOT re-do or retroactively own that review. Its purpose is the independence gap that review discloses about itself: the reviewer was the same model family as the writer, read the writer material before freezing its derivation, and does not claim method independence. Obtain a materially method-independent review, preferably from a different model family or a human mathematician, that adjudicates the same frozen obligations without routing through the same transfer-matrix object map.",
+  "assumptions": [],
+  "route_id": "ROUTE-LOCAL-TP2-CONTINUANT-REVIEW-001",
+  "collision_keys": [
+    "local-tp2/continuant-gapcone-independent-review"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "INDEPENDENT_REVIEW",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "success_conditions": [
+    "A review derivation is frozen BEFORE reading work/TASK-LOCAL-TP2-CONTINUANT-LGV-001/w-4e8c1d7a9b3f6021/RESULT.md and the PR #90 review document.",
+    "The all-depth gap cone, extreme 1/n chain, degree rank and oriented D_v factorisation are adjudicated by an argument that does not simply repeat the PR #90 route.",
+    "The verdict either raises the registered independence grade toward I3 or records exactly why it cannot be raised."
+  ],
+  "failure_conditions": [
+    "No materially method-independent reviewer is available, in which case the I2 grade stands and is recorded as such.",
+    "The frozen target is too underspecified to reach a scoped review decision from canonical artifacts."
+  ],
+  "stop_conditions": [
+    "Do not attempt to finish Local TP2 itself or invent a replacement proof architecture.",
+    "Do not treat finite verifier success as proof of the all-depth statements.",
+    "Do not reuse reviews/local-tp2/continuant_gap_cone_independent_check.py as the independent check; it is PR #90 material.",
+    "Do not restate the PR #90 verdict as this Task's own result.",
+    "Stop once the independence grade is either raised with evidence or explicitly recorded as unraisable."
+  ],
+  "owned_paths": [
+    "work/TASK-LOCAL-TP2-CONTINUANT-REVIEW-001/**"
+  ],
+  "expected_artifacts": [
+    "independent mathematical derivation or precise counterexample",
+    "component-by-component review verdict",
+    "review outcome record"
+  ],
+  "source_task_id": "TASK-LOCAL-TP2-CONTINUANT-LGV-001",
+  "review_target_commit": "0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a",
+  "human_governance_required": true,
+  "created_at": "2026-09-05",
+  "prior_review": {
+    "pr": 90,
+    "record": "reviews/local-tp2/REVIEW.yml",
+    "document": "reviews/local-tp2/CONTINUANT_GAP_CONE_INDEPENDENT_REVIEW_2026-09-05.md",
+    "independence_grade": "I2",
+    "decision": "PASS_WITH_QUALIFICATIONS",
+    "note": "Already merged. This Task must not be recorded as having produced it."
+  }
+}
