@@ -17,7 +17,7 @@ from check_village_pr import validate_lock_transition
 from lock_auto_activate import AutoActivationError, AutoReleaseCandidate, _strict_up_to_date_gate, auto_activation_preflight, auto_release_preflight, automatic_release_identity_errors, choose_release_candidate, final_revalidation_errors, lock_git_object_errors, release_head_absence_errors
 from test_village_acceptance import NOW, add_lock, base_state
 from village_core import LockBundle
-from village_v1_2 import ABANDONED_REACQUIRE_COOLDOWN_HOURS, ReleaseBinding, abandonment_state, new_worker_lock_errors, parse_release_head_ref, release_terminal_state, validate_abandoned_terminal_record
+from village_v1_2 import ABANDONED_REACQUIRE_COOLDOWN_HOURS, ReleaseBinding, abandonment_state, new_worker_lock_errors, parse_release_head_ref, release_terminal_state, result_terminal_artifact_errors, validate_abandoned_terminal_record
 from workflow_security import repository_workflow_security_errors, workflow_text_errors
 
 MAIN_SHA = "a" * 40
@@ -32,11 +32,14 @@ def _write_schemas(root: Path):
     repo = Path(__file__).resolve().parent.parent; d=root/"schemas"; d.mkdir(parents=True,exist_ok=True)
     for n in ("outcome.schema.json","abandoned-terminal.schema.json"): (d/n).write_text((repo/"schemas"/n).read_text(),encoding="utf-8")
 
-def _result(root: Path, malformed=False):
+def _result(root: Path, malformed=False, artifacts=None):
     p=root/"coordination/outcomes/TASK-X-1.yml"; p.parent.mkdir(parents=True,exist_ok=True)
-    obj={"schema_version":1,"task_id":"TASK-X-1","outcome_type":"NO_REUSABLE_PROGRESS","summary":"terminal scheduling output","artifacts":[]}
+    obj={"schema_version":1,"task_id":"TASK-X-1","outcome_type":"NO_REUSABLE_PROGRESS","summary":"terminal scheduling output","artifacts":list(artifacts or [])}
     if malformed: obj={"schema_version":1,"task_id":"TASK-X-1"}
     p.write_text(json.dumps(obj)+"\n",encoding="utf-8")
+
+def _merged_artifact(root: Path, rel: str):
+    p=root/rel; p.parent.mkdir(parents=True,exist_ok=True); p.write_text("merged research artifact\n",encoding="utf-8"); return rel
 
 def _abandon(root: Path, *, worker=W_A, count=1, at=None, truth="NONE", extra=None):
     p=root/f"work/TASK-X-1/{worker}/ABANDONED_TERMINAL.yml"; p.parent.mkdir(parents=True,exist_ok=True)
@@ -201,6 +204,71 @@ jobs:
         errors=workflow_text_errors(self._trusted_wf().replace(old,new),trusted_write=True); self.assertTrue(errors); self.assertTrue(any("docker://" in e for e in errors))
     def test_37_m01_unrelated_readonly_workflow_still_passes(self):
         self.assertEqual(workflow_text_errors(self._wf()),[])
+
+
+
+
+class ResearchToReleaseLifecycle(unittest.TestCase):
+    """Regression cover for the #66/#87 shape.
+
+    Both PRs were lock-only RELEASE requests that failed with
+    ``no valid RESULT_TERMINAL or ABANDONED_TERMINAL exists on current main``.
+    The cause was a missing canonical Outcome, not a circular dependency: the
+    Director is allowed to write ``coordination/outcomes/<TASK-ID>.yml`` while
+    the Task lock is still held. These tests pin that sequence so the gate is
+    never "fixed" by weakening RELEASE.
+    """
+
+    ART = "work/TASK-X-1/" + W_A + "/RESULT.md"
+
+    def test_20_release_blocked_before_canonical_outcome(self):
+        # #66/#87 exactly: research merged, canonical Outcome not yet written.
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td); _write_schemas(r); _merged_artifact(r,self.ART); b=_lock_state(r)
+            state,errors=release_terminal_state(r,b.lock_bundles["LOCK-1"].payload,now=NOW)
+            self.assertEqual(state,"NONE")
+            self.assertTrue(any("no valid RESULT_TERMINAL" in x for x in errors))
+
+    def test_21_director_may_terminalize_while_lock_is_held(self):
+        # The unblocking step must not require releasing the lock first.
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td); _write_schemas(r); _merged_artifact(r,self.ART)
+            _result(r,artifacts=[self.ART]); b=_lock_state(r)
+            self.assertTrue(b.lock_bundles["LOCK-1"].payload["worker_id"])
+            self.assertEqual(release_terminal_state(r,b.lock_bundles["LOCK-1"].payload,now=NOW),("RESULT_TERMINAL",[]))
+
+    def test_22_terminal_cannot_cite_unmerged_artifacts(self):
+        # Guards the opposite failure: terminalizing a Task whose evidence is
+        # not on the branch would open RELEASE on nothing.
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td); _write_schemas(r); _result(r,artifacts=[self.ART]); b=_lock_state(r)
+            state,errors=release_terminal_state(r,b.lock_bundles["LOCK-1"].payload,now=NOW)
+            self.assertEqual(state,"NONE")
+            self.assertTrue(any("missing from this branch" in x for x in errors))
+
+    def test_23_empty_artifact_list_stays_legal(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td); _write_schemas(r); _result(r,artifacts=[]); b=_lock_state(r)
+            self.assertEqual(release_terminal_state(r,b.lock_bundles["LOCK-1"].payload,now=NOW)[0],"RESULT_TERMINAL")
+
+    def test_24_artifact_paths_may_not_escape_repository(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td)
+            for bad in ("/etc/passwd","../outside.md","work/../../escape.md"):
+                self.assertTrue(result_terminal_artifact_errors(r,{"artifacts":[bad]}),bad)
+
+    def test_25_artifact_may_not_be_a_symlink(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td); _merged_artifact(r,self.ART)
+            link=r/"work/TASK-X-1"/W_A/"LINK.md"; link.symlink_to(r/self.ART)
+            rel="work/TASK-X-1/"+W_A+"/LINK.md"
+            self.assertTrue(any("missing from this branch" in x for x in result_terminal_artifact_errors(r,{"artifacts":[rel]})))
+
+    def test_26_abandoned_terminal_still_releases_without_outcome(self):
+        # A Task may also terminate by abandonment; that path is unchanged.
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td); _write_schemas(r); _abandon(r); b=_lock_state(r)
+            self.assertEqual(release_terminal_state(r,b.lock_bundles["LOCK-1"].payload,now=NOW)[0],"ABANDONED_TERMINAL")
 
 
 if __name__ == "__main__": unittest.main(verbosity=2)
