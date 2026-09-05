@@ -14,6 +14,7 @@ from unittest.mock import patch
 import yaml
 
 from check_village_pr import validate_lock_transition
+from village_core import GENERATED_VIEW_PATHS, path_matches
 from lock_auto_activate import AutoActivationError, AutoReleaseCandidate, _strict_up_to_date_gate, auto_activation_preflight, auto_release_preflight, automatic_release_identity_errors, choose_release_candidate, final_revalidation_errors, lock_git_object_errors, release_head_absence_errors
 from test_village_acceptance import NOW, add_lock, base_state
 from village_core import LockBundle
@@ -269,6 +270,56 @@ class ResearchToReleaseLifecycle(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             r=Path(td); _write_schemas(r); _abandon(r); b=_lock_state(r)
             self.assertEqual(release_terminal_state(r,b.lock_bundles["LOCK-1"].payload,now=NOW)[0],"ABANDONED_TERMINAL")
+
+
+
+class GeneratedViewAccompaniesSource(unittest.TestCase):
+    """A generated view must be able to ride with whichever canonical file produced it.
+
+    docs/RESEARCH_BOARD.md, RESEARCH_PORTFOLIO.md, DEPENDENCY_GRAPH.md,
+    CAMPAIGN_HISTORY.md and RESEARCH_EVALUATIONS.md are rendered from canonical
+    state, and validate refuses view drift. So the canonical file and its view must
+    land together. Classifying the view as governance-only while its source is not
+    made that impossible: research/**/CLAIM.yml renders into DEPENDENCY_GRAPH.md, so
+    no new Claim could be merged at all.
+
+    These tests pin the exemption, and pin that it does not leak into a general
+    governance bypass.
+    """
+
+    GOV = ["coordination/tasks/TASK-X-1/TASK.yml"]
+    NONGOV = ["research/x/CLAIM.yml"]
+
+    def _mix(self, paths, governance_only):
+        classifiable=[p for p in paths if p not in GENERATED_VIEW_PATHS]
+        gov=[p for p in classifiable if path_matches(p,governance_only)]
+        non=[p for p in classifiable if not path_matches(p,governance_only)]
+        return bool(gov and non)
+
+    def _policy(self):
+        return ["coordination/tasks/**/TASK.yml","docs/RESEARCH_BOARD.md","docs/DEPENDENCY_GRAPH.md"]
+
+    def test_30_claim_plus_its_generated_view_is_allowed(self):
+        # The case that blocked the scoped Local TP2 claim.
+        self.assertFalse(self._mix(self.NONGOV+["docs/DEPENDENCY_GRAPH.md"],self._policy()))
+
+    def test_31_governance_source_plus_its_generated_view_is_allowed(self):
+        self.assertFalse(self._mix(self.GOV+["docs/RESEARCH_BOARD.md"],self._policy()))
+
+    def test_32_mixing_real_governance_with_research_is_still_rejected(self):
+        # The exemption must not become a general bypass.
+        self.assertTrue(self._mix(self.GOV+self.NONGOV,self._policy()))
+
+    def test_33_mixing_is_still_rejected_even_when_views_ride_along(self):
+        self.assertTrue(self._mix(self.GOV+self.NONGOV+["docs/DEPENDENCY_GRAPH.md"],self._policy()))
+
+    def test_34_generated_view_set_matches_renderer(self):
+        # Guards against the set drifting away from what village actually renders.
+        import village_core
+        from test_village_acceptance import base_state
+        rendered=set(base_state().rendered_views())
+        rendered.add("docs/RESEARCH_EVALUATIONS.md")  # rendered by village.py via EvaluationBook
+        self.assertEqual(rendered,GENERATED_VIEW_PATHS)
 
 
 if __name__ == "__main__": unittest.main(verbosity=2)

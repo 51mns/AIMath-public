@@ -8,6 +8,10 @@ from typing import Any, Iterable
 
 MAINTENANCE_TASK_KINDS={"INDEPENDENT_REVIEW","REPRODUCTION","FRONTIER_REFRESH","DEPENDENCY_TRIAGE"}
 PASS_REVIEW_DECISIONS={"PASS","PASS_WITH_QUALIFICATIONS"}
+# Derived views rendered from canonical state. They carry no independent
+# authority: check-views forces each to equal the render of canonical state,
+# so a hand-edited view is caught regardless of which PR class carries it.
+GENERATED_VIEW_PATHS={"docs/RESEARCH_PORTFOLIO.md","docs/RESEARCH_BOARD.md","docs/DEPENDENCY_GRAPH.md","docs/CAMPAIGN_HISTORY.md","docs/RESEARCH_EVALUATIONS.md"}
 class VillageError(ValueError): pass
 
 def load_machine_file(path:Path)->Any:

@@ -8,7 +8,7 @@ import re
 import subprocess
 import tempfile
 
-from village_core import VillageState, is_lock_only_paths, lock_bundle_active, parse_time, path_matches
+from village_core import GENERATED_VIEW_PATHS, VillageState, is_lock_only_paths, lock_bundle_active, parse_time, path_matches
 from village_v1_2 import ReleaseBinding, load_actor_policy, new_worker_lock_errors, parse_release_head_ref, release_terminal_state, validate_abandoned_terminal_record, worker_lock_errors
 from workflow_security import repository_workflow_security_errors
 
@@ -259,7 +259,8 @@ def main() -> int:
     errors.extend(lock_change_class_errors(paths)); errors.extend(lock_object_mode_errors(args.base, args.head, paths)); errors.extend(abandoned_terminal_transition_errors(args.base, args.head, rows)); errors.extend(repository_workflow_security_errors("."))
     protected_changed = [p for p in paths if path_matches(p, protected)]
     if protected_changed and args.actor not in maintainers: errors.append("non-maintainer changed protected governance path(s): " + ", ".join(protected_changed))
-    gov_changed = [p for p in paths if path_matches(p, governance_only)]; nongov = [p for p in paths if not path_matches(p, governance_only)]
+    classifiable = [p for p in paths if p not in GENERATED_VIEW_PATHS]
+    gov_changed = [p for p in classifiable if path_matches(p, governance_only)]; nongov = [p for p in classifiable if not path_matches(p, governance_only)]
     if gov_changed and nongov and not (bootstrap and args.actor in maintainers): errors.append("governance-only paths must be changed in a dedicated governance PR")
     lock_operation = "NONE"
     if lock_only:
