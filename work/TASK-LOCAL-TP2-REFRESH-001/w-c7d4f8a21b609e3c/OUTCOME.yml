@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-REFRESH-001",
+  "worker_id": "w-c7d4f8a21b609e3c",
+  "outcome_type": "NO_REUSABLE_PROGRESS",
+  "summary": "Bounded dependency/route triage found known multivariate snake-graph and weighted-poset skein bijections, but no external theorem or verified new mechanism that controls the signed H/exponent grade required for the adjacent Local TP2 minor. The route does not meet CAM-LOCAL-TP2 reopen conditions; keep the campaign on HOLD unless a rank-refined/factor-grade theorem, direct canonical sign identity, or counterexample appears.",
+  "artifacts": [
+    "work/TASK-LOCAL-TP2-REFRESH-001/w-c7d4f8a21b609e3c/REPORT.md"
+  ],
+  "claim_ids": [
+    "C-LOCAL-TP2"
+  ],
+  "review_required": false,
+  "self_assessment": {
+    "information_gain": 3,
+    "mathematical_reusability": 2,
+    "transfer_potential": 2,
+    "external_relevance": 2,
+    "followup_expected_value": 1,
+    "surprise": 2,
+    "uncertainty": 1,
+    "note": "Useful boundary clarification: full multivariate weight preservation is known, but the required factor-grade exchange remains unsupported. No claim or campaign-state effect."
+  },
+  "truth_layer_effect": "NONE",
+  "campaign_reopen_recommended": false
+}
