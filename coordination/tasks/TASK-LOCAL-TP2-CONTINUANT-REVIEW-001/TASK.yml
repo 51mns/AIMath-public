@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-CONTINUANT-REVIEW-001",
+  "campaign_id": "CAM-LOCAL-TP2",
+  "title": "Independent review of continuant gap-cone reduction",
+  "task_kind": "INDEPENDENT_REVIEW",
+  "stored_state": "PROPOSED",
+  "research_stage": "E1",
+  "research_mode": "STANDARD",
+  "objective": "Independently adjudicate the all-depth structural reduction frozen at research head 0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a without assuming the writer's conclusion: check the generic splice identity, boundary-gap cone propagation, extreme 1/n chain, D_v factorisation, and the root raw-gap LGV obstruction, and freeze a scoped PASS, PASS_WITH_QUALIFICATIONS, or FAIL decision with exact gap locations.",
+  "assumptions": [],
+  "route_id": "ROUTE-LOCAL-TP2-CONTINUANT-REVIEW-001",
+  "collision_keys": [
+    "local-tp2/continuant-gapcone-independent-review"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "INDEPENDENT_REVIEW",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "success_conditions": [
+    "A scoped review decision is anchored to the exact research head and theorem obligations.",
+    "The all-depth induction and extreme 1/n boundary argument are independently derived or a precise failure is identified.",
+    "The D_v factorisation and root determinant obstruction are checked independently from the writer's verifier."
+  ],
+  "failure_conditions": [
+    "The frozen target is too underspecified to reach a scoped review decision from canonical artifacts."
+  ],
+  "stop_conditions": [
+    "Do not attempt to finish Local TP2 itself or invent a replacement proof architecture.",
+    "Do not treat finite verifier success as proof of the all-depth statements.",
+    "Stop after every load-bearing component of the frozen structural reduction has an explicit review verdict."
+  ],
+  "owned_paths": [
+    "work/TASK-LOCAL-TP2-CONTINUANT-REVIEW-001/**"
+  ],
+  "expected_artifacts": [
+    "independent mathematical derivation or precise counterexample",
+    "component-by-component review verdict",
+    "review outcome record"
+  ],
+  "source_task_id": "TASK-LOCAL-TP2-CONTINUANT-LGV-001",
+  "review_target_commit": "0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a",
+  "human_governance_required": true,
+  "created_at": "2026-09-05"
+}
