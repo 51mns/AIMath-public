@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-CONTINUANT-REPRO-001",
+  "campaign_id": "CAM-LOCAL-TP2",
+  "title": "Adversarial reproduction of continuant verifier and root obstruction",
+  "task_kind": "REPRODUCTION",
+  "stored_state": "PROPOSED",
+  "research_stage": "E1",
+  "research_mode": "STANDARD",
+  "objective": "Freshly reproduce the executable and small exact components frozen at research head 0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a: reimplement or independently check splice_verifier.py fixtures, the root determinant obstruction, and representative boundary cases, while explicitly separating executable PASS/FAIL evidence from the universal all-depth mathematical argument.",
+  "assumptions": [],
+  "route_id": "ROUTE-LOCAL-TP2-CONTINUANT-REPRO-001",
+  "collision_keys": [
+    "local-tp2/continuant-gapcone-reproduction"
+  ],
+  "explicit_conflicts_with": [],
+  "parallelism": "REPLICATED_COMPUTATION",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "success_conditions": [
+    "A fresh implementation or exact independent calculation reproduces or falsifies the frozen small fixtures.",
+    "The root determinant obstruction is reproduced exactly rather than inferred from writer output.",
+    "The outcome explicitly states which conclusions are finite/executable and which still require mathematical review."
+  ],
+  "failure_conditions": [
+    "The frozen executable artifacts cannot be reproduced or their claimed exact fixtures disagree."
+  ],
+  "stop_conditions": [
+    "Do not promote successful finite computation to an all-depth proof.",
+    "Do not reuse the writer verifier as the only implementation under test.",
+    "Stop after the frozen executable/root-obstruction scope has a reproducible PASS/FAIL record."
+  ],
+  "owned_paths": [
+    "work/TASK-LOCAL-TP2-CONTINUANT-REPRO-001/**"
+  ],
+  "expected_artifacts": [
+    "fresh reproduction code or exact calculation",
+    "small-fixture comparison log",
+    "reproduction outcome record"
+  ],
+  "source_task_id": "TASK-LOCAL-TP2-CONTINUANT-LGV-001",
+  "review_target_commit": "0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a",
+  "human_governance_required": true,
+  "created_at": "2026-09-05"
+}
