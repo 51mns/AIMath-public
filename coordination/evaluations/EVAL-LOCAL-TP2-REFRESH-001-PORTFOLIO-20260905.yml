@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "EVAL-LOCAL-TP2-REFRESH-001-PORTFOLIO-20260905",
+  "task_id": "TASK-LOCAL-TP2-REFRESH-001",
+  "evaluation_role": "PORTFOLIO_EVALUATION",
+  "evaluator": {
+    "actor_id": "gh:51mns",
+    "ai_assistance": {
+      "model": "GPT-5.6 Sol",
+      "worker_id": "w-3706c97ab827997d",
+      "mode": "POST_OUTCOME_DIRECTOR"
+    }
+  },
+  "scores": {
+    "information_gain": 4,
+    "mathematical_reusability": 4,
+    "transfer_potential": 3,
+    "external_relevance": 3,
+    "followup_expected_value": 4,
+    "surprise": 4,
+    "uncertainty": 3
+  },
+  "confidence": "MEDIUM",
+  "recommendation": "CONTINUE",
+  "followup_task_ids": [
+    "TASK-LOCAL-TP2-CONTINUANT-LGV-001"
+  ],
+  "rationale": "The merged batch yields a specific structural route that is materially different from the recorded QW3/quotient/far-minor families and has an exact bounded next obligation: derive or obstruct the simultaneous subtraction-free common planar network for S_v and D_v. A separate merged literature triage found no existing theorem that closes the required signed H-grade transfer, so expected value remains meaningful but uncertainty is material. CONTINUE here is scheduling metadata only: the successor remains PROPOSED, CAM-LOCAL-TP2 remains HOLD, and human continuation governance is required before any approval or campaign reopen.",
+  "truth_layer_effect": "NONE",
+  "created_at": "2026-09-05"
+}
