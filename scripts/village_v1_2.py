@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import json
 import re
 import secrets
@@ -256,6 +256,33 @@ def abandonment_cooldown_errors(base_state, task_id: str, worker_id: str) -> lis
     return []
 
 
+def result_terminal_artifact_errors(root: Path | str, record: dict[str, Any]) -> list[str]:
+    """A RESULT_TERMINAL may only cite evidence that is actually on the branch.
+
+    A terminal outcome record is the gate that permits a lock RELEASE, so it must
+    not be able to declare a Task finished by pointing at artifacts that were
+    never merged. An empty artifact list stays legal: some terminal outcomes are
+    purely scheduling statements.
+    """
+    errors: list[str] = []
+    artifacts = record.get("artifacts")
+    if not isinstance(artifacts, list):
+        return errors
+    base = Path(root)
+    for item in artifacts:
+        if not isinstance(item, str) or not item.strip():
+            errors.append("RESULT_TERMINAL artifact entries must be non-empty strings")
+            continue
+        rel = PurePosixPath(item)
+        if rel.is_absolute() or any(part in ("..", "") for part in rel.parts):
+            errors.append(f"RESULT_TERMINAL artifact path must stay inside the repository: {item}")
+            continue
+        target = base / Path(*rel.parts)
+        if target.is_symlink() or not target.is_file():
+            errors.append(f"RESULT_TERMINAL cites an artifact missing from this branch: {item}")
+    return errors
+
+
 def result_terminal_errors(root: Path | str, task_id: str) -> tuple[bool, list[str]]:
     try:
         rel = result_terminal_path(task_id)
@@ -276,6 +303,7 @@ def result_terminal_errors(root: Path | str, task_id: str) -> tuple[bool, list[s
     errors = validate_schema(record, schema, "RESULT_TERMINAL")
     if record.get("task_id") != task_id:
         errors.append("RESULT_TERMINAL task_id mismatch")
+    errors.extend(result_terminal_artifact_errors(root, record))
     return not errors, list(dict.fromkeys(errors))
 
 
