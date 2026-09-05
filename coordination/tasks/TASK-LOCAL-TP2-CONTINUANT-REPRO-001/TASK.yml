@@ -7,7 +7,7 @@
   "stored_state": "PROPOSED",
   "research_stage": "E1",
   "research_mode": "STANDARD",
-  "objective": "Freshly reproduce the executable and small exact components frozen at research head 0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a: reimplement or independently check splice_verifier.py fixtures, the root determinant obstruction, and representative boundary cases, while explicitly separating executable PASS/FAIL evidence from the universal all-depth mathematical argument.",
+  "objective": "Freshly reproduce the executable and small exact components frozen at research head 0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a: reimplement or independently check splice_verifier.py fixtures, the root determinant obstruction, and representative boundary cases, while explicitly separating executable PASS/FAIL evidence from the universal all-depth mathematical argument. No reproduction obtained outside a canonical Task workspace counts as evidence for this Task: any prior ad hoc or conversational reproduction must be redone here from a fresh implementation and recorded under owned_paths.",
   "assumptions": [],
   "route_id": "ROUTE-LOCAL-TP2-CONTINUANT-REPRO-001",
   "collision_keys": [
@@ -28,7 +28,9 @@
   "stop_conditions": [
     "Do not promote successful finite computation to an all-depth proof.",
     "Do not reuse the writer verifier as the only implementation under test.",
-    "Stop after the frozen executable/root-obstruction scope has a reproducible PASS/FAIL record."
+    "Stop after the frozen executable/root-obstruction scope has a reproducible PASS/FAIL record.",
+    "Do not import reviews/local-tp2/continuant_gap_cone_independent_check.py as the implementation under test; it is PR #90 material and is itself a reproduction aid.",
+    "Do not admit any reproduction that was not produced inside this Task workspace."
   ],
   "owned_paths": [
     "work/TASK-LOCAL-TP2-CONTINUANT-REPRO-001/**"
@@ -41,5 +43,9 @@
   "source_task_id": "TASK-LOCAL-TP2-CONTINUANT-LGV-001",
   "review_target_commit": "0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a",
   "human_governance_required": true,
-  "created_at": "2026-09-05"
+  "created_at": "2026-09-05",
+  "prior_reproduction_aids": [
+    "work/TASK-LOCAL-TP2-CONTINUANT-LGV-001/w-4e8c1d7a9b3f6021/splice_verifier.py",
+    "reviews/local-tp2/continuant_gap_cone_independent_check.py"
+  ]
 }
