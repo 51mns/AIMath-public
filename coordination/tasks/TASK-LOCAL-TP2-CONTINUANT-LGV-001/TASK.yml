@@ -4,7 +4,7 @@
   "campaign_id": "CAM-LOCAL-TP2",
   "title": "Local TP2 continuant-splice common-network gate",
   "task_kind": "RESEARCH",
-  "stored_state": "PROPOSED",
+  "stored_state": "APPROVED",
   "research_stage": "E0",
   "research_mode": "STANDARD",
   "objective": "Starting from the merged Farey-recursive continued-fraction/continuant structural route, decide whether the canonical differences S_v=U_v-C_v and D_v=V_v-U_v admit one subtraction-free compatible planar-network realization whose adjacent coefficient 2x2 minor is exactly the frozen F_v(n).",
