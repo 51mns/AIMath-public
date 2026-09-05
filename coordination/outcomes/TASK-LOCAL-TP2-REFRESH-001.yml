@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-REFRESH-001",
+  "outcome_type": "STRUCTURAL_REDUCTION",
+  "summary": "Two merged worker contributions are complementary rather than materially contradictory. PR #73 isolates a bounded internal continuant/degree-lift/Lindstrom-Gessel-Viennot common-network architecture for the frozen Local TP2 determinant, with the simultaneous subtraction-free common network for S_v and D_v still unproved. PR #75 independently finds no existing external theorem or grade-refined skein/matching mechanism that supplies the required signed H/exponent-grade transfer. Canonically, this is reusable structural reduction only: no universal Local TP2 proof, counterexample, novelty result, or campaign reopen is established; CAM-LOCAL-TP2 remains HOLD pending human continuation governance.",
+  "artifacts": [
+    "work/TASK-LOCAL-TP2-REFRESH-001/w-2282a212672dc6bf/RESULT.md",
+    "work/TASK-LOCAL-TP2-REFRESH-001/w-2282a212672dc6bf/root_fixture.py",
+    "work/TASK-LOCAL-TP2-REFRESH-001/w-2282a212672dc6bf/NEXT_TASK_PROPOSAL.yml",
+    "work/TASK-LOCAL-TP2-REFRESH-001/w-c7d4f8a21b609e3c/REPORT.md"
+  ],
+  "claim_ids": [
+    "C-LOCAL-TP2"
+  ],
+  "review_required": false,
+  "truth_layer_effect": "NONE",
+  "continuation_gate_required": true,
+  "campaign_reopen_effect": "NONE",
+  "merged_source_prs": [73, 75],
+  "merged_source_commits": [
+    "ea5e62e5b6303da8038d1c06344ad9fd27ae5fff",
+    "c6323bdaf773d997064f47bd0b46aa26a643f7ab"
+  ],
+  "source_worker_ids": [
+    "w-2282a212672dc6bf",
+    "w-c7d4f8a21b609e3c"
+  ],
+  "component_worker_outcomes": [
+    {
+      "worker_id": "w-2282a212672dc6bf",
+      "label": "STRUCTURAL_REDUCTION",
+      "scope_note": "Internal proof-architecture triage: continuant plus degree lift plus a proposed common planar-network LGV gate; the common network is not constructed in general."
+    },
+    {
+      "worker_id": "w-c7d4f8a21b609e3c",
+      "label": "NO_REUSABLE_PROGRESS",
+      "scope_note": "External-theorem and grade-refined skein/matching triage: no located theorem supplies the required signed H/exponent-grade transfer."
+    }
+  ],
+  "immutable_artifacts": [
+    {
+      "path": "work/TASK-LOCAL-TP2-REFRESH-001/w-2282a212672dc6bf/RESULT.md",
+      "blob_sha": "27c76702a6516e8da3a32b0c0bef403dbb313b69"
+    },
+    {
+      "path": "work/TASK-LOCAL-TP2-REFRESH-001/w-2282a212672dc6bf/root_fixture.py",
+      "blob_sha": "68fe323fe56ce172c6aea214fe086be710af6114"
+    },
+    {
+      "path": "work/TASK-LOCAL-TP2-REFRESH-001/w-c7d4f8a21b609e3c/REPORT.md",
+      "blob_sha": "b5d9e43788d7deb5d1c4df67e0a07f60f935945b"
+    }
+  ],
+  "director_worker_id": "w-3706c97ab827997d",
+  "created_at": "2026-09-05"
+}
