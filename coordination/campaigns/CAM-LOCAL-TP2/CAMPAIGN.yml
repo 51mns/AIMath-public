@@ -3,14 +3,16 @@
   "campaign_id": "CAM-LOCAL-TP2",
   "title": "Local TP2 universal positivity",
   "kind": "PUBLIC_RESEARCH_THEME",
-  "strategic_state": "HOLD",
+  "strategic_state": "ACTIVE",
   "priority": "HOLD",
   "max_active_lanes": 1,
   "problem": {
     "frozen_statement": "Local TP2 universal positivity",
     "public_basis": "docs/CONTRIBUTION_TARGETS.md"
   },
-  "continuation_conditions": [],
+  "continuation_conditions": [
+    "Bounded reopen authorizes only TASK-LOCAL-TP2-CONTINUANT-LGV-001 until its terminal Outcome; re-evaluate continuation before allocating another Local TP2 research lane."
+  ],
   "do_not_continue_for": [
     "larger denominator/depth only",
     "higher-degree variants of closed far-minor ansatz"

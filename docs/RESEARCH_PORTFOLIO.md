@@ -11,7 +11,7 @@ Snapshot exported at: **2026-09-01**
 | Campaign | Priority | Stored strategic state | Lane cap |
 |---|---:|---|---:|
 | `CAM-B3RCC-APC` — B3RCC / antipodal partial cube campaign | HOLD | **HOLD** | 1 |
-| `CAM-LOCAL-TP2` — Local TP2 universal positivity | HOLD | **HOLD** | 1 |
+| `CAM-LOCAL-TP2` — Local TP2 universal positivity | HOLD | **ACTIVE** | 1 |
 | `CAM-LONELY-RUNNER` — Lonely Runner R2 pruning/scaling | HOLD | **HOLD** | 1 |
 | `CAM-EQUIANGULAR-R18` — Maximum equiangular lines in R^18 | P0 | **ACTIVE** | 2 |
 | `CAM-AIMATH-ND` — AIMath-ND AI-native representation discovery | P1 | **ACTIVE** | 12 |
