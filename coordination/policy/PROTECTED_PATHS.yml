@@ -49,7 +49,8 @@
     "REUSE.toml",
     "LICENSES/**",
     "SECURITY.md",
-    "research/**/CLAIM.yml"
+    "research/**/CLAIM.yml",
+    "coordination/evaluations/**"
   ],
   "governance_only_patterns": [
     "README.md",
@@ -72,6 +73,7 @@
     "coordination/portfolio/**",
     "coordination/policy/**",
     "coordination/evaluations/README.md",
+    "coordination/evaluations/**",
     "schemas/**",
     ".github/workflows/**",
     "CONTRIBUTING.md",
@@ -81,6 +83,7 @@
     "LICENSES/**",
     "SECURITY.md",
     "coordination/campaigns/**/CAMPAIGN.yml",
+    "coordination/campaigns/**/decisions/**",
     "coordination/tasks/**/TASK.yml",
     "scripts/public_release_audit.py",
     "scripts/village.py",
