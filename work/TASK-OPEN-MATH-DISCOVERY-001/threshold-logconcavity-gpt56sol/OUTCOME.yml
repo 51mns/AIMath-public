@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "record_kind": "WRITER_LOCAL_OUTCOME",
+  "task_id": "TASK-OPEN-MATH-DISCOVERY-001",
+  "actor_id": "gh:51mns",
+  "branch": "research/TASK-OPEN-MATH-DISCOVERY-001-threshold-gpt56sol",
+  "public_base": "5a36b1d413a05400120d25946e0acf71bce20a30",
+  "private_snapshot": "c8e61e0e398f540bc8c5de79663398d689f37473",
+  "status": "REUSABLE_PROGRESS_WRITER_ONLY",
+  "canonical_truth_effect": "NONE",
+  "claim_promotion": "NONE",
+  "novelty": "NOT_ESTABLISHED",
+  "success_conditions_met": [
+    "reusable structural reduction",
+    "useful literature match discovered through bounded search"
+  ],
+  "results": [
+    "Exact exhaustive threshold-word scan gives first non-log-concave order 10, with exactly two failing building words at that order.",
+    "For T_(n,k)=k K1 + K_(n-k), log-concavity is equivalent for k>=3 to C(k,2)^2 >= n C(k,3), equivalently n <= 3k(k-1)/(2(k-2)); k<=2 is automatic.",
+    "The 3K1+K7 order-10 witness is a literature rediscovery, not a novelty claim."
+  ],
+  "finite_scope": {
+    "threshold_orders_exhausted": "1..10",
+    "threshold_words_cross_checked": 1023,
+    "two_block_integer_stress": "1 <= k <= n <= 30",
+    "held_out_orders": [19, 20]
+  },
+  "load_bearing_verifier": {
+    "path": "work/TASK-OPEN-MATH-DISCOVERY-001/threshold-logconcavity-gpt56sol/verify_threshold_logconcavity.py",
+    "sha256": "b5ba4f4f2318675c4bb0f2a755180c2ec8f3d52b3637de03f7f22209b04c3eda",
+    "expected_final_line": "PASS",
+    "last_local_exit_code": 0
+  },
+  "self_assessment": {
+    "information_gain": 4,
+    "mathematical_reusability": 3,
+    "transfer_potential": 2,
+    "external_relevance": 2,
+    "followup_expected_value": 3,
+    "surprise": 2,
+    "uncertainty": 3,
+    "confidence": "MEDIUM",
+    "note": "Descriptive writer self-assessment only; zero allocation or truth authority. Deeper literature audit and independent mathematical review are required before promotion."
+  },
+  "recommended_next_gate": "INDEPENDENT_REVIEW_AND_DEEPER_LITERATURE_AUDIT_IF_PORTFOLIO_VALUE_JUSTIFIES_IT"
+}
