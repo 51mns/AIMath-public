@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-CONTINUANT-LGV-001",
+  "campaign_id": "CAM-LOCAL-TP2",
+  "title": "Local TP2 continuant-splice common-network gate",
+  "task_kind": "RESEARCH",
+  "stored_state": "PROPOSED",
+  "research_stage": "E0",
+  "research_mode": "STANDARD",
+  "objective": "Starting from the merged Farey-recursive continued-fraction/continuant structural route, decide whether the canonical differences S_v=U_v-C_v and D_v=V_v-U_v admit one subtraction-free compatible planar-network realization whose adjacent coefficient 2x2 minor is exactly the frozen F_v(n).",
+  "assumptions": [
+    {
+      "claim_id": "C-LOCAL-TP2",
+      "required_scope": "frozen candidate only"
+    }
+  ],
+  "route_id": "ROUTE-LOCAL-TP2-CONTINUANT-LGV-001",
+  "collision_keys": [
+    "local-tp2/continuant-lgv-common-network"
+  ],
+  "parallelism": "EXCLUSIVE",
+  "lease_ttl_hours": 168,
+  "frontier_sensitive": false,
+  "held_out_required": false,
+  "toy_problem_gate": false,
+  "transfer_test_required": false,
+  "post_outcome_evaluation": "REQUIRED",
+  "success_conditions": [
+    "A generic Farey-word splice identity gives subtraction-free formulas for both S_v and D_v.",
+    "One compatible degree-lifted planar network realizes the four adjacent H entries with the frozen determinant orientation.",
+    "Strict positivity follows from at least one positive nonintersecting two-path family at every frozen index."
+  ],
+  "failure_conditions": [
+    "The exact generic splice forces unavoidable signed cancellation incompatible with the proposed nonnegative common network.",
+    "A canonical vertex gives a counterexample to the proposed common-network invariant while Local TP2 itself may remain true."
+  ],
+  "stop_conditions": [
+    "Do not enlarge the recorded QW3, quotient, or far-minor ansatz families.",
+    "Do not replace the generic all-depth obligation with a larger finite-depth scan.",
+    "Stop once common-network existence is proved or a decisive structural obstruction is frozen."
+  ],
+  "owned_paths": [
+    "work/TASK-LOCAL-TP2-CONTINUANT-LGV-001/**"
+  ],
+  "expected_artifacts": [
+    "generic continuant splice derivation",
+    "common-network construction or exact obstruction",
+    "exact small fixtures and negative controls when load-bearing",
+    "outcome record"
+  ],
+  "source_task_id": "TASK-LOCAL-TP2-REFRESH-001",
+  "human_governance_required": true,
+  "created_at": "2026-09-05"
+}
