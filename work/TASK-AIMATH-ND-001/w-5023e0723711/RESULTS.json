@@ -1,0 +1,93 @@
+{
+  "adversarial_control": {
+    "baseline_c_from_first3": "3",
+    "baseline_first_mismatch": 4,
+    "bell": [
+      1,
+      1,
+      2,
+      5,
+      15,
+      52,
+      203,
+      877,
+      4140,
+      21147
+    ],
+    "seal_c_from_first3": "3",
+    "seal_first_mismatch": 4
+  },
+  "claim_level": "EXPLORATORY",
+  "decision": "NO_STRICT_UTILITY_GAIN",
+  "equivalence": {
+    "forecast_sequences_identical_on_both_transfer_sets": true,
+    "parameter_formula_baseline": "(z+x)/y",
+    "parameter_formula_seal": "(z^2-x^2)/(y*(z-x)) = (z+x)/y"
+  },
+  "held_out": {
+    "baseline_c": "16",
+    "baseline_correct": 7,
+    "baseline_first_mismatch": null,
+    "pell_D7_x": [
+      1,
+      8,
+      127,
+      2024,
+      32257,
+      514088,
+      8193151,
+      130576328,
+      2081028097,
+      33165873224
+    ],
+    "reserved_indices": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "seal_c": "16",
+    "seal_correct": 7,
+    "seal_first_mismatch": null
+  },
+  "metrics": {
+    "pell_baseline_correct_of_7": 7,
+    "pell_seal_correct_of_7": 7,
+    "proof_obligation_compression": false,
+    "reusable_non_equivalent_invariant_gain": false,
+    "strict_falsification_gain": false,
+    "strict_predictive_gain": false
+  },
+  "public_base": "71547cb5d757afaace54b558f2d0a4a49fad5656",
+  "task_id": "TASK-AIMATH-ND-001",
+  "train_provenance_after_freeze": {
+    "A": "tr(M_3^n), M_c=[[c,-1],[1,0]], n=0..7",
+    "B": "tr(M_5^n), M_c=[[c,-1],[1,0]], n=0..7"
+  },
+  "train_seals": {
+    "A": [
+      {
+        "coefficients": [
+          1,
+          -3,
+          1
+        ],
+        "constant": -5
+      }
+    ],
+    "B": [
+      {
+        "coefficients": [
+          1,
+          -5,
+          1
+        ],
+        "constant": -21
+      }
+    ]
+  },
+  "worker_id": "w-5023e0723711"
+}
