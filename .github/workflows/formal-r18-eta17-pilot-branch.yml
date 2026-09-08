@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 AIMath contributors
+# SPDX-License-Identifier: Apache-2.0
+name: Formal R18 eta17 pilot branch
+
+on:
+  push:
+    branches: ["pilot/formal-r18-eta17"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-formal-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Build and independently check Lean pilot
+        uses: leanprover/lean-action@50fcf42d2e460296f1a34b402e990d1b24f8b596 # v1
+        env:
+          LEAN_NUM_THREADS: "1"
+        with:
+          lake-package-directory: research/equiangular-r18-eta17/formal/pilot
+          auto-config: false
+          build: true
+          test: false
+          lint: false
+          use-github-cache: false
+          use-mathlib-cache: false
+          leanchecker: true
+          nanoda: true
+          nanoda-allow-sorry: false
+          axiom-audit: true
+          axiom-audit-root: AIMath.R18Eta17
