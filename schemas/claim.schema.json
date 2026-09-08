@@ -70,6 +70,51 @@
     "verification_modes": {
       "type": "array"
     },
+    "formal_verification": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NONE",
+            "STATEMENT_FORMALIZED",
+            "STATEMENT_AUDITED",
+            "KERNEL_PASS",
+            "DUAL_KERNEL_PASS"
+          ]
+        },
+        "proof_assistant": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "statement_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "theorem_graph_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
     "novelty": {
       "type": "string"
     },
