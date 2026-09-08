@@ -34,4 +34,4 @@ jobs:
           leanchecker: true
           nanoda: false
           axiom-audit: true
-          axiom-audit-root: AIMath.R18Eta17
+          axiom-audit-root: R18Eta17FormalPilot
