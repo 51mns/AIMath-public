@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 import sys
+import tempfile
 
 FORBIDDEN_PATH_PARTS = {".git"}
 IGNORED_GENERATED_PARTS = {"__pycache__"}
@@ -34,9 +35,9 @@ PATTERNS = {
 }
 TEXT_SUFFIX_ALLOW = {
     ".md", ".txt", ".py", ".json", ".yml", ".yaml", ".toml", ".cfg",
-    ".ini", ".csv", ".tsv", ".sh", ".ps1", ".bat", ".cff", ".lock",
+    ".ini", ".csv", ".tsv", ".sh", ".ps1", ".bat", ".cff", ".lock", ".lean",
 }
-TEXT_NAMES_ALLOW = {"Makefile", "LICENSE", "NOTICE", ".gitignore", "CODEOWNERS"}
+TEXT_NAMES_ALLOW = {"Makefile", "LICENSE", "NOTICE", ".gitignore", "CODEOWNERS", "lean-toolchain"}
 SCAN_EXEMPT_PREFIXES = ("LICENSES/",)
 SCAN_EXEMPT_FILES = {
     "scripts/public_release_audit.py",
@@ -99,8 +100,8 @@ def scan_patterns(text: str, rel: str, findings: list[str]) -> None:
             findings.append(f"{label}: {rel}")
 
 
-def main() -> int:
-    root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+def audit_root(root: Path) -> list[str]:
+    root = root.resolve()
     findings: list[str] = []
     for path in root.rglob("*"):
         rel = norm(path, root)
@@ -141,6 +142,64 @@ def main() -> int:
         text = read_utf8(path, rel, findings)
         if text is not None:
             scan_patterns(text, rel, findings)
+    return findings
+
+
+def run_self_test() -> int:
+    cases: list[tuple[str, dict[str, str], bool, str | None]] = [
+        (
+            "safe Lean source is accepted as scanned UTF-8 text",
+            {"Proof.lean": "theorem safe : True := by trivial\n"},
+            True,
+            None,
+        ),
+        (
+            "Lean source still receives secret scanning",
+            {"Proof.lean": 'def accidental := "sk-' + ("A" * 20) + '"\n'},
+            False,
+            "OpenAI-style secret: Proof.lean",
+        ),
+        (
+            "lean-toolchain is accepted as scanned UTF-8 text",
+            {"lean-toolchain": "leanprover/lean4:v4.33.1\n"},
+            True,
+            None,
+        ),
+        (
+            "unknown file types remain fail-closed",
+            {"proof.unknown-format": "safe text\n"},
+            False,
+            "unknown file type requires manual review",
+        ),
+    ]
+    failures: list[str] = []
+    for label, files, should_pass, expected in cases:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            for rel, text in files.items():
+                path = root / rel
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text, encoding="utf-8")
+            findings = audit_root(root)
+        passed = not findings
+        if passed != should_pass:
+            failures.append(f"{label}: expected pass={should_pass}, findings={findings}")
+        if expected is not None and not any(expected in item for item in findings):
+            failures.append(f"{label}: missing expected finding {expected!r}; findings={findings}")
+    if failures:
+        print("FAIL: public release audit self-test")
+        for item in failures:
+            print(" -", item)
+        return 1
+    print("PASS: public release audit self-test (Lean text allowed, secret scan retained, unknown types fail closed)")
+    return 0
+
+
+def main() -> int:
+    if len(sys.argv) == 2 and sys.argv[1] == "--self-test":
+        return run_self_test()
+    root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+    findings = audit_root(root)
     if findings:
         print("FAIL: public release audit found:")
         for item in sorted(set(findings)):
