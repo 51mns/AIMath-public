@@ -34,9 +34,9 @@ PATTERNS = {
 }
 TEXT_SUFFIX_ALLOW = {
     ".md", ".txt", ".py", ".json", ".yml", ".yaml", ".toml", ".cfg",
-    ".ini", ".csv", ".tsv", ".sh", ".ps1", ".bat", ".cff", ".lock",
+    ".ini", ".csv", ".tsv", ".sh", ".ps1", ".bat", ".cff", ".lock", ".lean",
 }
-TEXT_NAMES_ALLOW = {"Makefile", "LICENSE", "NOTICE", ".gitignore", "CODEOWNERS"}
+TEXT_NAMES_ALLOW = {"Makefile", "LICENSE", "NOTICE", ".gitignore", "CODEOWNERS", "lean-toolchain"}
 SCAN_EXEMPT_PREFIXES = ("LICENSES/",)
 SCAN_EXEMPT_FILES = {
     "scripts/public_release_audit.py",
