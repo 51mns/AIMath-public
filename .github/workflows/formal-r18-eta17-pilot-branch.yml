@@ -32,7 +32,6 @@ jobs:
           use-github-cache: false
           use-mathlib-cache: false
           leanchecker: true
-          nanoda: true
-          nanoda-allow-sorry: false
+          nanoda: false
           axiom-audit: true
           axiom-audit-root: AIMath.R18Eta17

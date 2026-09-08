@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 AIMath contributors
+-- SPDX-License-Identifier: Apache-2.0
+
 import Lake
 open Lake DSL
 
