@@ -59,8 +59,8 @@ jobs:
       - name: Public safety audit
         run: python3 scripts/public_release_audit.py .
 
-      - name: Public safety audit regression tests
-        run: python3 scripts/test_public_release_audit.py
+      - name: Public safety audit self-test
+        run: python3 scripts/public_release_audit.py --self-test
 
       - name: Verify public layout
         run: python3 scripts/verify_public_layout.py .
