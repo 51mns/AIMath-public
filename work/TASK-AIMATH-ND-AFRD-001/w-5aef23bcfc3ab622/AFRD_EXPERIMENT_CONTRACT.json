@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-AIMATH-ND-AFRD-001",
+  "worker_id": "w-5aef23bcfc3ab622",
+  "base_main": "ba61d1d7acbda8712cc447d19e45969e72e5fcfa",
+  "experiment": "AFRD-E0-v1",
+  "status": "CONTRACT_FROZEN_NO_CANDIDATE",
+  "candidate_input_rule": "N_AND_PUBLIC_CONSTANTS_ONLY",
+  "factor_labels_allowed_for": [
+    "training_labels_if_declared_before_freeze",
+    "hidden_scoring",
+    "falsification",
+    "post_signal_analysis"
+  ],
+  "factor_labels_forbidden_for": [
+    "candidate_encoding_at_evaluation_time",
+    "candidate_readout_at_evaluation_time",
+    "feature_generation_on_hidden_instances",
+    "hidden_instance_selection_after_candidate_results_are_seen"
+  ],
+  "visible_training": {
+    "generator": "GEN-A",
+    "factor_bit_pairs": [
+      [
+        16,
+        16
+      ],
+      [
+        20,
+        20
+      ],
+      [
+        24,
+        24
+      ]
+    ],
+    "instances_per_pair": 4096,
+    "total_instances": 12288,
+    "distinct_primes": true,
+    "ordered_label_convention": "p<q"
+  },
+  "hidden_splits": {
+    "H0_INTERPOLATION": {
+      "generator": "GEN-A",
+      "factor_bit_pairs": [
+        [
+          16,
+          16
+        ],
+        [
+          20,
+          20
+        ],
+        [
+          24,
+          24
+        ]
+      ],
+      "instances_per_pair": 512,
+      "total_instances": 1536,
+      "purpose": "unseen N from the same bit-range and generation distribution"
+    },
+    "H1_SCALE": {
+      "generator": "GEN-A",
+      "factor_bit_pairs": [
+        [
+          28,
+          28
+        ],
+        [
+          32,
+          32
+        ],
+        [
+          36,
+          36
+        ]
+      ],
+      "instances_per_pair": 384,
+      "total_instances": 1152,
+      "purpose": "larger factors than discovery training"
+    },
+    "H2_BALANCE": {
+      "generator": "GEN-A",
+      "factor_bit_pairs": [
+        [
+          16,
+          24
+        ],
+        [
+          20,
+          28
+        ],
+        [
+          24,
+          32
+        ]
+      ],
+      "instances_per_pair": 384,
+      "total_instances": 1152,
+      "purpose": "deliberately unbalanced p,q regimes"
+    },
+    "H3_ARITHMETIC": {
+      "generator": "GEN-A",
+      "families": [
+        "SAFE_PRIME_FACTOR",
+        "P_MINUS_1_4096_SMOOTH_FACTOR",
+        "P_MINUS_1_HAS_FACTOR_AT_LEAST_2_POW_20",
+        "SELECTED_MOD16_CLASSES"
+      ],
+      "instances_per_family": 256,
+      "total_instances": 1024,
+      "purpose": "arithmetic structure shift",
+      "factor_bit_pair": [
+        24,
+        24
+      ],
+      "family_details": {
+        "SAFE_PRIME_FACTOR": "smaller factor p=2r+1 with r and p prime; q generic 24-bit prime",
+        "P_MINUS_1_4096_SMOOTH_FACTOR": "largest prime divisor of p-1 <= 4096; q generic 24-bit prime",
+        "P_MINUS_1_HAS_FACTOR_AT_LEAST_2_POW_20": "largest prime divisor of p-1 >= 2^20; q generic 24-bit prime",
+        "SELECTED_MOD16_CLASSES": "128 instances with (p mod 16,q mod 16)=(1,15) and 128 with (3,13), after ordering p<q"
+      }
+    },
+    "H4_GENERATOR": {
+      "generator": "GEN-B_INDEPENDENT_IMPLEMENTATION_AND_RANDOMNESS",
+      "factor_bit_pairs": [
+        [
+          16,
+          16
+        ],
+        [
+          20,
+          20
+        ],
+        [
+          24,
+          24
+        ]
+      ],
+      "instances_per_pair": 512,
+      "total_instances": 1536,
+      "purpose": "generator-fingerprint falsification"
+    },
+    "H5_TEMPORAL": {
+      "generator": "GEN-B_INDEPENDENT_IMPLEMENTATION_AND_RANDOMNESS",
+      "total_instances": 1024,
+      "generated_after_candidate_freeze": true,
+      "purpose": "temporal holdout",
+      "strata": {
+        "BALANCED_24_24": 512,
+        "UNBALANCED_20_28": 256,
+        "ARITHMETIC_H3_FAMILIES": {
+          "instances_per_family": 64,
+          "families": 4,
+          "total": 256
+        }
+      }
+    }
+  },
+  "hidden_total_instances": 7424,
+  "hidden_data_publication_rule": "NO_HIDDEN_INSTANCE_FACTOR_SEED_OR_ANSWER_BEFORE_CANDIDATE_FREEZE; publish replay material only after evaluation is irrevocably frozen",
+  "representation_interface": {
+    "encoder": "encode(N, public_constants) -> X",
+    "deterministic_serialization_required": true,
+    "max_serialized_bytes_per_instance": 65536,
+    "evaluation_readouts": [
+      "LOCALISE",
+      "FACTOR"
+    ],
+    "candidate_package_freeze_requires": [
+      "representation_specification",
+      "encoder_source_and_hash",
+      "readout_source_and_hash",
+      "all_learned_parameters_and_hashes",
+      "public_constants",
+      "training_instance_manifest",
+      "resource_budget",
+      "declared_known_idea_influences",
+      "no_hidden_data_attestation"
+    ]
+  },
+  "localisation_metric": {
+    "target": "smaller_prime_factor_p",
+    "candidate_output": "at most 8 disjoint closed integer intervals within [3,floor(sqrt(N))]",
+    "coverage": "p is inside union of intervals",
+    "width": "number of odd integers contained in the interval union",
+    "bits_saved": "log2(M/max(1,width)), where M is number of odd integers in [3,floor(sqrt(N))]",
+    "trivial_full_interval_bits_saved": 0,
+    "width_budget_fractions": [
+      "1/2",
+      "1/4",
+      "1/16",
+      "1/256"
+    ],
+    "paired_gate_input": "binary factor coverage at equal predeclared width budget"
+  },
+  "factor_metric": {
+    "success": "return integer d with 1<d<N and N%d==0",
+    "failure": "timeout, exception, invalid divisor, or no divisor",
+    "primary_resource_caps_seconds": [
+      0.01,
+      0.1,
+      1.0
+    ],
+    "memory_cap_mib": 512
+  },
+  "paired_signal_gate": {
+    "comparison": "best predeclared eligible baseline at the same resource cap on identical hidden instances",
+    "primary_split": "H0_INTERPOLATION",
+    "minimum_absolute_net_win_fraction": 0.05,
+    "exact_two_sided_binomial_p_max": 0.01,
+    "replication_required_on": [
+      "H4_GENERATOR",
+      "H5_TEMPORAL"
+    ],
+    "replication_exact_two_sided_binomial_p_max": 0.05,
+    "replication_net_wins_must_be_positive": true,
+    "notes": "w = candidate success/baseline failure; l = baseline success/candidate failure; test conditions on w+l and uses p=1/2 exact binomial null"
+  },
+  "baseline_classes": [
+    "RAW_N_MATCHED_READOUT",
+    "TRIVIAL_REVERSIBLE_REENCODING",
+    "TRIAL_DIVISION",
+    "FERMAT_STYLE",
+    "POLLARD_RHO",
+    "POLLARD_P_MINUS_1",
+    "ECM_WHERE_RESOURCE_FEASIBLE",
+    "VSA_DISTRIBUTED_REPRESENTATION_REFERENCE",
+    "ML_FERMAT_REFERENCE"
+  ],
+  "post_signal_order": [
+    "freeze_hidden_results_and_candidate_artifacts",
+    "candidate_specific_literature_search",
+    "independent_AI_reduction_attempt",
+    "symbolic_simplification",
+    "known_invariant_and_algorithm_comparison",
+    "adversarial_generator_and_label_controls",
+    "human_mathematical_extraction",
+    "only_then_consider_novelty_or_new_campaign"
+  ],
+  "promotion_rule": "AFRD remains inside CAM-AIMATH-ND unless a reusable representation or sustained multi-task programme survives held-out, reduction, falsification, and human Portfolio review",
+  "generators": {
+    "GEN-A": {
+      "implementation": "Python standard-library reference generator in gen_a_reference.py",
+      "prime_candidate_rng": "random.Random seeded from SHA-256 of an explicit seed string; visible seed may be public, hidden seed stays evaluator-side until reveal",
+      "primality": "deterministic Miller-Rabin bases [2,3,5,7,11,13,17] for all factor candidates (<2^36)",
+      "duplicate_rule": "reject duplicate primes within instance and duplicate N across all already-generated splits"
+    },
+    "GEN-B_INDEPENDENT_IMPLEMENTATION_AND_RANDOMNESS": {
+      "implementation": "OpenSSL 3.x `openssl prime -generate -bits <b>` in a separate evaluator wrapper; no GEN-A code imported",
+      "randomness": "OpenSSL DRBG independently seeded by its runtime; evaluator records OpenSSL version and generated manifest",
+      "replay": "post-evaluation publication of exact sorted (N,p,q) manifest is authoritative replay material; no pre-freeze hidden values are committed"
+    }
+  }
+}
