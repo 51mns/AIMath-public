@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Formal theorem obligation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "theorem_id",
+    "obligation_state",
+    "statement_path",
+    "depends_on",
+    "statement_fidelity",
+    "verification"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "theorem_id": {
+      "type": "string",
+      "pattern": "^THM-[A-Z0-9-]+$"
+    },
+    "claim_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^C-[A-Z0-9-]+$"
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "obligation_state": {
+      "enum": [
+        "OPEN",
+        "PROOF_CANDIDATE",
+        "PROVED",
+        "REFUTED",
+        "BLOCKED"
+      ]
+    },
+    "statement_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "statement_sha256": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "proof_path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^THM-[A-Z0-9-]+$"
+      },
+      "uniqueItems": true
+    },
+    "statement_fidelity": {
+      "enum": [
+        "NOT_REVIEWED",
+        "AUDITED",
+        "MISMATCH"
+      ]
+    },
+    "verification": {
+      "type": "object",
+      "required": [
+        "proof_assistant",
+        "kernel"
+      ],
+      "properties": {
+        "proof_assistant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kernel": {
+          "enum": [
+            "NOT_RUN",
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "comparator": {
+          "enum": [
+            "NOT_RUN",
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "secondary_kernel": {
+          "enum": [
+            "NOT_RUN",
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "toolchain": {
+          "type": "object"
+        },
+        "axioms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "proof_commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
