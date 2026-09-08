@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-OPEN-MATH-DISCOVERY-002",
+  "worker_id": "w-e7cd824c02b53f1b",
+  "exact_public_base": "279ba9fa98befe3aee37bfd1a98e4f688d333bd4",
+  "freeze_commit": "a721b416a30c49820bdc4c4ac789782992c25691",
+  "heldout_rule": "SHA256('AIMath-transfer-heldout-v1:' + decimal(case_id)), cases 0..63",
+  "integer_arithmetic_only": true,
+  "case_transcript_sha256": "705af97c146b38ce74fef31ee14e3622b6a41d83ee5478ce3f57f9446ceffde8",
+  "summary": {
+    "cases": 64,
+    "checks_per_case": 6,
+    "checks_total": 384,
+    "failures": [],
+    "all_pass": true,
+    "n_min": 5,
+    "n_max": 12,
+    "max_abs_perturbed_numerator": 12560229392,
+    "max_abs_perturbed_denominator": 2038256703
+  }
+}
