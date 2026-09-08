@@ -19,6 +19,12 @@ python3 research/equiangular-r18-eta17/verify.py
 
 The public checker uses exact Python integer arithmetic only. It reconstructs the 64 endpoint-feasible principal-deletion quartics, applies the complete type-2 coefficient divisibility test, finds the unique quartic, and verifies the characteristic-polynomial deck contradiction.
 
+## Formal proof pilot
+
+`formal/pilot/` contains a Lean 4.33.1 kernel-checked formalisation of the **final deck-mismatch bridge only**. Its frozen statement has SHA-256 `9241e1e958bcc05207e72b8d0acd7ed1ca1484ba69c4231062095708147c24e9`; the verified pilot passed Lean build, zero-axiom guarding, `leanchecker`, and `axiom-audit`.
+
+This does **not** mean the full Seidel-matrix Claim has been formalised. The reduction from the spectral/deletion hypotheses to that final polynomial mismatch remains outside Lean and continues to rely on the existing exact verifier and independent mathematical review.
+
 ## Boundary
 
 This excludes one spectral branch only. It does **not** prove `N(18)<=58`, does not exclude every 59-line configuration, and does not establish publication novelty.

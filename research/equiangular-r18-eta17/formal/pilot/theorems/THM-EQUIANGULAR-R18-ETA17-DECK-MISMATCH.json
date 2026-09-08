@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "theorem_id": "THM-EQUIANGULAR-R18-ETA17-DECK-MISMATCH",
+  "claim_id": "C-EQUIANGULAR-R18-ETA17-SINGLETON-EXCLUSION",
+  "description": "Kernel-checked formalisation of the final exact deck-mismatch bridge only: the reconstructed p'/F polynomial is not identical to 59*Q0.",
+  "obligation_state": "PROVED",
+  "statement_path": "research/equiangular-r18-eta17/formal/pilot/R18Eta17FormalPilot/Statement.lean",
+  "statement_sha256": "9241e1e958bcc05207e72b8d0acd7ed1ca1484ba69c4231062095708147c24e9",
+  "proof_path": "research/equiangular-r18-eta17/formal/pilot/R18Eta17FormalPilot/Proof.lean",
+  "depends_on": [],
+  "statement_fidelity": "NOT_REVIEWED",
+  "verification": {
+    "proof_assistant": "Lean 4",
+    "kernel": "PASS",
+    "comparator": "NOT_RUN",
+    "secondary_kernel": "NOT_RUN",
+    "toolchain": {
+      "lean": "4.33.1",
+      "lean_commit": "819816b2e0a3bf405af45ae5c7af2491d8f5bee6",
+      "lake": "5.0.0-src+819816b",
+      "mathlib": null,
+      "dependency_mode": "Lean core only"
+    },
+    "axioms": [],
+    "proof_commit": "a8b3044543b54ff42be15c29754890cba8a85394",
+    "checked_workflow_run": 34196114477,
+    "leanchecker": "PASS",
+    "axiom_audit": {
+      "status": "PASS",
+      "version": "v0.1.2",
+      "commit": "46024e005996495c65ef609368e11ab39c4222e3",
+      "audited_declarations": 5
+    },
+    "nanoda_attempt": {
+      "status": "BLOCKED_TOOL_INCOMPATIBILITY",
+      "attempted_proof_commit": "daabfbb0fb4e08e603979cc32e42ac16aabb110d",
+      "workflow_run": 34195635857,
+      "nanoda_lib_version": "0.3.2",
+      "result": "Lean export completed, then nanoda terminated with 'invalid digit found in string'; this is not recorded as a theorem rejection."
+    }
+  }
+}
