@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "claim_id": "C-LOCAL-TP2-GAP-CONE-REDUCTION",
+  "mathematical_level": "INDEPENDENTLY_REPRODUCED",
+  "validity_state": "CURRENT",
+  "public_evidence": "FULL",
+  "dependency_use": "SCOPED",
+  "statement_path": "research/local-tp2-gap-cone/STATEMENT.md",
+  "depends_on": [],
+  "universal_claim": true,
+  "verification_modes": [
+    "INDEPENDENT_DERIVATION",
+    "MATHEMATICAL_REVIEW",
+    "FINITE_EXACT_REPLAY"
+  ],
+  "novelty": "NOT_ESTABLISHED",
+  "external_frontier_impact": "NONE",
+  "supersedes": [],
+  "superseded_by": null,
+  "scope_note": "Scoped structural reduction only. This claim does not assert C-LOCAL-TP2, the strict adjacent H minor F_v(n) > 0, or any common coefficient-grade planar network.",
+  "source_research_head": "0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a",
+  "source_task_id": "TASK-LOCAL-TP2-CONTINUANT-LGV-001"
+}

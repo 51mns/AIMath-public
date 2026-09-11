@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "claim_id": "C-LOCAL-TP2-GAP-CONE-REDUCTION",
+  "reviewer_actor": "gh:51mns",
+  "writer_material_seen_before_freeze": {
+    "statement": true,
+    "proof": true,
+    "code": true,
+    "generated_outputs": false
+  },
+  "implementation_independent": true,
+  "method_independent": false,
+  "derivation_frozen_before_comparison": false,
+  "adversarial_controls": true,
+  "independence_grade": "I2",
+  "decision": "PASS_WITH_QUALIFICATIONS",
+  "checked": [
+    "uniform transfer splice against arXiv:2602.14802v1 Definition 3.1",
+    "determinant-one and fixed-skew invariants",
+    "all-depth boundary gap-cone induction",
+    "extreme-left 1/n chain with explicit skew-cancellation step",
+    "degree rank deg_x G_(p/q) = p+q-1",
+    "oriented D_v factorisation",
+    "universal subtraction-free S_v and D_v",
+    "root raw-gap LGV determinant obstruction"
+  ],
+  "not_checked": [
+    "C-LOCAL-TP2 itself",
+    "strict adjacent determinant F_v(n) > 0",
+    "common coefficient/H-grade planar network for S_v and D_v",
+    "publication novelty",
+    "any continuation or campaign decision"
+  ],
+  "qualifications": [
+    "B_(n+1) = R_0 B_n on the extreme 1/n chain requires the fixed-skew invariant to cancel transpose terms; it does not follow from the boundary recursion alone. The reviewer supplied this step.",
+    "The orientation in the D_v factorisation requires the exact degree rank deg_x G_(p/q) = p+q-1 plus Farey interval genealogy. The reviewer supplied this step."
+  ],
+  "independence_limitations": [
+    "Reviewer model GPT-5.6 Sol is the same model family recorded for the writer lane, so errors may be correlated.",
+    "Writer RESULT.md and splice_verifier.py were read before the review derivation was frozen, so this was not a blind derivation.",
+    "Method independence is not claimed: the review rederives through the same primary-source recursion and transfer-matrix object map."
+  ],
+  "reviewed_research_head": "0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a",
+  "review_pr": 90,
+  "source": "CONTINUANT_GAP_CONE_INDEPENDENT_REVIEW_2026-09-05.md"
+}
