@@ -16,6 +16,8 @@
 | `TASK-FIXED-433-002` — Independent source-normalization audit | `CAM-FIXED-433` | REPRODUCTION | E1 | **APPROVED** | INDEPENDENT_REVIEW |
 | `TASK-GYODA-89-001` — Primary-source comparison for four residue classes | `CAM-GYODA-89` | LITERATURE_AUDIT | E0 | **APPROVED** | PARALLEL_SAFE |
 | `TASK-LOCAL-TP2-CONTINUANT-LGV-001` — Local TP2 continuant-splice common-network gate | `CAM-LOCAL-TP2` | RESEARCH | E0 | **APPROVED** | EXCLUSIVE |
+| `TASK-LOCAL-TP2-CONTINUANT-REPRO-001` — Adversarial reproduction of continuant verifier and root obstruction | `CAM-LOCAL-TP2` | REPRODUCTION | E1 | **PROPOSED** | REPLICATED_COMPUTATION |
+| `TASK-LOCAL-TP2-CONTINUANT-REVIEW-001` — Cross-family independent review of continuant gap-cone reduction | `CAM-LOCAL-TP2` | INDEPENDENT_REVIEW | E1 | **PROPOSED** | INDEPENDENT_REVIEW |
 | `TASK-LOCAL-TP2-REFRESH-001` — Independent dependency/route triage for a genuinely new Local TP2 architecture | `CAM-LOCAL-TP2` | DEPENDENCY_TRIAGE | E0 | **APPROVED** | PARALLEL_SAFE |
 | `TASK-OPEN-MATH-DISCOVERY-001` — Bounded open theorem and counterexample discovery | `CAM-OPEN-MATH-DISCOVERY` | RESEARCH | E0 | **APPROVED** | PARALLEL_SAFE |
 | `TASK-OPEN-MATH-DISCOVERY-002` — Cross-domain structural transfer search | `CAM-OPEN-MATH-DISCOVERY` | RESEARCH | E0 | **APPROVED** | PARALLEL_SAFE |
