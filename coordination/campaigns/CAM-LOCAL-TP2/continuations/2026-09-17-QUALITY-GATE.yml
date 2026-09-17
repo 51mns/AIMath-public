@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-LOCAL-TP2",
+  "trigger": {
+    "type": "STRUCTURAL_REDUCTION_TERMINAL_OUTCOME",
+    "source_task_id": "TASK-LOCAL-TP2-CONTINUANT-LGV-001",
+    "source_outcome": "STRUCTURAL_REDUCTION",
+    "post_outcome_director_pr": 91
+  },
+  "assets_gained": [
+    "uniform continuant splice representation",
+    "all-depth coefficientwise boundary gap cone",
+    "exact treatment of the extreme 1/n chain",
+    "subtraction-free representations for S_v and D_v",
+    "exact root obstruction to the direct raw-gap LGV architecture",
+    "scoped independent rederivation from PR #90 with disclosed independence limitations"
+  ],
+  "failed_routes": [
+    "direct raw-gap common-network/LGV architecture is obstructed at the root",
+    "direct QW3/five-W sign propagation remains closed in its recorded scope",
+    "quotient/all-pair TP2 route remains a lower-TP2 restatement risk rather than a proof bridge"
+  ],
+  "external_progress": {
+    "status": "NONE_REQUIRED_FOR_THIS_GATE",
+    "note": "This continuation is a bounded quality-control step on already-public frozen artifacts, not an external-frontier claim."
+  },
+  "information_gain": {
+    "assessment": "HIGH_BUT_SCOPED",
+    "reason": "The previous Task produced a reusable structural reduction, but its executable/root-obstruction components should be independently reproduced before further load-bearing use."
+  },
+  "transfer_value": [
+    "separates finite executable evidence from the universal all-depth argument",
+    "can falsify implementation or fixture errors before any H-kernel follow-up is allocated"
+  ],
+  "do_not_continue_for_check": {
+    "larger_denominator_or_depth_only": true,
+    "higher_degree_closed_ansatz": true,
+    "agent_count_or_available_capacity": true,
+    "sunk_cost": true
+  },
+  "recommended_decision": "CONTINUE",
+  "bounded_scope": {
+    "approve_exactly": "TASK-LOCAL-TP2-CONTINUANT-REPRO-001",
+    "leave_proposed": "TASK-LOCAL-TP2-CONTINUANT-REVIEW-001",
+    "max_active_lanes": 1,
+    "h_kernel_followup_approved": false,
+    "post_terminal_rule": "Require a fresh continuation decision. If the bounded reproduction yields no reusable new mechanism beyond confirmation/falsification of frozen fixtures, do not force further Local TP2 work."
+  }
+}
