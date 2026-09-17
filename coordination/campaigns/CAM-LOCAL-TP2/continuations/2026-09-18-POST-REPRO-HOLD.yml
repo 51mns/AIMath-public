@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-LOCAL-TP2",
+  "trigger": {
+    "type": "TERMINAL_NO_REUSABLE_PROGRESS",
+    "source_task_id": "TASK-LOCAL-TP2-CONTINUANT-REPRO-001",
+    "source_outcome_type": "NO_REUSABLE_PROGRESS",
+    "source_research_pr": 104,
+    "source_release_pr": 105
+  },
+  "assets_gained": [
+    "fresh exact-arithmetic reproduction of the bounded continuant finite fixtures",
+    "independent direct-splice implementation matching the writer verifier counts and frozen root profiles",
+    "independent exact reproduction of the root determinant obstruction det(M_(1/3)-M_(1/2))=-(x+1)^2",
+    "independent representative checks of the extreme-left 1/n boundary recurrence"
+  ],
+  "failed_routes": [
+    "direct raw-gap common-network/LGV architecture remains obstructed at the root",
+    "the bounded reproduction produced no new H-grade switching or order-preservation mechanism",
+    "direct five-W/QW3 and quotient/all-pair TP2 routes remain closed or restatement-risk in their recorded scopes"
+  ],
+  "external_progress": {
+    "status": "NO_MATERIAL_CHANGE",
+    "note": "This gate follows an internal quality-control reproduction and makes no external-frontier claim."
+  },
+  "information_gain": {
+    "assessment": "QUALITY_CONFIRMATION_ONLY",
+    "reason": "The reproduction materially increases confidence in the frozen finite/exact fixtures and root obstruction, but it does not narrow the remaining H-grade bridge enough to justify automatic further allocation."
+  },
+  "transfer_value": [
+    "the frozen finite fixtures can be reused as regression checks for any genuinely new future Local TP2 architecture",
+    "the direct-splice reproduction provides an implementation-independent cross-check of the existing verifier"
+  ],
+  "do_not_continue_for_check": {
+    "larger_denominator_or_depth_only": true,
+    "higher_degree_closed_ansatz": true,
+    "more_agents_only": true,
+    "sunk_cost": true,
+    "direct_five_w_restart": true,
+    "direct_raw_gap_network_restart": true
+  },
+  "recommended_decision": "HOLD",
+  "reopen_only_if": [
+    "a materially new theorem-native gap-cone to H-grade mechanism is identified",
+    "an external theorem directly bridges the frozen structure to the Local TP2 determinant",
+    "a valid counterexample changes the problem representation"
+  ],
+  "note": "The user explicitly requested that the planned bounded work stop rather than be forced onward if it did not produce a proof or reusable new mechanism. No H-kernel/H-grade follow-up is approved by this memo."
+}
