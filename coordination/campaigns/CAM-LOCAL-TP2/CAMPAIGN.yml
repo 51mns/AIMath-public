@@ -3,7 +3,7 @@
   "campaign_id": "CAM-LOCAL-TP2",
   "title": "Local TP2 universal positivity",
   "kind": "PUBLIC_RESEARCH_THEME",
-  "strategic_state": "ACTIVE",
+  "strategic_state": "HOLD",
   "priority": "HOLD",
   "max_active_lanes": 1,
   "problem": {
@@ -11,7 +11,7 @@
     "public_basis": "docs/CONTRIBUTION_TARGETS.md"
   },
   "continuation_conditions": [
-    "Bounded reopen authorizes only TASK-LOCAL-TP2-CONTINUANT-LGV-001 until its terminal Outcome; re-evaluate continuation before allocating another Local TP2 research lane."
+    "The bounded reproduction TASK-LOCAL-TP2-CONTINUANT-REPRO-001 is terminal with NO_REUSABLE_PROGRESS; no further Local TP2 lane is authorized without a fresh human continuation decision after a materially new reopen signal."
   ],
   "do_not_continue_for": [
     "larger denominator/depth only",
