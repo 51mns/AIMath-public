@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-LOCAL-TP2",
+  "decision_id": "2026-09-17-QUALITY-GATE-CONTINUE",
+  "decided_at": "2026-09-17",
+  "decision": "CONTINUE",
+  "authority": "HUMAN_MAINTAINER",
+  "reason": "Human maintainer authorizes exactly one bounded Local TP2 quality-control lane after the terminal STRUCTURAL_REDUCTION: approve TASK-LOCAL-TP2-CONTINUANT-REPRO-001, keep TASK-LOCAL-TP2-CONTINUANT-REVIEW-001 PROPOSED, retain max_active_lanes=1 and priority HOLD, and require a fresh continuation decision after the reproduction reaches a terminal Outcome. Do not force further Local TP2 work if this bounded scope yields no reusable mathematical mechanism beyond confirmation or falsification of the frozen executable fixtures.",
+  "supersedes": "2026-09-05-BOUNDED-REOPEN"
+}
