@@ -4,7 +4,7 @@
   "campaign_id": "CAM-LOCAL-TP2",
   "title": "Adversarial reproduction of continuant verifier and root obstruction",
   "task_kind": "REPRODUCTION",
-  "stored_state": "PROPOSED",
+  "stored_state": "APPROVED",
   "research_stage": "E1",
   "research_mode": "STANDARD",
   "objective": "Freshly reproduce the executable and small exact components frozen at research head 0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a: reimplement or independently check splice_verifier.py fixtures, the root determinant obstruction, and representative boundary cases, while explicitly separating executable PASS/FAIL evidence from the universal all-depth mathematical argument. No reproduction obtained outside a canonical Task workspace counts as evidence for this Task: any prior ad hoc or conversational reproduction must be redone here from a fresh implementation and recorded under owned_paths.",
@@ -30,7 +30,8 @@
     "Do not reuse the writer verifier as the only implementation under test.",
     "Stop after the frozen executable/root-obstruction scope has a reproducible PASS/FAIL record.",
     "Do not import reviews/local-tp2/continuant_gap_cone_independent_check.py as the implementation under test; it is PR #90 material and is itself a reproduction aid.",
-    "Do not admit any reproduction that was not produced inside this Task workspace."
+    "Do not admit any reproduction that was not produced inside this Task workspace.",
+    "After this Task reaches a terminal Outcome, do not automatically open another Local TP2 lane; require a fresh continuation decision, and prefer HOLD if no reusable mathematical mechanism is gained."
   ],
   "owned_paths": [
     "work/TASK-LOCAL-TP2-CONTINUANT-REPRO-001/**"
