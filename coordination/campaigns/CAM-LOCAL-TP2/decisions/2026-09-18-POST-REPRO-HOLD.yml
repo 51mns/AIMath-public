@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "campaign_id": "CAM-LOCAL-TP2",
+  "decision_id": "2026-09-18-POST-REPRO-HOLD",
+  "decided_at": "2026-09-18",
+  "decision": "HOLD",
+  "authority": "HUMAN_MAINTAINER",
+  "reason": "After the bounded reproduction TASK-LOCAL-TP2-CONTINUANT-REPRO-001 terminated with a finite/exact REPRODUCTION PASS but NO_REUSABLE_PROGRESS, the human maintainer returns CAM-LOCAL-TP2 to HOLD. The reproduction confirms the frozen executable fixtures and root obstruction but does not prove Local TP2 and produces no new H-grade switching/order-preservation/common-network mechanism. Do not allocate another Local TP2 lane merely to continue searching; reopen only for a materially new theorem-native mechanism, a directly applicable external theorem, or a valid counterexample.",
+  "supersedes": "2026-09-17-QUALITY-GATE-CONTINUE"
+}
