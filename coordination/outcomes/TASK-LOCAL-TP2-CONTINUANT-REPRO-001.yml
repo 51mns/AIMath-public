@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "task_id": "TASK-LOCAL-TP2-CONTINUANT-REPRO-001",
+  "outcome_type": "NO_REUSABLE_PROGRESS",
+  "summary": "A fresh exact-arithmetic implementation, frozen before comparison with the writer verifier, independently reproduces the bounded executable fixtures of the Local TP2 continuant reduction: 511 generated Farey vertices, 127 coefficientwise-nonnegative S/D sibling checks, 127 finite adjacent-H-minor sanity checks, the frozen root H(S), H(D), and F profiles, the exact root obstruction det(M_(1/3)-M_(1/2))=-(x+1)^2, and representative extreme-left 1/n boundary-chain recurrences. The implementation generates matrices directly from the uniform splice rather than reconstructing the writer's continued-fraction words. This is a bounded reproduction PASS only; it does not independently prove the all-depth gap-cone theorem, does not supply the missing H-grade switching/common-network bridge, and does not prove C-LOCAL-TP2. No new reusable proof mechanism arose beyond confirmation of the frozen finite/exact fixtures, so the Task terminates here and further Local TP2 allocation requires a fresh continuation decision.",
+  "artifacts": [
+    "work/TASK-LOCAL-TP2-CONTINUANT-REPRO-001/w-6f2c9a7e1b4d8c35/independent_reproduction.py",
+    "work/TASK-LOCAL-TP2-CONTINUANT-REPRO-001/w-6f2c9a7e1b4d8c35/REPRODUCTION.md"
+  ],
+  "claim_ids": [
+    "C-LOCAL-TP2"
+  ],
+  "review_required": false,
+  "truth_layer_effect": "NONE",
+  "continuation_gate_required": true,
+  "campaign_reopen_effect": "NONE",
+  "source_worker_ids": [
+    "w-6f2c9a7e1b4d8c35"
+  ],
+  "reproduction_scope": "FINITE_EXACT_REPLAY",
+  "reproduction_verdict": "PASS",
+  "review_target_commit": "0f2d9f6fb7f3331ad289cc949b1191d7cbb2fb0a",
+  "created_at": "2026-09-18"
+}
